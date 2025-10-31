@@ -1,9 +1,6 @@
 <?php
 
 declare(strict_types=1);
-
-namespace Tests\Feature\User;
-
 use Heart\Character\Infrastructure\Models\Character;
 use Heart\Character\Infrastructure\Models\PastSeason;
 use Heart\Message\Infrastructure\Models\Message;
@@ -12,64 +9,56 @@ use Heart\User\Infrastructure\Models\Address;
 use Heart\User\Infrastructure\Models\Information;
 use Heart\User\Infrastructure\Models\User;
 use Symfony\Component\HttpFoundation\Response;
-use Tests\TestCase;
+test('success', function () {
+    $user = User::factory()
+        ->has(Character::factory()->has(PastSeason::factory()), 'character')
+        ->has(Address::factory(), 'address')
+        ->has(Information::factory(), 'information')
+        ->has(Provider::factory()->has(Message::factory()->count(2)))
+        ->create();
 
-final class UpdateProfileTest extends TestCase
-{
-    public function test_success(): void
-    {
-        $user = User::factory()
-            ->has(Character::factory()->has(PastSeason::factory()), 'character')
-            ->has(Address::factory(), 'address')
-            ->has(Information::factory(), 'information')
-            ->has(Provider::factory()->has(Message::factory()->count(2)))
-            ->create();
+    $payload = [
+        'info' => [
+            'name' => 'daniel corazon',
+            'nickname' => 'danielhe4rt#0001',
+            'linkedin_url' => 'https://linkedin.com/in/danielheart',
+            'github_url' => 'https://github.com/danielhe4rt',
+            'birthdate' => '1999-08-03',
+            'about' => 'definitely a developer',
+        ],
+    ];
 
-        $payload = [
-            'info' => [
-                'name' => 'daniel corazon',
-                'nickname' => 'danielhe4rt#0001',
-                'linkedin_url' => 'https://linkedin.com/in/danielheart',
-                'github_url' => 'https://github.com/danielhe4rt',
-                'birthdate' => '1999-08-03',
-                'about' => 'definitely a developer',
-            ],
-        ];
+    $response = $this
+        ->actingAsAdmin()
+        ->putJson(route('users.profile.update', ['value' => $user->username]), $payload);
 
-        $response = $this
-            ->actingAsAdmin()
-            ->putJson(route('users.profile.update', ['value' => $user->username]), $payload);
+    $response->assertStatus(Response::HTTP_OK);
 
-        $response->assertStatus(Response::HTTP_OK);
+    $this->assertDatabaseHas('user_information', $payload['info']);
+});
+test('success with one field', function () {
+    $user = User::factory()
+        ->has(Character::factory()->has(PastSeason::factory()), 'character')
+        ->has(Address::factory(), 'address')
+        ->has(Information::factory(), 'information')
+        ->has(Provider::factory()->has(Message::factory()->count(2)))
+        ->create();
 
-        $this->assertDatabaseHas('user_information', $payload['info']);
-    }
+    $payload = [
+        'info' => [
+            'github_url' => 'https://github.com/danielhe4rt',
+        ],
+    ];
+    $userExpected = $user->information
+        ->only(['nickname', 'linkedin_url']);
 
-    public function test_success_with_one_field(): void
-    {
-        $user = User::factory()
-            ->has(Character::factory()->has(PastSeason::factory()), 'character')
-            ->has(Address::factory(), 'address')
-            ->has(Information::factory(), 'information')
-            ->has(Provider::factory()->has(Message::factory()->count(2)))
-            ->create();
+    $response = $this
+        ->actingAsAdmin()
+        ->putJson(route('users.profile.update', ['value' => $user->username]), $payload);
 
-        $payload = [
-            'info' => [
-                'github_url' => 'https://github.com/danielhe4rt',
-            ],
-        ];
-        $userExpected = $user->information
-            ->only(['nickname', 'linkedin_url']);
+    $userExpected['github_url'] = $payload['info']['github_url'];
 
-        $response = $this
-            ->actingAsAdmin()
-            ->putJson(route('users.profile.update', ['value' => $user->username]), $payload);
+    $response->assertStatus(Response::HTTP_OK);
 
-        $userExpected['github_url'] = $payload['info']['github_url'];
-
-        $response->assertStatus(Response::HTTP_OK);
-
-        $this->assertDatabaseHas('user_information', $userExpected);
-    }
-}
+    $this->assertDatabaseHas('user_information', $userExpected);
+});

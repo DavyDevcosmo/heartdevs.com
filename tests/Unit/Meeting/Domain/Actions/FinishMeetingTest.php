@@ -1,47 +1,27 @@
 <?php
 
 declare(strict_types=1);
-
-namespace Tests\Unit\Meeting\Domain\Actions;
-
 use Heart\Meeting\Domain\Actions\FinishMeeting;
 use Heart\Meeting\Domain\Entities\MeetingEntity;
 use Heart\Meeting\Domain\Repositories\MeetingRepository;
-use Mockery as m;
 use Mockery\MockInterface;
-use Tests\TestCase;
-use Tests\Unit\Meeting\MeetingProviderTrait;
+uses(\Tests\Unit\Meeting\MeetingProviderTrait::class);
 
-final class FinishMeetingTest extends TestCase
-{
-    use MeetingProviderTrait;
-    private MockInterface $meetingRepositoryStub;
+beforeEach(function () {
+    $this->meetingRepositoryStub = m::mock(MeetingRepository::class);
+    $this->meetingEntity = $this->validMeetingEntity();
+});
+afterEach(function () {
+    m::close();
+});
+test('finish meeting', function () {
+    $this->meetingRepositoryStub
+        ->shouldReceive('endMeeting')
+        ->with($this->meetingEntity->id)
+        ->once()
+        ->andReturn($this->meetingEntity);
 
-    private MeetingEntity $meetingEntity;
+    $test = new FinishMeeting($this->meetingRepositoryStub);
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->meetingRepositoryStub = m::mock(MeetingRepository::class);
-        $this->meetingEntity = $this->validMeetingEntity();
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-        m::close();
-    }
-
-    public function test_finish_meeting(): void
-    {
-        $this->meetingRepositoryStub
-            ->shouldReceive('endMeeting')
-            ->with($this->meetingEntity->id)
-            ->once()
-            ->andReturn($this->meetingEntity);
-
-        $test = new FinishMeeting($this->meetingRepositoryStub);
-
-        $test->handle($this->meetingEntity->id);
-    }
-}
+    $test->handle($this->meetingEntity->id);
+});

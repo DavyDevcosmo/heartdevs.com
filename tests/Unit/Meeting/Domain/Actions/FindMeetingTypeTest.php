@@ -1,68 +1,41 @@
 <?php
 
 declare(strict_types=1);
-
-namespace Tests\Unit\Meeting\Domain\Actions;
-
 use Heart\Meeting\Domain\Actions\FindMeetingType;
 use Heart\Meeting\Domain\Entities\MeetingTypeEntity;
 use Heart\Meeting\Domain\Exceptions\MeetingException;
 use Heart\Meeting\Domain\Repositories\MeetingTypeRepository;
-use Mockery as m;
 use Mockery\MockInterface;
-use Tests\TestCase;
-use Tests\Unit\Meeting\MeetingTypeProviderTrait;
+uses(\Tests\Unit\Meeting\MeetingTypeProviderTrait::class);
 
-final class FindMeetingTypeTest extends TestCase
-{
-    use MeetingTypeProviderTrait;
-    public $meetingEntity;
+beforeEach(function () {
+    $this->meetingTypeRepositoryStub = m::mock(MeetingTypeRepository::class);
+    $this->meetingEntity = $this->validMeetingTypeEntity();
+});
+afterEach(function () {
+    m::close();
+});
+test('meeting type is not found', function () {
+    $this->expectException(MeetingException::class);
 
-    private MockInterface $meetingTypeRepositoryStub;
+    $this->meetingTypeRepositoryStub
+        ->shouldReceive('findById')
+        ->with(12)
+        ->once()
+        ->andReturn(null);
 
-    private MeetingTypeEntity $meetingTypeEntity;
+    $test = new FindMeetingType($this->meetingTypeRepositoryStub);
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->meetingTypeRepositoryStub = m::mock(MeetingTypeRepository::class);
-        $this->meetingEntity = $this->validMeetingTypeEntity();
-    }
+    $test->handle(12);
+});
+test('find meeting type success', function () {
+    $this->meetingTypeRepositoryStub
+        ->shouldReceive('findById')
+        ->with(2)
+        ->once()
+        ->andReturn($this->meetingEntity);
 
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-        m::close();
-    }
+    $test = new FindMeetingType($this->meetingTypeRepositoryStub);
 
-    public function test_meeting_type_is_not_found(): void
-    {
-        $this->expectException(MeetingException::class);
-
-        $this->meetingTypeRepositoryStub
-            ->shouldReceive('findById')
-            ->with(12)
-            ->once()
-            ->andReturn(null);
-
-        $test = new FindMeetingType($this->meetingTypeRepositoryStub);
-
-        $test->handle(12);
-    }
-
-    /**
-     * @throws MeetingException
-     */
-    public function test_find_meeting_type_success(): void
-    {
-        $this->meetingTypeRepositoryStub
-            ->shouldReceive('findById')
-            ->with(2)
-            ->once()
-            ->andReturn($this->meetingEntity);
-
-        $test = new FindMeetingType($this->meetingTypeRepositoryStub);
-
-        $test->handle(2);
-    }
-}
+    $test->handle(2);
+});

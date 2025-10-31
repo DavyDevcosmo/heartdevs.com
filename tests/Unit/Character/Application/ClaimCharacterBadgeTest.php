@@ -1,10 +1,6 @@
 <?php
 
 declare(strict_types=1);
-
-namespace Tests\Unit\Character\Application;
-
-use He4rt\Badge\Tests\Unit\BadgeProviderTrait;
 use Heart\Badges\Application\FindBadgeBySlug;
 use Heart\Badges\Domain\Entities\BadgeEntity;
 use Heart\Character\Application\ClaimCharacterBadge;
@@ -12,77 +8,52 @@ use Heart\Character\Application\FindCharacterIdByUserId;
 use Heart\Character\Domain\Actions\PersistClaimedBadge;
 use Heart\Provider\Application\FindProvider;
 use Heart\Provider\Domain\Entities\ProviderEntity;
-use Mockery as m;
 use Mockery\MockInterface;
-use Tests\TestCase;
-use Tests\Unit\Character\ProviderProviderTrait;
+uses(\He4rt\Badge\Tests\Unit\BadgeProviderTrait::class);
 
-final class ClaimCharacterBadgeTest extends TestCase
-{
-    use BadgeProviderTrait;
-    use ProviderProviderTrait;
+uses(\Tests\Unit\Character\ProviderProviderTrait::class);
 
-    private MockInterface $persistClaimBadgeStub;
+beforeEach(function () {
+    $this->persistClaimBadgeStub = m::mock(PersistClaimedBadge::class);
+    $this->findProviderStub = m::mock(FindProvider::class);
+    $this->findCharacterIdByUserId = m::mock(FindCharacterIdByUserId::class);
+    $this->findBadgeBySlug = m::mock(FindBadgeBySlug::class);
+    $this->providerEntity = $this->validProviderEntity();
+    $this->badgeEntity = $this->validBadgeEntity();
+});
+afterEach(function () {
+    m::close();
+});
+test('claim character badge success', function () {
+    $this->findProviderStub
+        ->shouldReceive('handle')
+        ->with('canhassi-provider', 'canhassi-id')
+        ->once()
+        ->andReturn($this->providerEntity);
 
-    private MockInterface $findProviderStub;
+    $this->findCharacterIdByUserId
+        ->shouldReceive('handle')
+        ->with($this->providerEntity->userId)
+        ->once()
+        ->andReturn('character-id');
 
-    private MockInterface $findCharacterIdByUserId;
+    $this->findBadgeBySlug
+        ->shouldReceive('handle')
+        ->with('é o canhas')
+        ->once()
+        ->andReturn($this->badgeEntity);
 
-    private MockInterface $findBadgeBySlug;
+    $this->persistClaimBadgeStub
+        ->shouldReceive('handle')
+        ->with('character-id', $this->badgeEntity->id)
+        ->once();
 
-    private ProviderEntity $providerEntity;
-
-    private BadgeEntity $badgeEntity;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->persistClaimBadgeStub = m::mock(PersistClaimedBadge::class);
-        $this->findProviderStub = m::mock(FindProvider::class);
-        $this->findCharacterIdByUserId = m::mock(FindCharacterIdByUserId::class);
-        $this->findBadgeBySlug = m::mock(FindBadgeBySlug::class);
-        $this->providerEntity = $this->validProviderEntity();
-        $this->badgeEntity = $this->validBadgeEntity();
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-        m::close();
-    }
-
-    public function test_claim_character_badge_success(): void
-    {
-        $this->findProviderStub
-            ->shouldReceive('handle')
-            ->with('canhassi-provider', 'canhassi-id')
-            ->once()
-            ->andReturn($this->providerEntity);
-
-        $this->findCharacterIdByUserId
-            ->shouldReceive('handle')
-            ->with($this->providerEntity->userId)
-            ->once()
-            ->andReturn('character-id');
-
+    $test = new ClaimCharacterBadge(
+        $this->persistClaimBadgeStub,
+        $this->findProviderStub,
+        $this->findCharacterIdByUserId,
         $this->findBadgeBySlug
-            ->shouldReceive('handle')
-            ->with('é o canhas')
-            ->once()
-            ->andReturn($this->badgeEntity);
+    );
 
-        $this->persistClaimBadgeStub
-            ->shouldReceive('handle')
-            ->with('character-id', $this->badgeEntity->id)
-            ->once();
-
-        $test = new ClaimCharacterBadge(
-            $this->persistClaimBadgeStub,
-            $this->findProviderStub,
-            $this->findCharacterIdByUserId,
-            $this->findBadgeBySlug
-        );
-
-        $test->handle('canhassi-provider', 'canhassi-id', 'é o canhas');
-    }
-}
+    $test->handle('canhassi-provider', 'canhassi-id', 'é o canhas');
+});
