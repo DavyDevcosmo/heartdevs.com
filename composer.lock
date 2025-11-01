@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c34adfb1cbd5a44b517c61d01b693d50",
+    "content-hash": "e5d0971e094b78fba7f2a23f4b0d2fad",
     "packages": [
         {
             "name": "brick/math",
@@ -1706,6 +1706,38 @@
             }
         },
         {
+            "name": "he4rt/integrations",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/integrations",
+                "reference": "89c22f3466924b16e956e20c093a593dee2cbfce"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Integrations\\Providers\\IntegrationsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Integrations\\": "src/",
+                    "He4rt\\Integrations\\Tests\\": "tests/",
+                    "He4rt\\Integrations\\Database\\Factories\\": "database/factories/",
+                    "He4rt\\Integrations\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "he4rt/message",
             "version": "1.0.0",
             "dist": {
@@ -1732,6 +1764,38 @@
                 "proprietary"
             ],
             "description": "Message module for He4rt community bot",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/ranking",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/ranking",
+                "reference": "621560de8a9a0aeea465875ce76e84a8f06974e8"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Ranking\\Providers\\RankingServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Ranking\\": "src/",
+                    "He4rt\\Ranking\\Tests\\": "tests/",
+                    "He4rt\\Ranking\\Database\\Factories\\": "database/factories/",
+                    "He4rt\\Ranking\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
             "transport-options": {
                 "symlink": true,
                 "relative": true
