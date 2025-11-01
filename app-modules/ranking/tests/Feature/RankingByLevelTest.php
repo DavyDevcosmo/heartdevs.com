@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Heart\Character\Infrastructure\Models\Character;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Heart\Character\Infrastructure\Models\Character;
 use Symfony\Component\HttpFoundation\Response;
 
 uses(DatabaseTransactions::class);
