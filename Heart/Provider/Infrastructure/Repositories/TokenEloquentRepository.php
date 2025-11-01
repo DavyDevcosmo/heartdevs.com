@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Heart\Provider\Infrastructure\Repositories;
 
-use Heart\Authentication\OAuth\Domain\DTO\OAuthAccessDTO;
+use Heart\Autentication\DTO\OAuthAccessDTO;
 use Heart\Provider\Domain\Repositories\TokenRepository;
 use Heart\Provider\Infrastructure\Models\Token;
 

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Heart\Authentication\OAuth\Domain\DTO;
+namespace Heart\Authentication\DTO;
 
-abstract class OAuthAccessDTO
+abstract readonly class OAuthAccessDTO
 {
     public function __construct(
-        public readonly string $accessToken,
-        public readonly string $refreshToken,
-        public readonly ?int $expiresIn
+        public string $accessToken,
+        public string $refreshToken,
+        public ?int $expiresIn
     ) {}
 
     abstract public static function make(array $payload): self;

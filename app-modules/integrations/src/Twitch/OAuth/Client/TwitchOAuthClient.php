@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Heart\Integrations\Twitch\OAuth\Client;
 
 use GuzzleHttp\Client;
-use Heart\Authentication\OAuth\Domain\DTO\OAuthAccessDTO;
+use Heart\Autentication\DTO\OAuthAccessDTO;
 use Heart\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
 use Heart\Integrations\Twitch\OAuth\DTO\TwitchOAuthAccessDTO;
 use Heart\Integrations\Twitch\OAuth\DTO\TwitchOAuthDTO;

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Heart\Authentication\OAuth\Domain\Interfaces;
+namespace Heart\Authentication\Contracts;
 
-use Heart\Authentication\OAuth\Domain\DTO\OAuthAccessDTO;
-use Heart\Authentication\OAuth\Domain\DTO\OAuthUserDTO;
+use Heart\Authentication\DTO\OAuthAccessDTO;
+use Heart\Authentication\DTO\OAuthUserDTO;
 
 interface OAuthClientContract
 {

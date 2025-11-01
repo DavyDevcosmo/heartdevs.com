@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Heart\Authentication\OAuth\Application;
+namespace Heart\Autentication\Services;
 
 use GuzzleHttp\Exception\ClientException;
-use Heart\Authentication\OAuth\Infrastructure\Enums\OAuthProviderEnum;
+use Heart\Authentication\Enums\OAuthProviderEnum;
+use Heart\Authentication\OAuth\Application\SubscriberDTO;
+use Heart\Authentication\OAuth\Application\SubscribersRepository;
 use Heart\Provider\Domain\Repositories\ProviderRepository;
 use Heart\Provider\Domain\Repositories\TokenRepository;
 use Illuminate\Support\Facades\Auth;

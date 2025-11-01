@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4a96050494132a0408f88c9e6858920f",
+    "content-hash": "e6d6ff973b2c580eaa6068c9322123b5",
     "packages": [
         {
             "name": "brick/math",
@@ -1673,6 +1673,38 @@
                 }
             ],
             "time": "2025-08-22T14:27:06+00:00"
+        },
+        {
+            "name": "he4rt/authentication",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/authentication",
+                "reference": "49d5901908d54157e9b6fc7f15da317dd3684180"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Authentication\\Providers\\AuthenticationServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Authentication\\": "src/",
+                    "He4rt\\Authentication\\Tests\\": "tests/",
+                    "He4rt\\Authentication\\Database\\Factories\\": "database/factories/",
+                    "He4rt\\Authentication\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "he4rt/badge",

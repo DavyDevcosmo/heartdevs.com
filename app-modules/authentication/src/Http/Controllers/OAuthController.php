@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Heart\Authentication\OAuth\Presentation\Controllers;
+namespace Heart\Authentication\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Heart\Authentication\OAuth\Application\OAuthService;
+use Heart\Autentication\Services\OAuthService;
 use Heart\Authentication\OAuth\Domain\Actions\RedirectOAuthUrl;
 use Illuminate\Http\RedirectResponse;
 
