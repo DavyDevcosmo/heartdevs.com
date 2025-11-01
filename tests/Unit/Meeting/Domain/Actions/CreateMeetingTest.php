@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use He4rt\Meeting\Actions\CreateMeetingAction;
+use src\Contracts\MeetingRepository;
+use src\DTO\NewMeetingDTO;
 use Tests\Unit\Meeting\MeetingProviderTrait;
-use Heart\Meeting\Domain\Actions\CreateMeeting;
-use Heart\Meeting\Domain\DTO\NewMeetingDTO;
-use Heart\Meeting\Domain\Repositories\MeetingRepository;
 
 uses(MeetingProviderTrait::class);
 
@@ -28,7 +28,7 @@ test('create meeting', function (): void {
         ->once()
         ->andReturn($this->meetingEntity);
 
-    $test = new CreateMeeting($this->meetingTypeRepositoryStub);
+    $test = new CreateMeetingAction($this->meetingTypeRepositoryStub);
 
     $test->handle($this->payloadDTO, $this->meetingEntity->adminId);
 });

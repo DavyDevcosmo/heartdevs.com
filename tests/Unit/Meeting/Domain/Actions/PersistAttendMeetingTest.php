@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use He4rt\Meeting\Actions\PersistAttendMeetingAction;
+use src\Contracts\MeetingRepository;
 use Tests\Unit\Meeting\MeetingProviderTrait;
-use Heart\Meeting\Domain\Actions\PersistAttendMeeting;
-use Heart\Meeting\Domain\Repositories\MeetingRepository;
 
 uses(MeetingProviderTrait::class);
 
@@ -21,7 +21,7 @@ test('persist attend meeting', function (): void {
         ->with($this->meetingEntity->id, 12)
         ->once();
 
-    $test = new PersistAttendMeeting($this->meetingTypeRepositoryStub);
+    $test = new PersistAttendMeetingAction($this->meetingTypeRepositoryStub);
 
     $test->handle($this->meetingEntity->id, 12);
 });

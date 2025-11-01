@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Heart\Meeting\Infrastructure\Models\MeetingType;
 use Heart\Provider\Infrastructure\Models\Provider;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
+use src\Models\MeetingType;
 use Symfony\Component\HttpFoundation\Response;
 
 uses(DatabaseTransactions::class);

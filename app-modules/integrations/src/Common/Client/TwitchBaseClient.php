@@ -8,7 +8,8 @@ use GuzzleHttp\Client;
 use Heart\Integrations\Common\Contracts\TwitchService;
 use Heart\Integrations\Twitch\OAuth\Client\TwitchOAuthClient;
 use Heart\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
-use Heart\Integrations\Twitch\Subscriber\Contract\TwitchSubscribersService;
+use Heart\Integrations\Twitch\Subscriber\Client\TwitchSubscribersClient;
+use Heart\Integrations\Twitch\Subscriber\Contracts\TwitchSubscribersService;
 
 final readonly class TwitchBaseClient implements TwitchService
 {

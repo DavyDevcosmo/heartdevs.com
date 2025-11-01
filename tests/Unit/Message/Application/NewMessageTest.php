@@ -1,9 +1,10 @@
 <?php
 
 declare(strict_types=1);
+
+use He4rt\Meeting\Actions\AttendMeeting;
 use Heart\Character\Application\FindCharacterIdByUserId;
 use Heart\Character\Domain\Actions\IncrementExperience;
-use Heart\Meeting\Application\AttendMeeting;
 use Heart\Message\Application\NewMessage;
 use Heart\Message\Domain\Actions\PersistMessage;
 use Heart\Message\Domain\DTO\NewMessageDTO;

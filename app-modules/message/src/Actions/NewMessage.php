@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace He4rt\Message\Actions;
 
+use He4rt\Meeting\Actions\AttendMeeting;
 use He4rt\Message\DTOs\NewMessageDTO;
 use Heart\Character\Application\FindCharacterIdByUserId;
 use Heart\Character\Domain\Actions\IncrementExperience;
-use Heart\Meeting\Application\AttendMeeting;
 use Heart\Provider\Application\FindProvider;
 use Heart\Provider\Application\NewAccountByProvider;
 use Heart\Provider\Domain\Entities\ProviderEntity;

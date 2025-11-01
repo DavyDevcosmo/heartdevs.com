@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Tests\Unit\Meeting\MeetingProviderTrait;
-use Heart\Meeting\Domain\Actions\PaginateMeetings;
-use Heart\Meeting\Domain\Repositories\MeetingRepository;
+use He4rt\Meeting\Actions\PaginateMeetingsAction;
 use Heart\Shared\Domain\Paginator;
+use src\Contracts\MeetingRepository;
+use Tests\Unit\Meeting\MeetingProviderTrait;
 
 uses(MeetingProviderTrait::class);
 
@@ -24,7 +24,7 @@ test('paginate meetings', function (): void {
         ->once()
         ->andReturn($this->paginatorStub);
 
-    $test = new PaginateMeetings($this->meetingRepositoryStub);
+    $test = new PaginateMeetingsAction($this->meetingRepositoryStub);
 
     $test->handle();
 });

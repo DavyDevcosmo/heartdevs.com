@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Heart\Meeting\Infrastructure\Models\Meeting;
+use src\Models\Meeting;
 
 uses(DatabaseTransactions::class);
 

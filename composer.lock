@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e5d0971e094b78fba7f2a23f4b0d2fad",
+    "content-hash": "4a96050494132a0408f88c9e6858920f",
     "packages": [
         {
             "name": "brick/math",
@@ -1727,6 +1727,38 @@
                     "He4rt\\Integrations\\Tests\\": "tests/",
                     "He4rt\\Integrations\\Database\\Factories\\": "database/factories/",
                     "He4rt\\Integrations\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/meeting",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/meeting",
+                "reference": "6b0d3a5d1501c5ace72ae169a95e631a054b7e00"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Meeting\\Providers\\MeetingServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Meeting\\": "src/",
+                    "He4rt\\Meeting\\Tests\\": "tests/",
+                    "He4rt\\Meeting\\Database\\Factories\\": "database/factories/",
+                    "He4rt\\Meeting\\Database\\Seeders\\": "database/seeders/"
                 }
             },
             "license": [
@@ -11675,12 +11707,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.3"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }

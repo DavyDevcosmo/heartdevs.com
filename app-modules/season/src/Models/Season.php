@@ -6,11 +6,11 @@ namespace He4rt\Season\Models;
 
 use He4rt\Badge\Models\Badge;
 use He4rt\Season\Database\Factories\SeasonFactory;
-use Heart\Meeting\Infrastructure\Models\Meeting;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use src\Models\Meeting;
 
 final class Season extends Model
 {

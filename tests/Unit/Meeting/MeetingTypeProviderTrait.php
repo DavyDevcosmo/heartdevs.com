@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Meeting;
 
-use Heart\Meeting\Domain\Entities\MeetingTypeEntity;
 use Illuminate\Support\Facades\Date;
+use src\Entities\MeetingTypeEntity;
 
 trait MeetingTypeProviderTrait
 {

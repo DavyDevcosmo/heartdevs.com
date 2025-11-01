@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use He4rt\Meeting\Actions\FindMeetingTypeAction;
+use src\Contracts\MeetingTypeRepository;
+use src\Exceptions\MeetingException;
 use Tests\Unit\Meeting\MeetingTypeProviderTrait;
-use Heart\Meeting\Domain\Actions\FindMeetingType;
-use Heart\Meeting\Domain\Exceptions\MeetingException;
-use Heart\Meeting\Domain\Repositories\MeetingTypeRepository;
 
 uses(MeetingTypeProviderTrait::class);
 
@@ -25,7 +25,7 @@ test('meeting type is not found', function (): void {
         ->once()
         ->andReturn(null);
 
-    $test = new FindMeetingType($this->meetingTypeRepositoryStub);
+    $test = new FindMeetingTypeAction($this->meetingTypeRepositoryStub);
 
     $test->handle(12);
 });
@@ -36,7 +36,7 @@ test('find meeting type success', function (): void {
         ->once()
         ->andReturn($this->meetingEntity);
 
-    $test = new FindMeetingType($this->meetingTypeRepositoryStub);
+    $test = new FindMeetingTypeAction($this->meetingTypeRepositoryStub);
 
     $test->handle(2);
 });

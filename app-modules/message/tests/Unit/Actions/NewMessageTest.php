@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
+use He4rt\Meeting\Actions\AttendMeeting;
 use He4rt\Message\Actions\NewMessage;
 use He4rt\Message\Actions\PersistMessage;
 use He4rt\Message\DTOs\NewMessageDTO;
 use Heart\Character\Application\FindCharacterIdByUserId;
 use Heart\Character\Domain\Actions\IncrementExperience;
-use Heart\Meeting\Application\AttendMeeting;
 use Heart\Provider\Application\FindProvider;
 use Heart\Provider\Application\NewAccountByProvider;
 use Heart\Provider\Domain\Entities\ProviderEntity;

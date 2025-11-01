@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use He4rt\Meeting\Actions\FinishMeetingAction;
+use src\Contracts\MeetingRepository;
 use Tests\Unit\Meeting\MeetingProviderTrait;
-use Heart\Meeting\Domain\Actions\FinishMeeting;
-use Heart\Meeting\Domain\Repositories\MeetingRepository;
 
 uses(MeetingProviderTrait::class);
 
@@ -22,7 +22,7 @@ test('finish meeting', function (): void {
         ->once()
         ->andReturn($this->meetingEntity);
 
-    $test = new FinishMeeting($this->meetingRepositoryStub);
+    $test = new FinishMeetingAction($this->meetingRepositoryStub);
 
     $test->handle($this->meetingEntity->id);
 });
