@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Heart\Integrations\Twitch\OAuth\DTO;
+
+use Heart\Authentication\OAuth\Domain\DTO\OAuthAccessDTO;
+
+final class TwitchOAuthAccessDTO extends OAuthAccessDTO
+{
+    public static function make(array $payload): self
+    {
+        return new self(
+            accessToken: $payload['access_token'],
+            refreshToken: $payload['refresh_token'],
+            expiresIn: $payload['expires_in']
+        );
+    }
+}
