@@ -6,7 +6,7 @@ namespace Heart\Character\Application;
 
 use Heart\Badges\Application\FindBadgeBySlug;
 use Heart\Character\Domain\Actions\PersistClaimedBadge;
-use Heart\Provider\Actions\FindProvider;
+use He4rt\Provider\Actions\FindProvider;
 
 final readonly class ClaimCharacterBadge
 {

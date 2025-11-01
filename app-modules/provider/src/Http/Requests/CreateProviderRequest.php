@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\Http\Requests;
+namespace He4rt\Provider\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 

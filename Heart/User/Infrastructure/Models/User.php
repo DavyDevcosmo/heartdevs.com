@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Heart\User\Infrastructure\Models;
 
 use Heart\Character\Infrastructure\Models\Character;
-use Heart\Provider\Models\Provider;
+use He4rt\Provider\Models\Provider;
 use Heart\User\Infrastructure\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

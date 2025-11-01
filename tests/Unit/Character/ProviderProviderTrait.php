@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Character;
 
-use Heart\Provider\Entities\ProviderEntity;
+use He4rt\Provider\Entities\ProviderEntity;
 
 trait ProviderProviderTrait
 {

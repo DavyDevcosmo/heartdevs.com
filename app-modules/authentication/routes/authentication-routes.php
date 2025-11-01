@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Heart\Authentication\Http\Controllers\OAuthController;
+use He4rt\Authentication\Http\Controllers\OAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')

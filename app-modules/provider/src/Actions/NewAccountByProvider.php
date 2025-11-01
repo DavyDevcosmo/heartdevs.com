@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\Actions;
+namespace He4rt\Provider\Actions;
 
-use Heart\Provider\Contracts\ProviderRepository;
-use Heart\Provider\DTO\NewProviderDTO;
-use Heart\Provider\Entities\ProviderEntity;
-use Heart\Provider\Enums\ProviderEnum;
+use He4rt\Provider\Contracts\ProviderRepository;
+use He4rt\Provider\DTO\NewProviderDTO;
+use He4rt\Provider\Entities\ProviderEntity;
+use He4rt\Provider\Enums\ProviderEnum;
 use Heart\User\Domain\Repositories\UserRepository;
 
 class NewAccountByProvider

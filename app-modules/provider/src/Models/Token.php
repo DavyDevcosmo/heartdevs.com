@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\Models;
+namespace He4rt\Provider\Models;
 
-use Heart\Provider\Database\Factories\TokenFactory;
+use He4rt\Provider\Database\Factories\TokenFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Heart\Authentication\Http\Controllers;
+namespace He4rt\Authentication\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Heart\Autentication\Services\OAuthService;
-use Heart\Authentication\OAuth\Domain\Actions\RedirectOAuthUrl;
+use He4rt\Authentication\OAuth\Domain\Actions\RedirectOAuthUrl;
 use Illuminate\Http\RedirectResponse;
 
 final class OAuthController extends Controller

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\Repositories;
+namespace He4rt\Provider\Repositories;
 
-use Heart\Authentication\DTO\OAuthAccessDTO;
-use Heart\Provider\Contracts\TokenRepository;
-use Heart\Provider\Models\Token;
+use He4rt\Authentication\DTO\OAuthAccessDTO;
+use He4rt\Provider\Contracts\TokenRepository;
+use He4rt\Provider\Models\Token;
 
 final class TokenEloquentRepository implements TokenRepository
 {

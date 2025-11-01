@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Heart\Provider\Models\Provider;
+use He4rt\Provider\Models\Provider;
 use Symfony\Component\HttpFoundation\Response;
 
 test('can create account by provider', function (): void {

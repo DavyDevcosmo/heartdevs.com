@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Heart\Ranking\Repositories;
+namespace He4rt\Ranking\Repositories;
 
 use Heart\Character\Infrastructure\Models\Character;
-use Heart\Ranking\Contracts\RankingRepository;
+use He4rt\Ranking\Contracts\RankingRepository;
 use Heart\Shared\Domain\Paginator;
 use Heart\Shared\Infrastructure\Paginator as PaginatorConcrete;
 

@@ -8,10 +8,10 @@ use He4rt\Meeting\Actions\AttendMeeting;
 use He4rt\Message\DTOs\NewMessageDTO;
 use Heart\Character\Application\FindCharacterIdByUserId;
 use Heart\Character\Domain\Actions\IncrementExperience;
-use Heart\Provider\Actions\FindProvider;
-use Heart\Provider\Actions\NewAccountByProvider;
-use Heart\Provider\Entities\ProviderEntity;
-use Heart\Provider\Exceptions\ProviderException;
+use He4rt\Provider\Actions\FindProvider;
+use He4rt\Provider\Actions\NewAccountByProvider;
+use He4rt\Provider\Entities\ProviderEntity;
+use He4rt\Provider\Exceptions\ProviderException;
 use Illuminate\Support\Facades\Cache;
 
 final readonly class NewMessage

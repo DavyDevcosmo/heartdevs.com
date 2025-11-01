@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\Actions;
+namespace He4rt\Provider\Actions;
 
-use Heart\Provider\Contracts\ProviderRepository;
-use Heart\Provider\Entities\ProviderEntity;
+use He4rt\Provider\Contracts\ProviderRepository;
+use He4rt\Provider\Entities\ProviderEntity;
 
 final readonly class GetProviderById
 {

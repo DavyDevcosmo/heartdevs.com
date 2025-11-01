@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Heart\Authentication\Enums;
+namespace He4rt\Authentication\Enums;
 
-use Heart\Authentication\Contracts\OAuthClientContract;
+use He4rt\Authentication\Contracts\OAuthClientContract;
 use Heart\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
 
 enum OAuthProviderEnum: string

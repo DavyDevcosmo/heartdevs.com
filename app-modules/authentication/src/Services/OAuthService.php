@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Heart\Autentication\Services;
 
 use GuzzleHttp\Exception\ClientException;
-use Heart\Authentication\Enums\OAuthProviderEnum;
-use Heart\Authentication\OAuth\Application\SubscriberDTO;
-use Heart\Authentication\OAuth\Application\SubscribersRepository;
-use Heart\Provider\Repositories\ProviderRepository;
-use Heart\Provider\Repositories\TokenRepository;
+use He4rt\Authentication\Enums\OAuthProviderEnum;
+use He4rt\Authentication\OAuth\Application\SubscriberDTO;
+use He4rt\Authentication\OAuth\Application\SubscribersRepository;
+use He4rt\Provider\Contracts\ProviderRepository;
+use He4rt\Provider\Contracts\TokenRepository;
 use Illuminate\Support\Facades\Auth;
 use Kingdom\Authentication\OAuth\Domain\Actions\GetOAuthUser;
 
@@ -20,7 +20,8 @@ final readonly class OAuthService
         private ProviderRepository $providerRepository,
         private TokenRepository $tokenRepository,
         private SubscribersRepository $subscribersRepository
-    ) {}
+    ) {
+    }
 
     public function handle(string $provider, string $code)
     {

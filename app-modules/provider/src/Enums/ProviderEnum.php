@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\Enums;
+namespace He4rt\Provider\Enums;
 
 enum ProviderEnum: string
 {

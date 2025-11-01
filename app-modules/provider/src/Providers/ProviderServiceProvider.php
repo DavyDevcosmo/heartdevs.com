@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace He4rt\Provider\Providers;
 
-use Heart\Provider\Contracts\ProviderRepository;
-use Heart\Provider\Repositories\ProviderEloquentRepository;
+use He4rt\Provider\Contracts\ProviderRepository;
+use He4rt\Provider\Repositories\ProviderEloquentRepository;
 use Illuminate\Support\ServiceProvider;
 
 class ProviderServiceProvider extends ServiceProvider

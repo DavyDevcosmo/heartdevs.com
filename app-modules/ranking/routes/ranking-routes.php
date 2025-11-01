@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Heart\Ranking\Actions\RankingByLevel;
+use He4rt\Ranking\Actions\RankingByLevel;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('api')

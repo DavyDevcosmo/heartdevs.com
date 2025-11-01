@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Heart\Character\Application;
 
 use Heart\Character\Domain\Actions\PersistDailyBonus;
-use Heart\Provider\Actions\FindProvider;
+use He4rt\Provider\Actions\FindProvider;
 
 final readonly class ClaimDailyBonus
 {

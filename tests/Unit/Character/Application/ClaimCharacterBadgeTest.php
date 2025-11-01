@@ -7,7 +7,7 @@ use Heart\Badges\Application\FindBadgeBySlug;
 use Heart\Character\Application\ClaimCharacterBadge;
 use Heart\Character\Application\FindCharacterIdByUserId;
 use Heart\Character\Domain\Actions\PersistClaimedBadge;
-use Heart\Provider\Actions\FindProvider;
+use He4rt\Provider\Actions\FindProvider;
 use Tests\Unit\Character\ProviderProviderTrait;
 
 uses(BadgeProviderTrait::class);

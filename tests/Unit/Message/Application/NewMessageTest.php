@@ -8,9 +8,9 @@ use Heart\Character\Domain\Actions\IncrementExperience;
 use Heart\Message\Application\NewMessage;
 use Heart\Message\Domain\Actions\PersistMessage;
 use Heart\Message\Domain\DTO\NewMessageDTO;
-use Heart\Provider\Actions\FindProvider;
-use Heart\Provider\Actions\NewAccountByProvider;
-use Heart\Provider\Entities\ProviderEntity;
+use He4rt\Provider\Actions\FindProvider;
+use He4rt\Provider\Actions\NewAccountByProvider;
+use He4rt\Provider\Entities\ProviderEntity;
 use Illuminate\Support\Facades\Cache;
 
 dataset('dataProvider', fn () => [

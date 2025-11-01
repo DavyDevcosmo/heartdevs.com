@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace He4rt\Authentication\Providers;
 
-use Heart\Provider\Repositories\ProviderEloquentRepository;
-use Heart\Provider\Repositories\ProviderRepository;
-use Heart\Provider\Repositories\TokenEloquentRepository;
-use Heart\Provider\Repositories\TokenRepository;
+use He4rt\Provider\Contracts\ProviderRepository;
+use He4rt\Provider\Contracts\TokenRepository;
+use He4rt\Provider\Repositories\ProviderEloquentRepository;
+use He4rt\Provider\Repositories\TokenEloquentRepository;
 use Illuminate\Support\ServiceProvider;
 
 class AuthenticationServiceProvider extends ServiceProvider

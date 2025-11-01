@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\Models;
+namespace He4rt\Provider\Models;
 
 use He4rt\Message\Models\Message;
-use Heart\Provider\Database\Factories\ProviderFactory;
+use He4rt\Provider\Database\Factories\ProviderFactory;
 use Heart\User\Infrastructure\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;

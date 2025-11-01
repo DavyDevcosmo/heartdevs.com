@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\DTO;
+namespace He4rt\Provider\DTO;
 
-use Heart\Provider\Enums\ProviderEnum;
+use He4rt\Provider\Enums\ProviderEnum;
 use JsonSerializable;
 
 final readonly class NewProviderDTO implements JsonSerializable

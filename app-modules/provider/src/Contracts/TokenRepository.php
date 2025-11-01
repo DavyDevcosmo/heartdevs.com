@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\Contracts;
+namespace He4rt\Provider\Contracts;
 
-use Heart\Authentication\DTO\OAuthAccessDTO;
-use Heart\Provider\Models\Token;
+use He4rt\Authentication\DTO\OAuthAccessDTO;
+use He4rt\Provider\Models\Token;
 
 interface TokenRepository
 {

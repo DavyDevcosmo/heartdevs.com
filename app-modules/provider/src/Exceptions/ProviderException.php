@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\Exceptions;
+namespace He4rt\Provider\Exceptions;
 
 use Exception;
 use Symfony\Component\HttpFoundation\Response;

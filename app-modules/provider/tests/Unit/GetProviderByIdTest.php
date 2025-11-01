@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Heart\Provider\Actions\GetProviderById;
-use Heart\Provider\Contracts\ProviderRepository;
-use Heart\Provider\Entities\ProviderEntity;
+use He4rt\Provider\Actions\GetProviderById;
+use He4rt\Provider\Contracts\ProviderRepository;
+use He4rt\Provider\Entities\ProviderEntity;
 use Mockery as m;
 
 beforeEach(function (): void {});

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\ValueObjects;
+namespace He4rt\Provider\ValueObjects;
 
 final readonly class ProviderData
 {

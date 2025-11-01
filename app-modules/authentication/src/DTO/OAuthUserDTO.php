@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Heart\Authentication\DTO;
+namespace He4rt\Authentication\DTO;
 
 abstract class OAuthUserDTO
 {

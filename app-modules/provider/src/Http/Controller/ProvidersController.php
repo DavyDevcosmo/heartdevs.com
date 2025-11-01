@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\Http\Controller;
+namespace He4rt\Provider\Http\Controller;
 
 use App\Http\Controllers\Controller;
-use Heart\Provider\Actions\NewAccountByProvider;
-use Heart\Provider\Enums\ProviderEnum;
-use Heart\Provider\Http\Requests\CreateProviderRequest;
+use He4rt\Provider\Actions\NewAccountByProvider;
+use He4rt\Provider\Enums\ProviderEnum;
+use He4rt\Provider\Http\Requests\CreateProviderRequest;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 

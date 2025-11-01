@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace He4rt\Ranking\Providers;
 
-use Heart\Ranking\Contracts\RankingRepository;
-use Heart\Ranking\Repositories\RankingEloquentRepository;
+use He4rt\Ranking\Contracts\RankingRepository;
+use He4rt\Ranking\Repositories\RankingEloquentRepository;
 use Illuminate\Support\ServiceProvider;
 
 class RankingServiceProvider extends ServiceProvider

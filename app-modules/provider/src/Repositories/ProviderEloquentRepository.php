@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\Repositories;
+namespace He4rt\Provider\Repositories;
 
-use Heart\Provider\Contracts\ProviderRepository;
-use Heart\Provider\DTO\NewProviderDTO;
-use Heart\Provider\Entities\ProviderEntity;
-use Heart\Provider\Exceptions\ProviderException;
-use Heart\Provider\Models\Provider;
+use He4rt\Provider\Contracts\ProviderRepository;
+use He4rt\Provider\DTO\NewProviderDTO;
+use He4rt\Provider\Entities\ProviderEntity;
+use He4rt\Provider\Exceptions\ProviderException;
+use He4rt\Provider\Models\Provider;
 
 final class ProviderEloquentRepository implements ProviderRepository
 {

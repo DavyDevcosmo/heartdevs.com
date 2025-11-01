@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Heart\Ranking\Actions;
+namespace He4rt\Ranking\Actions;
 
-use Heart\Ranking\Contracts\RankingRepository;
+use He4rt\Ranking\Contracts\RankingRepository;
 use Heart\Shared\Domain\Paginator;
 
 final readonly class RankingByLevel

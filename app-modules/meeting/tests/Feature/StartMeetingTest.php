@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use He4rt\Meeting\Models\MeetingType;
-use Heart\Provider\Model\Provider;
+use He4rt\Provider\Model\Provider;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;

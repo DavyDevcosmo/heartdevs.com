@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\Entities;
+namespace He4rt\Provider\Entities;
 
-use Heart\Provider\ValueObjects\ProviderData;
+use He4rt\Provider\ValueObjects\ProviderData;
 
 final readonly class ProviderEntity
 {

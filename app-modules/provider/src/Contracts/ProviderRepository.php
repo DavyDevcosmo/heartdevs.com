@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Heart\Provider\Contracts;
+namespace He4rt\Provider\Contracts;
 
-use Heart\Provider\DTO\NewProviderDTO;
-use Heart\Provider\Entities\ProviderEntity;
+use He4rt\Provider\DTO\NewProviderDTO;
+use He4rt\Provider\Entities\ProviderEntity;
 
 interface ProviderRepository
 {
