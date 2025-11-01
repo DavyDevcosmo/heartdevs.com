@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use He4rt\Meeting\Models\MeetingType;
 use Illuminate\Database\Migrations\Migration;
-use src\Models\MeetingType;
 
 return new class extends Migration
 {

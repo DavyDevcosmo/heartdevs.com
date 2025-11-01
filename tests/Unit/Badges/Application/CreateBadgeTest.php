@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use He4rt\Badge\Tests\Unit\BadgeProviderTrait;
 use He4rt\Badge\Actions\CreateBadge;
 use He4rt\Badge\Actions\PersistBadge;
 use He4rt\Badge\DTOs\NewBadgeDTO;
+use He4rt\Badge\Tests\Unit\BadgeProviderTrait;
 
 uses(BadgeProviderTrait::class);
 
@@ -28,7 +28,7 @@ test('create badge application success', function (): void {
 
     $test->handle($this->payload);
 });
-dataset('dataProvider', fn() => [
+dataset('dataProvider', fn () => [
     'provider' => 'canhassi-provider',
     'name' => 'canhassi',
     'description' => 'é o canhas, esqueça tudo!',

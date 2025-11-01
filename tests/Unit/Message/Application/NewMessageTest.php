@@ -13,7 +13,7 @@ use Heart\Provider\Application\NewAccountByProvider;
 use Heart\Provider\Domain\Entities\ProviderEntity;
 use Illuminate\Support\Facades\Cache;
 
-dataset('dataProvider', fn() => [
+dataset('dataProvider', fn () => [
     'twitch #1' => [
         'provider' => 'twitch',
         'payload' => [

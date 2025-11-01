@@ -11,7 +11,6 @@ use He4rt\Meeting\Actions\StartMeeting;
 use He4rt\Meeting\Exceptions\MeetingException;
 use He4rt\Meeting\Http\Requests\MeetingRequest;
 use Illuminate\Http\JsonResponse;
-
 use Symfony\Component\HttpFoundation\Response;
 
 final class MeetingController extends Controller

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Factories;
+namespace He4rt\Meeting\Database\Factories;
 
 use He4rt\Meeting\Models\Meeting;
 use He4rt\Meeting\Models\MeetingType;

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Meeting;
+namespace He4rt\Meeting\Tests\Unit;
 
+use He4rt\Meeting\Entities\MeetingEntity;
 use Illuminate\Support\Facades\Date;
-use src\Entities\MeetingEntity;
 
 trait MeetingProviderTrait
 {
@@ -17,7 +17,7 @@ trait MeetingProviderTrait
             'meeting_type_id' => 12,
             'admin_id' => '12',
             'starts_at' => $time = Date::now(),
-            'ends_at' => $time->addMinutes(12),
+            'ends_at' => $time->addMinutes(12)->toString(),
             'created_at' => Date::now(),
             'updated_at' => Date::now(),
         ];

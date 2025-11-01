@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 use He4rt\Meeting\Actions\CreateMeetingAction;
-use src\Contracts\MeetingRepository;
-use src\DTO\NewMeetingDTO;
-use Tests\Unit\Meeting\MeetingProviderTrait;
+use He4rt\Meeting\Contracts\MeetingRepository;
+use He4rt\Meeting\DTO\NewMeetingDTO;
+use He4rt\Meeting\Tests\Unit\MeetingProviderTrait;
+use Mockery as m;
 
 uses(MeetingProviderTrait::class);
 

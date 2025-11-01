@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace He4rt\Meeting\Providers;
 
 use He4rt\Meeting\Contracts\MeetingRepository;

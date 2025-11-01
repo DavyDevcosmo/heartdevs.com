@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 use He4rt\Meeting\Actions\FindMeetingTypeAction;
-use src\Contracts\MeetingTypeRepository;
-use src\Exceptions\MeetingException;
-use Tests\Unit\Meeting\MeetingTypeProviderTrait;
+use He4rt\Meeting\Contracts\MeetingTypeRepository;
+use He4rt\Meeting\Exceptions\MeetingException;
+use He4rt\Meeting\Tests\Unit\MeetingTypeProviderTrait;
+use Mockery as m;
 
 uses(MeetingTypeProviderTrait::class);
 

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 use Heart\User\Domain\Entities\UserEntity;
 
-dataset('validUserPayloads', fn() => [
+dataset('validUserPayloads', fn () => [
     [[
         'id' => 123,
         'name' => 'Luis Alberto Suárez',

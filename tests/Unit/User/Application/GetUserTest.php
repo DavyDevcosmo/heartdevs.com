@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Tests\Unit\User\UserProviderTrait;
 use Heart\User\Application\GetUser;
 use Heart\User\Domain\Repositories\UserRepository;
+use Tests\Unit\User\UserProviderTrait;
 
 uses(UserProviderTrait::class);
 

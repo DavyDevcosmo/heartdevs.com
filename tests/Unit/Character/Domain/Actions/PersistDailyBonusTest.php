@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Tests\Unit\Character\CharacterProviderTrait;
 use Heart\Character\Domain\Actions\PersistDailyBonus;
 use Heart\Character\Domain\Exceptions\CharacterException;
 use Heart\Character\Domain\Repositories\CharacterRepository;
 use Illuminate\Support\Facades\Date;
+use Tests\Unit\Character\CharacterProviderTrait;
 
 uses(CharacterProviderTrait::class);
 

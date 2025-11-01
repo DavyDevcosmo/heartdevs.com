@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace He4rt\Meeting\Models;
 
 use Carbon\Carbon;
-use He4rt\Factories\MeetingTypeFactory;
+use He4rt\Meeting\Database\Factories\MeetingTypeFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

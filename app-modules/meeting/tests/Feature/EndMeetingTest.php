@@ -2,11 +2,8 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use He4rt\Meeting\Models\Meeting;
 use Illuminate\Support\Facades\Cache;
-use src\Models\Meeting;
-
-uses(DatabaseTransactions::class);
 
 test('end meeting', function (): void {
     $meeting = Meeting::factory()->create();

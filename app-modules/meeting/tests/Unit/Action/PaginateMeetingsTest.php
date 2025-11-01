@@ -3,11 +3,12 @@
 declare(strict_types=1);
 
 use He4rt\Meeting\Actions\PaginateMeetingsAction;
+use He4rt\Meeting\Contracts\MeetingRepository;
+use He4rt\Meeting\Tests\Unit\MeetingTypeProviderTrait;
 use Heart\Shared\Domain\Paginator;
-use src\Contracts\MeetingRepository;
-use Tests\Unit\Meeting\MeetingProviderTrait;
+use Mockery as m;
 
-uses(MeetingProviderTrait::class);
+uses(MeetingTypeProviderTrait::class);
 
 beforeEach(function (): void {
     $this->meetingRepositoryStub = m::mock(MeetingRepository::class);

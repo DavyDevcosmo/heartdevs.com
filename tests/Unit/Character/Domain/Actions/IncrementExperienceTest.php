@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Tests\Unit\Character\CharacterProviderTrait;
 use Heart\Character\Domain\Actions\FindCharacter;
 use Heart\Character\Domain\Actions\IncrementExperience;
 use Heart\Character\Domain\Repositories\CharacterRepository;
+use Tests\Unit\Character\CharacterProviderTrait;
 
 uses(CharacterProviderTrait::class);
 

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Heart\Feedback\Infrastructure\Models\Feedback;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Symfony\Component\HttpFoundation\Response;
 
 uses(DatabaseTransactions::class);

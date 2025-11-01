@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Heart\Feedback\Infrastructure\Models\Feedback;
 use Heart\Provider\Infrastructure\Models\Provider;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Symfony\Component\HttpFoundation\Response;
 
 uses(DatabaseTransactions::class);
 
-dataset('dataProvider', fn() => [
+dataset('dataProvider', fn () => [
     'approve feedback' => [
         'action' => 'approved',
         'payload' => [],

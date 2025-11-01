@@ -3,7 +3,7 @@
 declare(strict_types=1);
 use Heart\Character\Domain\Entities\ReputationEntity;
 
-dataset('reputationDataProvider', fn() => [
+dataset('reputationDataProvider', fn () => [
     'increment #1' => ['points' => 5, 'operation' => 'increment', 'expectedPoints' => 6, 'expectedBadge' => 'Lenda'],
     'increment #2' => ['points' => 7, 'operation' => 'increment', 'expectedPoints' => 8, 'expectedBadge' => 'Lenda'],
     'increment #3' => ['points' => -2, 'operation' => 'increment', 'expectedPoints' => -1, 'expectedBadge' => 'Vacilão'],

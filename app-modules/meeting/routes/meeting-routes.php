@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use He4rt\Meeting\Http\Controllers\MeetingController;
 use Illuminate\Support\Facades\Route;
 

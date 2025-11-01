@@ -3,10 +3,11 @@
 declare(strict_types=1);
 
 use He4rt\Meeting\Actions\FinishMeetingAction;
-use src\Contracts\MeetingRepository;
-use Tests\Unit\Meeting\MeetingProviderTrait;
+use He4rt\Meeting\Contracts\MeetingRepository;
+use He4rt\Meeting\Tests\Unit\MeetingTypeProviderTrait;
+use Mockery as m;
 
-uses(MeetingProviderTrait::class);
+uses(MeetingTypeProviderTrait::class);
 
 beforeEach(function (): void {
     $this->meetingRepositoryStub = m::mock(MeetingRepository::class);

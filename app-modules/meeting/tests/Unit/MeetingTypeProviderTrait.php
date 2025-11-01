@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Meeting;
+namespace He4rt\Meeting\Tests\Unit;
 
+use He4rt\Meeting\Entities\MeetingTypeEntity;
 use Illuminate\Support\Facades\Date;
-use src\Entities\MeetingTypeEntity;
 
 trait MeetingTypeProviderTrait
 {

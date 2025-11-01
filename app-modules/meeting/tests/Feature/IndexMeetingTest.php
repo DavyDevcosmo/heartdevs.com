@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use He4rt\Meeting\Models\Meeting;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use src\Models\Meeting;
 
 uses(DatabaseTransactions::class);
 

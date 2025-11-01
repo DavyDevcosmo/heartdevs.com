@@ -8,7 +8,6 @@ use He4rt\Meeting\DTO\NewMeetingDTO;
 use He4rt\Meeting\Entities\MeetingEntity;
 use Heart\Shared\Domain\Paginator;
 
-
 interface MeetingRepository
 {
     public function paginate(array $relations = [], int $perPage = 10): Paginator;

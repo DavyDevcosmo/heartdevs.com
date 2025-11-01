@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use He4rt\Badge\Tests\Unit\BadgeProviderTrait;
-use Tests\Unit\Character\ProviderProviderTrait;
 use Heart\Badges\Application\FindBadgeBySlug;
 use Heart\Character\Application\ClaimCharacterBadge;
 use Heart\Character\Application\FindCharacterIdByUserId;
 use Heart\Character\Domain\Actions\PersistClaimedBadge;
 use Heart\Provider\Application\FindProvider;
+use Tests\Unit\Character\ProviderProviderTrait;
 
 uses(BadgeProviderTrait::class);
 

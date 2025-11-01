@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Tests\Unit\User\ProfileProviderTrait;
-use Tests\Unit\Character\ProviderProviderTrait;
-use Tests\Unit\User\UserProviderTrait;
 use Heart\Provider\Domain\Repositories\ProviderRepository;
 use Heart\User\Application\Exceptions\ProfileException;
 use Heart\User\Application\FindProfile;
 use Heart\User\Domain\Actions\GetProfile;
 use Heart\User\Domain\Repositories\UserRepository;
+use Tests\Unit\Character\ProviderProviderTrait;
+use Tests\Unit\User\ProfileProviderTrait;
+use Tests\Unit\User\UserProviderTrait;
 
 uses(ProfileProviderTrait::class);
 

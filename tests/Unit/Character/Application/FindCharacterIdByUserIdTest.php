@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Tests\Unit\Character\CharacterProviderTrait;
 use Heart\Character\Application\FindCharacterIdByUserId;
 use Heart\Character\Domain\Actions\GetCharacterByUserId;
+use Tests\Unit\Character\CharacterProviderTrait;
 
 uses(CharacterProviderTrait::class);
 
