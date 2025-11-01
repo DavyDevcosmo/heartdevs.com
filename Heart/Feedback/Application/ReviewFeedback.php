@@ -6,8 +6,8 @@ namespace Heart\Feedback\Application;
 
 use Heart\Feedback\Domain\Actions\PersistFeedbackReview;
 use Heart\Feedback\Domain\DTOs\FeedbackReviewDTO;
-use Heart\Provider\Application\FindProvider;
-use Heart\Provider\Domain\Enums\ProviderEnum;
+use Heart\Provider\Actions\FindProvider;
+use Heart\Provider\Enums\ProviderEnum;
 
 final readonly class ReviewFeedback
 {

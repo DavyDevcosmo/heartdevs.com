@@ -6,7 +6,7 @@ use Heart\Badges\Infrastructure\Model\Badge;
 use Heart\Character\Infrastructure\Models\Character;
 use Heart\Character\Infrastructure\Models\PastSeason;
 use Heart\Message\Infrastructure\Models\Message;
-use Heart\Provider\Infrastructure\Models\Provider;
+use Heart\Provider\Model\Provider;
 use Heart\User\Infrastructure\Models\Address;
 use Heart\User\Infrastructure\Models\Information;
 use Heart\User\Infrastructure\Models\User;

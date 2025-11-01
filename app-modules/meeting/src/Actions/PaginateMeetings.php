@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\Meeting\Actions;
 
-use Heart\Provider\Domain\Enums\ProviderEnum;
+use Heart\Provider\Enums\ProviderEnum;
 use Heart\Shared\Domain\Paginator;
 
 final readonly class PaginateMeetings

@@ -8,8 +8,8 @@ use GuzzleHttp\Exception\ClientException;
 use Heart\Authentication\Enums\OAuthProviderEnum;
 use Heart\Authentication\OAuth\Application\SubscriberDTO;
 use Heart\Authentication\OAuth\Application\SubscribersRepository;
-use Heart\Provider\Domain\Repositories\ProviderRepository;
-use Heart\Provider\Domain\Repositories\TokenRepository;
+use Heart\Provider\Repositories\ProviderRepository;
+use Heart\Provider\Repositories\TokenRepository;
 use Illuminate\Support\Facades\Auth;
 use Kingdom\Authentication\OAuth\Domain\Actions\GetOAuthUser;
 

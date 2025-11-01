@@ -8,9 +8,9 @@ use He4rt\Message\Actions\PersistMessage;
 use He4rt\Message\DTOs\NewMessageDTO;
 use Heart\Character\Application\FindCharacterIdByUserId;
 use Heart\Character\Domain\Actions\IncrementExperience;
-use Heart\Provider\Application\FindProvider;
-use Heart\Provider\Application\NewAccountByProvider;
-use Heart\Provider\Domain\Entities\ProviderEntity;
+use Heart\Provider\Actions\FindProvider;
+use Heart\Provider\Actions\NewAccountByProvider;
+use Heart\Provider\Entities\ProviderEntity;
 use Illuminate\Support\Facades\Cache;
 
 test('new message', function (string $provider, array $payload): void {

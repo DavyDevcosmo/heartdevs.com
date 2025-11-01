@@ -6,7 +6,7 @@ namespace He4rt\Meeting\Actions;
 
 use He4rt\Meeting\DTO\NewMeetingDTO;
 use He4rt\Meeting\Entities\MeetingEntity;
-use Heart\Provider\Application\FindProvider;
+use Heart\Provider\Actions\FindProvider;
 use Heart\Shared\Application\TTL;
 use Illuminate\Support\Facades\Cache;
 

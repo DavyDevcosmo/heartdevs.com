@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace He4rt\Message\DTOs;
 
 use Heart\Character\Domain\Enums\VoiceStatesEnum;
-use Heart\Provider\Domain\Enums\ProviderEnum;
+use Heart\Provider\Enums\ProviderEnum;
 
 final readonly class NewVoiceMessageDTO
 {

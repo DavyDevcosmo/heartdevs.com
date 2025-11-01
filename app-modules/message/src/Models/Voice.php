@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\Message\Models;
 
-use Heart\Provider\Infrastructure\Models\Provider;
+use Heart\Provider\Model\Provider;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 

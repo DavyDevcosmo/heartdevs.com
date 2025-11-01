@@ -6,7 +6,7 @@ use He4rt\Message\Actions\PersistMessage;
 use He4rt\Message\DTOs\NewMessageDTO;
 use He4rt\Message\Entities\MessageEntity;
 use He4rt\Message\Repositories\MessageRepository;
-use Heart\Provider\Domain\Enums\ProviderEnum;
+use Heart\Provider\Enums\ProviderEnum;
 use Illuminate\Support\Facades\Date;
 
 beforeEach(function (): void {

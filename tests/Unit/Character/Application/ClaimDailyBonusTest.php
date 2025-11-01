@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Heart\Character\Application\ClaimDailyBonus;
 use Heart\Character\Application\FindCharacterIdByUserId;
 use Heart\Character\Domain\Actions\PersistDailyBonus;
-use Heart\Provider\Application\FindProvider;
+use Heart\Provider\Actions\FindProvider;
 use Tests\Unit\Character\ProviderProviderTrait;
 
 uses(ProviderProviderTrait::class);

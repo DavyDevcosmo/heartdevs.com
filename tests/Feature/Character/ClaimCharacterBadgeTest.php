@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Heart\Badges\Infrastructure\Model\Badge;
 use Heart\Character\Infrastructure\Models\Character;
-use Heart\Provider\Infrastructure\Models\Provider;
+use Heart\Provider\Model\Provider;
 use Heart\User\Infrastructure\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Symfony\Component\HttpFoundation\Response;

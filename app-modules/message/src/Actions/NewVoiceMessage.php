@@ -8,7 +8,7 @@ use He4rt\Message\DTOs\NewVoiceMessageDTO;
 use He4rt\Message\Repositories\VoiceRepository;
 use Heart\Character\Application\FindCharacterIdByUserId;
 use Heart\Character\Domain\Actions\IncrementExperience;
-use Heart\Provider\Application\FindProvider;
+use Heart\Provider\Actions\FindProvider;
 
 final readonly class NewVoiceMessage
 {

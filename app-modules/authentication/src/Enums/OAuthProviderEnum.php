@@ -7,7 +7,6 @@ namespace Heart\Authentication\Enums;
 use Heart\Authentication\Contracts\OAuthClientContract;
 use Heart\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
 
-
 enum OAuthProviderEnum: string
 {
     case Twitch = 'twitch';

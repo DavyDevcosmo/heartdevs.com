@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Heart\Provider\Domain\Repositories\ProviderRepository;
+use Heart\Provider\Repositories\ProviderRepository;
 use Heart\User\Application\Exceptions\ProfileException;
 use Heart\User\Application\FindProfile;
 use Heart\User\Domain\Actions\GetProfile;

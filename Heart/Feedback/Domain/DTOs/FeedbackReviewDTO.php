@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Heart\Feedback\Domain\DTOs;
 
 use Heart\Feedback\Domain\Enums\ReviewTypeEnum;
-use Heart\Provider\Domain\Entities\ProviderEntity;
+use Heart\Provider\Entities\ProviderEntity;
 use JsonSerializable;
 
 final readonly class FeedbackReviewDTO implements JsonSerializable

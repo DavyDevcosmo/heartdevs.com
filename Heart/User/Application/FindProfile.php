@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Heart\User\Application;
 
-use Heart\Provider\Domain\Entities\ProviderEntity;
-use Heart\Provider\Domain\Repositories\ProviderRepository;
+use Heart\Provider\Entities\ProviderEntity;
+use Heart\Provider\Repositories\ProviderRepository;
 use Heart\User\Application\Exceptions\ProfileException;
 use Heart\User\Domain\Actions\GetProfile;
 use Heart\User\Domain\Entities\ProfileEntity;

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e6d6ff973b2c580eaa6068c9322123b5",
+    "content-hash": "6f3b026b14c174cb5f19fbdaadd335c1",
     "packages": [
         {
             "name": "brick/math",
@@ -1828,6 +1828,38 @@
                 "proprietary"
             ],
             "description": "Message module for He4rt community bot",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/provider",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/provider",
+                "reference": "03eb94756cebf6d8fab1bb22a4ef7a86c463b8ca"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Provider\\Providers\\ProviderServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Provider\\": "src/",
+                    "He4rt\\Provider\\Tests\\": "tests/",
+                    "He4rt\\Provider\\Database\\Factories\\": "database/factories/",
+                    "He4rt\\Provider\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
             "transport-options": {
                 "symlink": true,
                 "relative": true

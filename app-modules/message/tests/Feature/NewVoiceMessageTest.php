@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Heart\Character\Domain\Enums\VoiceStatesEnum;
 use Heart\Character\Infrastructure\Models\Character;
-use Heart\Provider\Infrastructure\Models\Provider;
+use Heart\Provider\Model\Provider;
 use Heart\User\Infrastructure\Models\User;
 
 test('can create voice message', function (): void {

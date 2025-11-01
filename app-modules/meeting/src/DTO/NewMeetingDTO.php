@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\Meeting\DTO;
 
-use Heart\Provider\Domain\Enums\ProviderEnum;
+use Heart\Provider\Enums\ProviderEnum;
 
 final readonly class NewMeetingDTO
 {

@@ -7,8 +7,8 @@ namespace Heart\Feedback\Domain\Actions;
 use Heart\Feedback\Domain\DTOs\NewFeedbackDTO;
 use Heart\Feedback\Domain\Entities\FeedbackEntity;
 use Heart\Feedback\Domain\Repositories\FeedbackRepository;
-use Heart\Provider\Application\FindProvider;
-use Heart\Provider\Domain\Enums\ProviderEnum;
+use Heart\Provider\Actions\FindProvider;
+use Heart\Provider\Enums\ProviderEnum;
 
 final readonly class CreateFeedback
 {
