@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Heart\Feedback\Infrastructure\Models\Feedback;
-use Heart\Provider\Model\Provider;
+use He4rt\Provider\Model\Provider;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use src\Models\Feedback;
 use Symfony\Component\HttpFoundation\Response;
 
 uses(DatabaseTransactions::class);
