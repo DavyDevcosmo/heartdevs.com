@@ -1,11 +1,14 @@
 <?php
 
 declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Heart\Provider\Infrastructure\Models\Provider;
 use Symfony\Component\HttpFoundation\Response;
-uses(\Illuminate\Foundation\Testing\DatabaseTransactions::class);
 
-test('can create', function () {
+uses(DatabaseTransactions::class);
+
+test('can create', function (): void {
     $providerSender = Provider::factory()->create(['provider' => 'discord']);
     $providerTarget = Provider::factory()->create(['provider' => 'discord']);
 

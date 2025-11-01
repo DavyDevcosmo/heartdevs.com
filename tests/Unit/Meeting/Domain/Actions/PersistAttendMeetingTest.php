@@ -1,21 +1,21 @@
 <?php
 
 declare(strict_types=1);
-use Heart\Meeting\Domain\Actions\PersistAttendMeeting;
-use Heart\Meeting\Domain\DTO\NewMeetingDTO;
-use Heart\Meeting\Domain\Entities\MeetingEntity;
-use Heart\Meeting\Domain\Repositories\MeetingRepository;
-use Mockery\MockInterface;
-uses(\Tests\Unit\Meeting\MeetingProviderTrait::class);
 
-beforeEach(function () {
+use Tests\Unit\Meeting\MeetingProviderTrait;
+use Heart\Meeting\Domain\Actions\PersistAttendMeeting;
+use Heart\Meeting\Domain\Repositories\MeetingRepository;
+
+uses(MeetingProviderTrait::class);
+
+beforeEach(function (): void {
     $this->meetingTypeRepositoryStub = m::mock(MeetingRepository::class);
     $this->meetingEntity = $this->validMeetingEntity();
 });
-afterEach(function () {
+afterEach(function (): void {
     m::close();
 });
-test('persist attend meeting', function () {
+test('persist attend meeting', function (): void {
     $this->meetingTypeRepositoryStub
         ->shouldReceive('attendMeeting')
         ->with($this->meetingEntity->id, 12)

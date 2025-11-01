@@ -1,20 +1,21 @@
 <?php
 
 declare(strict_types=1);
-use Heart\User\Application\GetUser;
-use Heart\User\Domain\Entities\UserEntity;
-use Heart\User\Domain\Repositories\UserRepository;
-use Mockery\MockInterface;
-uses(\Tests\Unit\User\UserProviderTrait::class);
 
-beforeEach(function () {
+use Tests\Unit\User\UserProviderTrait;
+use Heart\User\Application\GetUser;
+use Heart\User\Domain\Repositories\UserRepository;
+
+uses(UserProviderTrait::class);
+
+beforeEach(function (): void {
     $this->repositoryStub = m::mock(UserRepository::class);
     $this->userEntity = $this->validUserEntity();
 });
-afterEach(function () {
+afterEach(function (): void {
     m::close();
 });
-test('get user', function () {
+test('get user', function (): void {
     $this->repositoryStub
         ->shouldReceive('find')
         ->with('12')

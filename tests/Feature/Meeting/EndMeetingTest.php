@@ -1,11 +1,14 @@
 <?php
 
 declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Heart\Meeting\Infrastructure\Models\Meeting;
 use Illuminate\Support\Facades\Cache;
-uses(\Illuminate\Foundation\Testing\DatabaseTransactions::class);
 
-test('end meeting', function () {
+uses(DatabaseTransactions::class);
+
+test('end meeting', function (): void {
     $meeting = Meeting::factory()->create();
     Cache::tags(['meetings'])->set('current-meeting', $meeting->id);
 

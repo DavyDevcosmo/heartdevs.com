@@ -1,20 +1,21 @@
 <?php
 
 declare(strict_types=1);
-use Heart\Character\Domain\Actions\GetCharacterByUserId;
-use Heart\Character\Domain\Entities\CharacterEntity;
-use Heart\Character\Domain\Repositories\CharacterRepository;
-use Mockery\MockInterface;
-uses(\Tests\Unit\Character\CharacterProviderTrait::class);
 
-beforeEach(function () {
+use Tests\Unit\Character\CharacterProviderTrait;
+use Heart\Character\Domain\Actions\GetCharacterByUserId;
+use Heart\Character\Domain\Repositories\CharacterRepository;
+
+uses(CharacterProviderTrait::class);
+
+beforeEach(function (): void {
     $this->characterRepositoryStub = m::mock(CharacterRepository::class);
     $this->characterEntity = $this->validCharacterEntity();
 });
-afterEach(function () {
+afterEach(function (): void {
     m::close();
 });
-test('get character by user id', function () {
+test('get character by user id', function (): void {
     $this->characterRepositoryStub
         ->shouldReceive('findByUserId')
         ->with(12)

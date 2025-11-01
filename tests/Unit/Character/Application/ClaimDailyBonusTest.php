@@ -1,24 +1,25 @@
 <?php
 
 declare(strict_types=1);
+
+use Tests\Unit\Character\ProviderProviderTrait;
 use Heart\Character\Application\ClaimDailyBonus;
 use Heart\Character\Application\FindCharacterIdByUserId;
 use Heart\Character\Domain\Actions\PersistDailyBonus;
 use Heart\Provider\Application\FindProvider;
-use Heart\Provider\Domain\Entities\ProviderEntity;
-use Mockery\MockInterface;
-uses(\Tests\Unit\Character\ProviderProviderTrait::class);
 
-beforeEach(function () {
+uses(ProviderProviderTrait::class);
+
+beforeEach(function (): void {
     $this->persistDailyStub = m::mock(PersistDailyBonus::class);
     $this->findProviderStub = m::mock(FindProvider::class);
     $this->findCharacterIdByUserId = m::mock(FindCharacterIdByUserId::class);
     $this->providerEntity = $this->validProviderEntity();
 });
-afterEach(function () {
+afterEach(function (): void {
     m::close();
 });
-test('claim daily bonus success', function () {
+test('claim daily bonus success', function (): void {
     $this->findProviderStub
         ->shouldReceive('handle')
         ->with('canhassi-provider', 'canhassi-id')

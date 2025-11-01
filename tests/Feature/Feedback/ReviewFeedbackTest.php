@@ -1,34 +1,34 @@
 <?php
 
 declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Heart\Feedback\Infrastructure\Models\Feedback;
 use Heart\Provider\Infrastructure\Models\Provider;
-use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Response;
-uses(\Illuminate\Foundation\Testing\DatabaseTransactions::class);
 
-dataset('dataProvider', function () {
-    return [
-        'approve feedback' => [
-            'action' => 'approved',
-            'payload' => [],
-            'expected' => [
-                'status' => 'approved',
-            ],
+uses(DatabaseTransactions::class);
+
+dataset('dataProvider', fn() => [
+    'approve feedback' => [
+        'action' => 'approved',
+        'payload' => [],
+        'expected' => [
+            'status' => 'approved',
         ],
-        'decline feedback' => [
-            'action' => 'declined',
-            'payload' => [
-                'reason' => 'bobo',
-            ],
-            'expected' => [
-                'status' => 'declined',
-                'reason' => 'bobo',
-            ],
+    ],
+    'decline feedback' => [
+        'action' => 'declined',
+        'payload' => [
+            'reason' => 'bobo',
         ],
-    ];
-});
-test('can handle feedback', function (string $action, array $payload, array $expected) {
+        'expected' => [
+            'status' => 'declined',
+            'reason' => 'bobo',
+        ],
+    ],
+]);
+test('can handle feedback', function (string $action, array $payload, array $expected): void {
     $feedback = Feedback::factory()->create();
     $staffProvider = Provider::factory()->create(['provider' => 'discord']);
 

@@ -1,16 +1,17 @@
 <?php
 
 declare(strict_types=1);
+
+use Tests\Unit\Message\MessageProviderTrait;
 use Heart\Message\Domain\Actions\PersistMessage;
 use Heart\Message\Domain\DTO\NewMessageDTO;
-use Heart\Message\Domain\Entities\MessageEntity;
 use Heart\Message\Domain\Repositories\MessageRepository;
 use Heart\Provider\Domain\Enums\ProviderEnum;
 use Illuminate\Support\Facades\Date;
-use Mockery\MockInterface;
-uses(\Tests\Unit\Message\MessageProviderTrait::class);
 
-beforeEach(function () {
+uses(MessageProviderTrait::class);
+
+beforeEach(function (): void {
     $this->messageRepositoryStub = m::mock(MessageRepository::class);
     $this->messageEntity = $this->validMessageEntity();
     $this->messageDTO = new NewMessageDTO(
@@ -22,10 +23,10 @@ beforeEach(function () {
         Date::parse('2023-01-24') // sentAt in string
     );
 });
-afterEach(function () {
+afterEach(function (): void {
     m::close();
 });
-test('persist message success', function () {
+test('persist message success', function (): void {
     $this->messageRepositoryStub
         ->shouldReceive('create')
         ->with($this->messageDTO, 'canhassi', $this->messageEntity->obtainedExperience)

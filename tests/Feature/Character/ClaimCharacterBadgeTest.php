@@ -1,14 +1,17 @@
 <?php
 
 declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Heart\Badges\Infrastructure\Model\Badge;
 use Heart\Character\Infrastructure\Models\Character;
 use Heart\Provider\Infrastructure\Models\Provider;
 use Heart\User\Infrastructure\Models\User;
 use Symfony\Component\HttpFoundation\Response;
-uses(\Illuminate\Foundation\Testing\DatabaseTransactions::class);
 
-test('can claim badge', function () {
+uses(DatabaseTransactions::class);
+
+test('can claim badge', function (): void {
     $badge = Badge::factory()
         ->create();
 

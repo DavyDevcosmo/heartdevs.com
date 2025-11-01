@@ -9,7 +9,8 @@ use Heart\User\Infrastructure\Models\Address;
 use Heart\User\Infrastructure\Models\Information;
 use Heart\User\Infrastructure\Models\User;
 use Symfony\Component\HttpFoundation\Response;
-test('success', function () {
+
+test('success', function (): void {
     $user = User::factory()
         ->has(Character::factory()->has(PastSeason::factory()), 'character')
         ->has(Address::factory(), 'address')
@@ -36,7 +37,7 @@ test('success', function () {
 
     $this->assertDatabaseHas('user_information', $payload['info']);
 });
-test('success with one field', function () {
+test('success with one field', function (): void {
     $user = User::factory()
         ->has(Character::factory()->has(PastSeason::factory()), 'character')
         ->has(Address::factory(), 'address')
