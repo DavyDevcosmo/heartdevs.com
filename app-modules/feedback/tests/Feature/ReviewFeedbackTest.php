@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use He4rt\Provider\Model\Provider;
+use He4rt\Feedback\Models\Feedback;
+use He4rt\Provider\Models\Provider;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use src\Models\Feedback;
 use Symfony\Component\HttpFoundation\Response;
 
 uses(DatabaseTransactions::class);

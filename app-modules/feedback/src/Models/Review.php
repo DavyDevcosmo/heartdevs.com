@@ -34,6 +34,7 @@ final class Review extends Model
     {
         return $this->belongsTo(User::class, 'staff_id');
     }
+
     protected function casts(): array
     {
         return [

@@ -2,11 +2,8 @@
 
 declare(strict_types=1);
 
-use He4rt\Provider\Model\Provider;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use He4rt\Provider\Models\Provider;
 use Symfony\Component\HttpFoundation\Response;
-
-uses(DatabaseTransactions::class);
 
 test('can create', function (): void {
     $providerSender = Provider::factory()->create(['provider' => 'discord']);
