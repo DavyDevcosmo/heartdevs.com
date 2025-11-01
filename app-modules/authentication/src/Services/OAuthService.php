@@ -20,8 +20,7 @@ final readonly class OAuthService
         private ProviderRepository $providerRepository,
         private TokenRepository $tokenRepository,
         private SubscribersRepository $subscribersRepository
-    ) {
-    }
+    ) {}
 
     public function handle(string $provider, string $code)
     {

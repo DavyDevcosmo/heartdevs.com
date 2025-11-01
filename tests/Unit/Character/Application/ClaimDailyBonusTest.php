@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use He4rt\Provider\Actions\FindProvider;
 use Heart\Character\Application\ClaimDailyBonus;
 use Heart\Character\Application\FindCharacterIdByUserId;
 use Heart\Character\Domain\Actions\PersistDailyBonus;
-use He4rt\Provider\Actions\FindProvider;
 use Tests\Unit\Character\ProviderProviderTrait;
 
 uses(ProviderProviderTrait::class);

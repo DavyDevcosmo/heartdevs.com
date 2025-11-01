@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace He4rt\Feedback\Providers;
 
 use He4rt\Feedback\Contracts\FeedbackRepository;

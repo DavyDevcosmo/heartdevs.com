@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Heart\User\Infrastructure\Models;
 
-use Heart\Character\Infrastructure\Models\Character;
 use He4rt\Provider\Models\Provider;
+use Heart\Character\Infrastructure\Models\Character;
 use Heart\User\Infrastructure\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

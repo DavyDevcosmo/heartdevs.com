@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use He4rt\Provider\Enums\ProviderEnum;
 use Heart\Message\Domain\Actions\PersistMessage;
 use Heart\Message\Domain\DTO\NewMessageDTO;
 use Heart\Message\Domain\Repositories\MessageRepository;
-use He4rt\Provider\Enums\ProviderEnum;
 use Illuminate\Support\Facades\Date;
 use Tests\Unit\Message\MessageProviderTrait;
 

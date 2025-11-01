@@ -15,11 +15,11 @@ final class FeedbackFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => $this->faker->uuid(),
+            'id' => fake()->uuid(),
             'sender_id' => User::factory(),
             'target_id' => User::factory(),
-            'type' => $this->faker->randomElement(['compliment', 'improvement']),
-            'message' => $this->faker->sentence(),
+            'type' => fake()->randomElement(['compliment', 'improvement']),
+            'message' => fake()->sentence(),
         ];
     }
 }

@@ -25,11 +25,6 @@ final class Review extends Model
         'received_at',
     ];
 
-    protected $casts = [
-        'status' => ReviewTypeEnum::class,
-        'received_at' => 'timestamp',
-    ];
-
     public function feedback(): BelongsTo
     {
         return $this->belongsTo(Feedback::class);
@@ -38,5 +33,12 @@ final class Review extends Model
     public function staff(): BelongsTo
     {
         return $this->belongsTo(User::class, 'staff_id');
+    }
+    protected function casts(): array
+    {
+        return [
+            'status' => ReviewTypeEnum::class,
+            'received_at' => 'timestamp',
+        ];
     }
 }

@@ -16,12 +16,12 @@ final class MeetingFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => $this->faker->uuid(),
+            'id' => fake()->uuid(),
             'meeting_type_id' => MeetingType::factory(),
             'admin_id' => User::factory(),
             'content' => 'Fake content',
-            'starts_at' => $this->faker->dateTimeBetween('-1 hour'),
-            'ends_at' => $this->faker->dateTimeBetween('+1 hour', '+2 hour'),
+            'starts_at' => fake()->dateTimeBetween('-1 hour'),
+            'ends_at' => fake()->dateTimeBetween('+1 hour', '+2 hour'),
         ];
     }
 

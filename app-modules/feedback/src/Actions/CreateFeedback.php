@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace He4rt\Feedback\Actions;
 
+use He4rt\Feedback\Contracts\FeedbackRepository;
 use He4rt\Feedback\DTO\NewFeedbackDTO;
 use He4rt\Feedback\Entities\FeedbackEntity;
-use He4rt\Feedback\Contracts\FeedbackRepository;
 use He4rt\Provider\Actions\FindProvider;
 use He4rt\Provider\Enums\ProviderEnum;
 

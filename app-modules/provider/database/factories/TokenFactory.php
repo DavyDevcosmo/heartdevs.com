@@ -15,11 +15,11 @@ final class TokenFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => $this->faker->uuid(),
+            'id' => fake()->uuid(),
             'provider_id' => Provider::factory(),
-            'access_token' => $this->faker->uuid(),
-            'refresh_token' => $this->faker->uuid(),
-            'expires_in' => $this->faker->randomNumber(4),
+            'access_token' => fake()->uuid(),
+            'refresh_token' => fake()->uuid(),
+            'expires_in' => fake()->randomNumber(4),
         ];
     }
 }

@@ -15,11 +15,11 @@ final class ProviderFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => $this->faker->uuid(),
+            'id' => fake()->uuid(),
             'user_id' => User::factory(),
-            'provider' => $this->faker->randomElement(['twitch', 'discord']),
-            'provider_id' => $this->faker->randomNumber(6),
-            'email' => $this->faker->unique()->email,
+            'provider' => fake()->randomElement(['twitch', 'discord']),
+            'provider_id' => fake()->randomNumber(6),
+            'email' => fake()->unique()->email(),
         ];
     }
 }

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Heart\Character\Infrastructure\Models\Character;
 use He4rt\Provider\Model\Provider;
+use Heart\Character\Infrastructure\Models\Character;
 use Heart\User\Infrastructure\Models\User;
 use Illuminate\Support\Facades\Cache;
 use src\Models\Meeting;

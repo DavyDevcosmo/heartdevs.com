@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use He4rt\Feedback\Http\Controllers\FeedbacksController;
 use Illuminate\Support\Facades\Route;
 

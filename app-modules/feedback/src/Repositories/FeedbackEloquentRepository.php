@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace He4rt\Feedback\Repositories;
 
+use He4rt\Feedback\Contracts\FeedbackRepository;
 use He4rt\Feedback\DTO\FeedbackReviewDTO;
 use He4rt\Feedback\DTO\NewFeedbackDTO;
 use He4rt\Feedback\Entities\FeedbackEntity;
-use He4rt\Feedback\Contracts\FeedbackRepository;
 use He4rt\Feedback\Exceptions\FeedbackException;
 use He4rt\Feedback\Models\Feedback;
 

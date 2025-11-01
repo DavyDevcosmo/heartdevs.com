@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace He4rt\Authentication\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Heart\Autentication\Services\OAuthService;
 use He4rt\Authentication\OAuth\Domain\Actions\RedirectOAuthUrl;
+use Heart\Autentication\Services\OAuthService;
 use Illuminate\Http\RedirectResponse;
 
 final class OAuthController extends Controller

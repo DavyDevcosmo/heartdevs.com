@@ -13,8 +13,8 @@ final readonly class PaginateMeetings
 
     public function handle(string $provider): Paginator
     {
-        $provider = ProviderEnum::from($provider);
+        ProviderEnum::from($provider);
 
-        return $this->paginateMeetingsAction->handle($provider);
+        return $this->paginateMeetingsAction->handle();
     }
 }

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Heart\Character\Application;
 
+use He4rt\Provider\Actions\FindProvider;
 use Heart\Badges\Application\FindBadgeBySlug;
 use Heart\Character\Domain\Actions\PersistClaimedBadge;
-use He4rt\Provider\Actions\FindProvider;
 
 final readonly class ClaimCharacterBadge
 {

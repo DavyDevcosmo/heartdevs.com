@@ -21,7 +21,7 @@ final class MeetingEntity
 
     public static function make(array $payload): self
     {
-        $endsAt = empty($payload['ends_at'])
+        $endsAt = blank($payload['ends_at'])
             ? null
             : new DateTimeImmutable($payload['ends_at']);
 
