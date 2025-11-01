@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace He4rt\Meeting\Models;
 
 use He4rt\Meeting\Database\Factories\MeetingFactory;
-use Heart\User\Infrastructure\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use src\Models\User;
 
 final class Meeting extends Model
 {

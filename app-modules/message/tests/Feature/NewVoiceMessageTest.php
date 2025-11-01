@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use He4rt\Provider\Model\Provider;
-use Heart\User\Infrastructure\Models\User;
 use src\Enums\VoiceStatesEnum;
 use src\Models\Character;
+use src\Models\User;
 
 test('can create voice message', function (): void {
     config(['he4rt.season.id' => 2]);

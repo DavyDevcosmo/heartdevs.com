@@ -6,13 +6,13 @@ namespace He4rt\Provider\Models;
 
 use He4rt\Message\Models\Message;
 use He4rt\Provider\Database\Factories\ProviderFactory;
-use Heart\User\Infrastructure\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use src\Models\User;
 
 /**
  * @property string $id

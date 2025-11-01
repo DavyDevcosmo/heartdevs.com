@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace He4rt\Provider\Database\Factories;
 
 use He4rt\Provider\Models\Provider;
-use Heart\User\Infrastructure\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use src\Models\User;
 
 final class ProviderFactory extends Factory
 {

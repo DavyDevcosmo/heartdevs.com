@@ -8,7 +8,7 @@ use He4rt\Provider\Contracts\ProviderRepository;
 use He4rt\Provider\DTO\NewProviderDTO;
 use He4rt\Provider\Entities\ProviderEntity;
 use He4rt\Provider\Enums\ProviderEnum;
-use Heart\User\Domain\Repositories\UserRepository;
+use He4rt\User\Contracts\UserRepository;
 
 class NewAccountByProvider
 {

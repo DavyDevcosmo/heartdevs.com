@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3e686561cda0445eba5cb18a9549053f",
+    "content-hash": "f15230316d4e2910a8834262a471741e",
     "packages": [
         {
             "name": "brick/math",
@@ -1983,6 +1983,38 @@
                     "He4rt\\Season\\Tests\\": "tests/",
                     "He4rt\\Season\\Database\\Factories\\": "database/factories/",
                     "He4rt\\Season\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/user",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/user",
+                "reference": "8436883bb7249c8f78fc460ca3946a68bce8f4a9"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\User\\Providers\\UserServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\User\\": "src/",
+                    "He4rt\\User\\Tests\\": "tests/",
+                    "He4rt\\User\\Database\\Factories\\": "database/factories/",
+                    "He4rt\\User\\Database\\Seeders\\": "database/seeders/"
                 }
             },
             "license": [

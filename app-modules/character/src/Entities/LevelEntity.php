@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace He4rt\Character\Entities;
 
-
 use He4rt\Character\Enums\VoiceStatesEnum;
 
 final class LevelEntity

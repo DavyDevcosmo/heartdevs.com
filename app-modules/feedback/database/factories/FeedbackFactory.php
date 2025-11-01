@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace He4rt\Feedback\Database\Factories;
 
 use He4rt\Feedback\Models\Feedback;
-use Heart\User\Infrastructure\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use src\Models\User;
 
 final class FeedbackFactory extends Factory
 {

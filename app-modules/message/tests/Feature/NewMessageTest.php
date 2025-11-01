@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use He4rt\Provider\Model\Provider;
-use Heart\User\Infrastructure\Models\User;
 use Illuminate\Support\Facades\Cache;
 use src\Models\Character;
 use src\Models\Meeting;
+use src\Models\User;
 
 test('can create amessage', function (): void {
     Cache::tags(['meetings'])->flush();
