@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace He4rt\Feedback\Models;
 
 use He4rt\Feedback\Enum\ReviewTypeEnum;
+use He4rt\User\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use He4rt\User\Models\User;
 
 final class Review extends Model
 {

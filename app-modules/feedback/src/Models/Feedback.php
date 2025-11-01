@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace He4rt\Feedback\Models;
 
 use He4rt\Feedback\Database\Factories\FeedbackFactory;
+use He4rt\User\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use He4rt\User\Models\User;
 
 final class Feedback extends Model
 {

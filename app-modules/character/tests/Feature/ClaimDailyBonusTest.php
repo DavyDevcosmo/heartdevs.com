@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use He4rt\Character\Models\Character;
 use He4rt\Provider\Models\Provider;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use He4rt\User\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Symfony\Component\HttpFoundation\Response;
 
 uses(DatabaseTransactions::class);

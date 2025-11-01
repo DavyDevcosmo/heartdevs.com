@@ -6,8 +6,8 @@ namespace He4rt\Meeting\Database\Factories;
 
 use He4rt\Meeting\Models\Meeting;
 use He4rt\Meeting\Models\MeetingType;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use He4rt\User\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 final class MeetingFactory extends Factory
 {

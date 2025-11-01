@@ -10,7 +10,6 @@ use He4rt\Message\Contracts\VoiceRepository;
 use He4rt\Message\DTO\NewVoiceMessageDTO;
 use He4rt\Provider\Actions\FindProvider;
 
-
 final readonly class NewVoiceMessage
 {
     public function __construct(

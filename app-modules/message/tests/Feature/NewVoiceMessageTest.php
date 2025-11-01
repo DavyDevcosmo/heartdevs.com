@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 use He4rt\Character\Enums\VoiceStatesEnum;
 use He4rt\Character\Models\Character;
 use He4rt\Provider\Models\Provider;
