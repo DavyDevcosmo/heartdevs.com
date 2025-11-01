@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use He4rt\Provider\Model\Provider;
-use Heart\Character\Infrastructure\Models\Character;
-use Heart\Character\Infrastructure\Models\PastSeason;
 use Heart\Message\Infrastructure\Models\Message;
 use Heart\User\Infrastructure\Models\Address;
 use Heart\User\Infrastructure\Models\Information;
 use Heart\User\Infrastructure\Models\User;
+use src\Models\Character;
+use src\Models\PastSeason;
 use Symfony\Component\HttpFoundation\Response;
 
 test('success', function (): void {

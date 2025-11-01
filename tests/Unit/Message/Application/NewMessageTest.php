@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
+use He4rt\Character\Actions\IncrementExperience;
 use He4rt\Meeting\Actions\AttendMeeting;
 use He4rt\Provider\Actions\FindProvider;
 use He4rt\Provider\Actions\NewAccountByProvider;
 use He4rt\Provider\Entities\ProviderEntity;
-use Heart\Character\Application\FindCharacterIdByUserId;
-use Heart\Character\Domain\Actions\IncrementExperience;
 use Heart\Message\Application\NewMessage;
 use Heart\Message\Domain\Actions\PersistMessage;
 use Heart\Message\Domain\DTO\NewMessageDTO;
 use Illuminate\Support\Facades\Cache;
+use src\Application\FindCharacterIdByUserId;
 
 dataset('dataProvider', fn () => [
     'twitch #1' => [

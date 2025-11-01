@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace He4rt\Message\Actions;
 
+use He4rt\Character\Actions\IncrementExperience;
 use He4rt\Message\DTOs\NewVoiceMessageDTO;
 use He4rt\Message\Repositories\VoiceRepository;
 use He4rt\Provider\Actions\FindProvider;
-use Heart\Character\Application\FindCharacterIdByUserId;
-use Heart\Character\Domain\Actions\IncrementExperience;
+use src\Application\FindCharacterIdByUserId;
 
 final readonly class NewVoiceMessage
 {

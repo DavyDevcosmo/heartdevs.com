@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Heart\Character\Infrastructure\Models\Character;
+use src\Models\Character;
 use Symfony\Component\HttpFoundation\Response;
 
 test('can fetch ranking', function (): void {

@@ -7,9 +7,9 @@ use Heart\User\Application\Exceptions\ProfileException;
 use Heart\User\Application\FindProfile;
 use Heart\User\Domain\Actions\GetProfile;
 use Heart\User\Domain\Repositories\UserRepository;
-use Tests\Unit\Character\ProviderProviderTrait;
 use Tests\Unit\User\ProfileProviderTrait;
 use Tests\Unit\User\UserProviderTrait;
+use Unit\ProviderProviderTrait;
 
 uses(ProfileProviderTrait::class);
 

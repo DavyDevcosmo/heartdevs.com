@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Heart\User\Domain\Entities;
 
 use Heart\Badges\Domain\Collections\BadgeCollection;
-use Heart\Character\Domain\Collections\PastSeasonCollection;
-use Heart\Character\Domain\Entities\CharacterEntity;
 use JsonSerializable;
+use src\Collections\PastSeasonCollection;
+use src\Entities\CharacterEntity;
 
 final readonly class ProfileEntity implements JsonSerializable
 {
