@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\Character\Actions;
 
-use src\Repositories\CharacterRepository;
+use He4rt\Character\Contracts\CharacterRepository;
 
 final readonly class PersistClaimedBadge
 {

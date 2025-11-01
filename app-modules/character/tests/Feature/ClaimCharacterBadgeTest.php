@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-use He4rt\Provider\Model\Provider;
-use Heart\Badges\Infrastructure\Model\Badge;
+use He4rt\Badge\Models\Badge;
+use He4rt\Character\Models\Character;
+use He4rt\Provider\Models\Provider;
+
 use Heart\User\Infrastructure\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use src\Models\Character;
+
 use Symfony\Component\HttpFoundation\Response;
 
 uses(DatabaseTransactions::class);

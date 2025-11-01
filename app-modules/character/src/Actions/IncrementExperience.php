@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace He4rt\Character\Actions;
 
-use src\Enums\VoiceStatesEnum;
-use src\Repositories\CharacterRepository;
+use He4rt\Character\Contracts\CharacterRepository;
+use He4rt\Character\Enums\VoiceStatesEnum;
 
 class IncrementExperience
 {

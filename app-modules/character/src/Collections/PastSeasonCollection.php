@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace He4rt\Character\Collections;
 
 use ArrayIterator;
+use He4rt\Character\Entities\PastSeasonEntity;
 use JsonSerializable;
-use src\Entities\PastSeasonEntity;
 
 final class PastSeasonCollection extends ArrayIterator implements JsonSerializable
 {

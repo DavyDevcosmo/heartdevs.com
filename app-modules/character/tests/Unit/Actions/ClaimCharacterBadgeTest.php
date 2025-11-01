@@ -7,9 +7,9 @@ use He4rt\Badge\Tests\Unit\BadgeProviderTrait;
 use He4rt\Character\Actions\ClaimCharacterBadge;
 use He4rt\Character\Actions\FindCharacterIdByUserId;
 use He4rt\Character\Actions\PersistClaimedBadge;
+use He4rt\Character\Tests\Unit\ProviderProviderTrait;
 use He4rt\Provider\Actions\FindProvider;
 use Mockery as m;
-use Tests\Unit\Character\ProviderProviderTrait;
 
 uses(BadgeProviderTrait::class);
 
