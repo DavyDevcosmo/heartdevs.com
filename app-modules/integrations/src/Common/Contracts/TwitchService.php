@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Heart\Integrations\Common\Contracts;
 
 use Heart\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
-use Heart\Integrations\Twitch\Subscriber\Contract\TwitchSubscribersService;
+use Heart\Integrations\Twitch\Subscriber\Contracts\TwitchSubscribersService;
 
 interface TwitchService
 {

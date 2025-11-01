@@ -6,7 +6,7 @@ namespace Heart\Integrations\Twitch\Subscriber\Client;
 
 use GuzzleHttp\Client;
 use Heart\Authentication\OAuth\Domain\DTO\OAuthAccessDTO;
-use Heart\Integrations\Twitch\Subscriber\Contract\TwitchSubscribersService;
+use Heart\Integrations\Twitch\Subscriber\Contracts\TwitchSubscribersService;
 use Heart\Integrations\Twitch\Subscriber\DTO\TwitchSubscriberDTO;
 
 final readonly class TwitchSubscribersClient implements TwitchSubscribersService
