@@ -1,11 +1,14 @@
 <?php
 
 declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Heart\Feedback\Infrastructure\Models\Feedback;
 use Symfony\Component\HttpFoundation\Response;
-uses(\Illuminate\Foundation\Testing\DatabaseTransactions::class);
 
-test('can find by id', function () {
+uses(DatabaseTransactions::class);
+
+test('can find by id', function (): void {
     $feedback = Feedback::factory()->create();
 
     $this

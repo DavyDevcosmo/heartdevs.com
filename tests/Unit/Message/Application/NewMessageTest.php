@@ -11,23 +11,21 @@ use Heart\Provider\Application\FindProvider;
 use Heart\Provider\Application\NewAccountByProvider;
 use Heart\Provider\Domain\Entities\ProviderEntity;
 use Illuminate\Support\Facades\Cache;
-use PHPUnit\Framework\Attributes\DataProvider;
-dataset('dataProvider', function () {
-    return [
-        'twitch #1' => [
+
+dataset('dataProvider', fn() => [
+    'twitch #1' => [
+        'provider' => 'twitch',
+        'payload' => [
             'provider' => 'twitch',
-            'payload' => [
-                'provider' => 'twitch',
-                'provider_id' => '1234',
-                'provider_message_id' => '78781237',
-                'channel_id' => '31231267312',
-                'content' => 'deixa o sub',
-                'sent_at' => '2023-01-18 22:36:32',
-            ],
+            'provider_id' => '1234',
+            'provider_message_id' => '78781237',
+            'channel_id' => '31231267312',
+            'content' => 'deixa o sub',
+            'sent_at' => '2023-01-18 22:36:32',
         ],
-    ];
-});
-test('new message', function (string $provider, array $payload) {
+    ],
+]);
+test('new message', function (string $provider, array $payload): void {
     Cache::tags(['meetings'])->put('current-meeting', 'é o canhas');
     $findProviderStub = m::mock(FindProvider::class);
     $findCharacterStub = m::mock(FindCharacterIdByUserId::class);

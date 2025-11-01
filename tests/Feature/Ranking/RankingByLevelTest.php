@@ -1,11 +1,14 @@
 <?php
 
 declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Heart\Character\Infrastructure\Models\Character;
 use Symfony\Component\HttpFoundation\Response;
-uses(\Illuminate\Foundation\Testing\DatabaseTransactions::class);
 
-test('can fetch ranking', function () {
+uses(DatabaseTransactions::class);
+
+test('can fetch ranking', function (): void {
     Character::factory()->count(5)->create();
 
     $response = $this

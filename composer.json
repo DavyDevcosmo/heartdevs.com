@@ -12,6 +12,7 @@
         "guzzlehttp/guzzle": "^7.10.0",
         "he4rt/badge": "^1.0",
         "he4rt/message": "^1.0.0",
+        "he4rt/ranking": ">=1",
         "internachi/modular": "^2.3.0",
         "laravel/framework": "^12.36.0",
         "laravel/sanctum": "^4.2.0",

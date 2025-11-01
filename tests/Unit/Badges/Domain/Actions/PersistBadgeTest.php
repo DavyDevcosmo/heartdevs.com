@@ -1,14 +1,15 @@
 <?php
 
 declare(strict_types=1);
+
+use He4rt\Badge\Tests\Unit\BadgeProviderTrait;
 use Heart\Badges\Domain\Actions\PersistBadge;
 use Heart\Badges\Domain\DTOs\NewBadgeDTO;
-use Heart\Badges\Domain\Entities\BadgeEntity;
 use Heart\Badges\Domain\Repositories\BadgeRepository;
-use Mockery\MockInterface;
-uses(\He4rt\Badge\Tests\Unit\BadgeProviderTrait::class);
 
-beforeEach(function () {
+uses(BadgeProviderTrait::class);
+
+beforeEach(function (): void {
     $this->badgeRepositoryStub = m::mock(BadgeRepository::class);
     $this->badgeEntity = $this->validBadgeEntity();
     $this->badgeDTO = new NewBadgeDTO(
@@ -20,10 +21,10 @@ beforeEach(function () {
         $this->badgeEntity->active
     );
 });
-afterEach(function () {
+afterEach(function (): void {
     m::close();
 });
-test('persist badge success', function () {
+test('persist badge success', function (): void {
     $this->badgeRepositoryStub
         ->shouldReceive('create')
         ->with($this->badgeDTO)

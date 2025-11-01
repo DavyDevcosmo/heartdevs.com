@@ -1,10 +1,13 @@
 <?php
 
 declare(strict_types=1);
-use Heart\Meeting\Infrastructure\Models\Meeting;
-uses(\Illuminate\Foundation\Testing\DatabaseTransactions::class);
 
-test('bot can list all meetings', function () {
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Heart\Meeting\Infrastructure\Models\Meeting;
+
+uses(DatabaseTransactions::class);
+
+test('bot can list all meetings', function (): void {
     // Arrange
     Meeting::factory()->unfinished()->create();
 

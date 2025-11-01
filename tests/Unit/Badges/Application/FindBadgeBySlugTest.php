@@ -1,20 +1,21 @@
 <?php
 
 declare(strict_types=1);
-use Heart\Badges\Application\FindBadgeBySlug;
-use Heart\Badges\Domain\Entities\BadgeEntity;
-use Heart\Badges\Domain\Repositories\BadgeRepository;
-use Mockery\MockInterface;
-uses(\He4rt\Badge\Tests\Unit\BadgeProviderTrait::class);
 
-beforeEach(function () {
+use He4rt\Badge\Tests\Unit\BadgeProviderTrait;
+use Heart\Badges\Application\FindBadgeBySlug;
+use Heart\Badges\Domain\Repositories\BadgeRepository;
+
+uses(BadgeProviderTrait::class);
+
+beforeEach(function (): void {
     $this->badgeRepositoryStub = m::mock(BadgeRepository::class);
     $this->badgeEntity = $this->validBadgeEntity();
 });
-afterEach(function () {
+afterEach(function (): void {
     m::close();
 });
-test('find badge by slug', function () {
+test('find badge by slug', function (): void {
     $slug = 'é-o-canhas';
     $this->badgeRepositoryStub
         ->shouldReceive('findBySlug')

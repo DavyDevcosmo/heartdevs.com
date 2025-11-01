@@ -1,13 +1,16 @@
 <?php
 
 declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Heart\Character\Infrastructure\Models\Character;
 use Heart\Provider\Infrastructure\Models\Provider;
 use Heart\User\Infrastructure\Models\User;
 use Symfony\Component\HttpFoundation\Response;
-uses(\Illuminate\Foundation\Testing\DatabaseTransactions::class);
 
-test('success', function () {
+uses(DatabaseTransactions::class);
+
+test('success', function (): void {
     $user = User::factory()
         ->has(Provider::factory(), 'providers')
         ->has(Character::factory(), 'character')
@@ -29,7 +32,7 @@ test('success', function () {
         'daily_bonus_claimed_at' => $expected,
     ]);
 });
-test('should not claim before24 hours', function () {
+test('should not claim before24 hours', function (): void {
     $user = User::factory()
         ->has(Provider::factory(), 'providers')
         ->has(Character::factory(), 'character')

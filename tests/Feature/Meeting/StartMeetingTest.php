@@ -1,13 +1,16 @@
 <?php
 
 declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Heart\Meeting\Infrastructure\Models\MeetingType;
 use Heart\Provider\Infrastructure\Models\Provider;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
-uses(\Illuminate\Foundation\Testing\DatabaseTransactions::class);
 
-test('bot can start new meeting', function () {
+uses(DatabaseTransactions::class);
+
+test('bot can start new meeting', function (): void {
     // Arrange
     $providerName = 'discord';
 
@@ -37,7 +40,7 @@ test('bot can start new meeting', function () {
     $this->assertDatabaseHas('meetings', $expectedResponse);
     expect(Cache::tags(['meetings'])->has('current-meeting'))->toBeTrue();
 });
-test('meeting type not found', function () {
+test('meeting type not found', function (): void {
     // Arrange
     $providerName = 'discord';
 

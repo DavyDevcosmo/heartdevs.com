@@ -1,22 +1,23 @@
 <?php
 
 declare(strict_types=1);
-use Heart\Provider\Domain\Entities\ProviderEntity;
+
+use Tests\Unit\User\ProfileProviderTrait;
+use Tests\Unit\Character\ProviderProviderTrait;
+use Tests\Unit\User\UserProviderTrait;
 use Heart\Provider\Domain\Repositories\ProviderRepository;
 use Heart\User\Application\Exceptions\ProfileException;
 use Heart\User\Application\FindProfile;
 use Heart\User\Domain\Actions\GetProfile;
-use Heart\User\Domain\Entities\ProfileEntity;
-use Heart\User\Domain\Entities\UserEntity;
 use Heart\User\Domain\Repositories\UserRepository;
-use Mockery\MockInterface;
-uses(\Tests\Unit\User\ProfileProviderTrait::class);
 
-uses(\Tests\Unit\Character\ProviderProviderTrait::class);
+uses(ProfileProviderTrait::class);
 
-uses(\Tests\Unit\User\UserProviderTrait::class);
+uses(ProviderProviderTrait::class);
 
-beforeEach(function () {
+uses(UserProviderTrait::class);
+
+beforeEach(function (): void {
     $this->userRepositoryStub = m::mock(UserRepository::class);
     $this->getProfileStub = m::mock(GetProfile::class);
     $this->providerRepositoryStub = m::mock(ProviderRepository::class);
@@ -24,10 +25,10 @@ beforeEach(function () {
     $this->userEntity = $this->validUserEntity();
     $this->profileEntity = $this->validProfileEntity();
 });
-afterEach(function () {
+afterEach(function (): void {
     m::close();
 });
-test('find profile with username success', function () {
+test('find profile with username success', function (): void {
     $this->userRepositoryStub
         ->shouldReceive('findByUsername')
         ->with('canhassi')
@@ -44,7 +45,7 @@ test('find profile with username success', function () {
 
     $test->handle('canhassi');
 });
-test('find profile with provider id success', function () {
+test('find profile with provider id success', function (): void {
     $this->userRepositoryStub
         ->shouldReceive('findByUsername')
         ->with('canhassi-id')
@@ -66,7 +67,7 @@ test('find profile with provider id success', function () {
 
     $test->handle('canhassi-id');
 });
-test('profile not found', function () {
+test('profile not found', function (): void {
     $this->expectException(ProfileException::class);
 
     $this->userRepositoryStub

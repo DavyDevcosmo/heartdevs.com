@@ -1,22 +1,23 @@
 <?php
 
 declare(strict_types=1);
+
+use Tests\Unit\Character\CharacterProviderTrait;
 use Heart\Character\Domain\Actions\FindCharacter;
 use Heart\Character\Domain\Actions\IncrementExperience;
-use Heart\Character\Domain\Entities\CharacterEntity;
 use Heart\Character\Domain\Repositories\CharacterRepository;
-use Mockery\MockInterface;
-uses(\Tests\Unit\Character\CharacterProviderTrait::class);
 
-beforeEach(function () {
+uses(CharacterProviderTrait::class);
+
+beforeEach(function (): void {
     $this->characterRepositoryStub = m::mock(CharacterRepository::class);
     $this->findCharacterStub = m::mock(FindCharacter::class);
     $this->characterEntity = $this->validCharacterEntity();
 });
-afterEach(function () {
+afterEach(function (): void {
     m::close();
 });
-test('increment experience success', function () {
+test('increment experience success', function (): void {
     $this->characterRepositoryStub
         ->shouldReceive('updateExperience')
         ->with($this->characterEntity)

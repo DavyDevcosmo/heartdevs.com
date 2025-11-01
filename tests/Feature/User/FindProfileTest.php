@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Heart\Badges\Infrastructure\Model\Badge;
 use Heart\Character\Infrastructure\Models\Character;
 use Heart\Character\Infrastructure\Models\PastSeason;
@@ -10,9 +12,10 @@ use Heart\User\Infrastructure\Models\Address;
 use Heart\User\Infrastructure\Models\Information;
 use Heart\User\Infrastructure\Models\User;
 use Symfony\Component\HttpFoundation\Response;
-uses(\Illuminate\Foundation\Testing\DatabaseTransactions::class);
 
-test('can find profile with username', function () {
+uses(DatabaseTransactions::class);
+
+test('can find profile with username', function (): void {
     $user = User::factory()
         ->has(Character::factory()->has(PastSeason::factory()), 'character')
         ->has(Address::factory(), 'address')
@@ -52,7 +55,7 @@ test('can find profile with username', function () {
             ],
         ]);
 });
-test('can find profile with provider id', function () {
+test('can find profile with provider id', function (): void {
     $user = User::factory()
         ->has(Character::factory()->has(PastSeason::factory()), 'character')
         ->has(Address::factory(), 'address')

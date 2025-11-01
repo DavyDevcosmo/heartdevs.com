@@ -1,20 +1,21 @@
 <?php
 
 declare(strict_types=1);
-use Heart\Season\Application\GetCurrentSeason;
-use Heart\Season\Domain\Entities\SeasonEntity;
-use Heart\Season\Domain\Repositories\SeasonRepository;
-use Mockery\MockInterface;
-uses(\Tests\Unit\Season\SeasonProviderTrait::class);
 
-beforeEach(function () {
+use Tests\Unit\Season\SeasonProviderTrait;
+use Heart\Season\Application\GetCurrentSeason;
+use Heart\Season\Domain\Repositories\SeasonRepository;
+
+uses(SeasonProviderTrait::class);
+
+beforeEach(function (): void {
     $this->seasonRepositoryStub = m::mock(SeasonRepository::class);
     $this->seasonEntity = $this->validSeasonEntity();
 });
-afterEach(function () {
+afterEach(function (): void {
     m::close();
 });
-test('get current season', function () {
+test('get current season', function (): void {
     $this->seasonRepositoryStub
         ->shouldReceive('getCurrent')
         ->once()

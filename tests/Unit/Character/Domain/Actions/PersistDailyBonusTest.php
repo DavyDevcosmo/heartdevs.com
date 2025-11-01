@@ -1,21 +1,23 @@
 <?php
 
 declare(strict_types=1);
+
+use Tests\Unit\Character\CharacterProviderTrait;
 use Heart\Character\Domain\Actions\PersistDailyBonus;
 use Heart\Character\Domain\Exceptions\CharacterException;
 use Heart\Character\Domain\Repositories\CharacterRepository;
 use Illuminate\Support\Facades\Date;
-use Mockery\MockInterface;
-uses(\Tests\Unit\Character\CharacterProviderTrait::class);
 
-beforeEach(function () {
+uses(CharacterProviderTrait::class);
+
+beforeEach(function (): void {
     $this->characterRepository = m::mock(CharacterRepository::class);
     $this->action = new PersistDailyBonus($this->characterRepository);
 });
-afterEach(function () {
+afterEach(function (): void {
     m::close();
 });
-test('can claim', function () {
+test('can claim', function (): void {
     $characterId = '123';
     Date::setTestNow(now()->subMinute());
     $characterEntity = $this->validCharacterEntity();
@@ -34,7 +36,7 @@ test('can claim', function () {
 
     $this->action->handle($characterId);
 });
-test('should not claim', function () {
+test('should not claim', function (): void {
     $this->expectException(CharacterException::class);
 
     $characterId = '123';

@@ -4,9 +4,9 @@ declare(strict_types=1);
 use Heart\Provider\Domain\Actions\GetProviderById;
 use Heart\Provider\Domain\Entities\ProviderEntity;
 use Heart\Provider\Domain\Repositories\ProviderRepository;
-beforeEach(function () {
-});
-test('get provider by id', function () {
+
+beforeEach(function (): void {});
+test('get provider by id', function (): void {
     $providerRepositoryStub = m::mock(ProviderRepository::class);
 
     $providerRepositoryStub

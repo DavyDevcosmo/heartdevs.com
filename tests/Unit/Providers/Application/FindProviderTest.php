@@ -6,7 +6,8 @@ use Heart\Provider\Domain\Actions\GetProviderById;
 use Heart\Provider\Domain\Entities\ProviderEntity;
 use Heart\Shared\Application\TTL;
 use Illuminate\Support\Facades\Cache;
-test('cached provider', function () {
+
+test('cached provider', function (): void {
     $cacheKey = 'provider-twitch-123';
     $getProviderStub = m::mock(GetProviderById::class);
 

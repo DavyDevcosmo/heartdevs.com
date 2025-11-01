@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Heart\Ranking\Domain\Repositories;
+namespace Heart\Ranking\Contracts;
 
 use Heart\Shared\Domain\Paginator;
 

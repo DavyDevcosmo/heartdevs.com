@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d61b7b927a09a546a645a70c61a79f6d",
+    "content-hash": "1c2a12a0c823c41747203fe94edeb828",
     "packages": [
         {
             "name": "brick/math",
@@ -1733,6 +1733,38 @@
                 "proprietary"
             ],
             "description": "Message module for He4rt community bot",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/ranking",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/ranking",
+                "reference": "621560de8a9a0aeea465875ce76e84a8f06974e8"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Ranking\\Providers\\RankingServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Ranking\\": "src/",
+                    "He4rt\\Ranking\\Tests\\": "tests/",
+                    "He4rt\\Ranking\\Database\\Factories\\": "database/factories/",
+                    "He4rt\\Ranking\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
             "transport-options": {
                 "symlink": true,
                 "relative": true
@@ -11577,12 +11609,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.3"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }
