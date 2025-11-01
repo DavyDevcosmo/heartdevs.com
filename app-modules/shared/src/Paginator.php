@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Heart\Shared\Infrastructure;
+namespace He4rt\Shared;
 
-use Heart\Shared\Domain\Paginator as PaginatorInterface;
+use He4rt\Shared\Contract\Paginator as PaginatorInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator as LengthAwarePaginatorContract;
 use Illuminate\Pagination\LengthAwarePaginator;
 

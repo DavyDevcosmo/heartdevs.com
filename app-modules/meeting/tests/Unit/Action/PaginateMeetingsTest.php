@@ -5,7 +5,7 @@ declare(strict_types=1);
 use He4rt\Meeting\Actions\PaginateMeetingsAction;
 use He4rt\Meeting\Contracts\MeetingRepository;
 use He4rt\Meeting\Tests\Unit\MeetingTypeProviderTrait;
-use Heart\Shared\Domain\Paginator;
+use He4rt\Shared\Contract\Paginator;
 use Mockery as m;
 
 uses(MeetingTypeProviderTrait::class);

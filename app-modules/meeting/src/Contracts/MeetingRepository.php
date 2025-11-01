@@ -6,7 +6,7 @@ namespace He4rt\Meeting\Contracts;
 
 use He4rt\Meeting\DTO\NewMeetingDTO;
 use He4rt\Meeting\Entities\MeetingEntity;
-use Heart\Shared\Domain\Paginator;
+use He4rt\Shared\Contract\Paginator;
 
 interface MeetingRepository
 {

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use He4rt\Provider\Actions\FindProvider;
 use He4rt\Provider\Actions\GetProviderById;
 use He4rt\Provider\Entities\ProviderEntity;
-use Heart\Shared\Application\TTL;
+use He4rt\Shared\TTL;
 use Illuminate\Support\Facades\Cache;
 use Mockery as m;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Heart\Shared\Infrastructure;
+namespace He4rt\Shared;
 
 use Illuminate\Database\Eloquent\Factories\Factory as EloquentFactory;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Heart\Shared\Domain;
+namespace He4rt\Shared\Contract;
 
 interface Paginator
 {

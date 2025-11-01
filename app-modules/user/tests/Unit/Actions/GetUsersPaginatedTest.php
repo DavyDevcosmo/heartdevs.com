@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use He4rt\Shared\Contract\Paginator;
 use He4rt\User\Actions\GetUsersPaginated;
 use He4rt\User\Contracts\UserRepository;
-use Heart\Shared\Domain\Paginator;
 use Mockery as m;
 
 beforeEach(function (): void {

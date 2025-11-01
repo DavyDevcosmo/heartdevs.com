@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace He4rt\User\Repositories;
 
+use He4rt\Shared\Contract\Paginator;
+use He4rt\Shared\Paginator as PaginatorConcrete;
 use He4rt\User\Contracts\UserRepository;
 use He4rt\User\Entities\ProfileEntity;
 use He4rt\User\Entities\UserEntity;
 use He4rt\User\Exceptions\UserEntityException;
 use He4rt\User\Models\User;
-use Heart\Shared\Domain\Paginator;
-use Heart\Shared\Infrastructure\Paginator as PaginatorConcrete;
 use Illuminate\Database\Eloquent\Builder;
 use Ramsey\Uuid\Uuid;
 

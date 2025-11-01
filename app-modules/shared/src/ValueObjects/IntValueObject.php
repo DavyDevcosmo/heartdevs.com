@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Heart\Shared\Domain\ValueObjects;
+namespace He4rt\Shared\ValueObjects;
 
 readonly class IntValueObject
 {

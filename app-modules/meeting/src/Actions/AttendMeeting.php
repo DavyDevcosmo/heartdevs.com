@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace He4rt\Meeting\Actions;
 
 use He4rt\Meeting\Exceptions\MeetingException;
-use Heart\Shared\Application\TTL;
+use He4rt\Shared\TTL;
 use Illuminate\Support\Facades\Cache;
 
 class AttendMeeting

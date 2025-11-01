@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Heart\Shared\Application;
+namespace He4rt\Shared;
 
 final class TTL
 {

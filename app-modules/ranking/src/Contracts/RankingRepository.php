@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\Ranking\Contracts;
 
-use Heart\Shared\Domain\Paginator;
+use He4rt\Shared\Contract\Paginator;
 
 interface RankingRepository
 {

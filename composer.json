@@ -20,6 +20,7 @@
         "he4rt/provider": ">=1",
         "he4rt/ranking": ">=1",
         "he4rt/season": "^1.0.0",
+        "he4rt/shared": ">=1",
         "he4rt/user": ">=1",
         "internachi/modular": "^2.3.0",
         "laravel/framework": "^12.36.1",

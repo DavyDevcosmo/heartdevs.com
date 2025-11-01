@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace He4rt\User\Contracts;
 
+use He4rt\Shared\Contract\Paginator;
 use He4rt\User\Entities\ProfileEntity;
 use He4rt\User\Entities\UserEntity;
 use He4rt\User\Exceptions\UserEntityException;
-use Heart\Shared\Domain\Paginator;
 
 interface UserRepository
 {
