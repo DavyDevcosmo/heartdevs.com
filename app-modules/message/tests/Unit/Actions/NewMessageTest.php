@@ -6,12 +6,12 @@ use He4rt\Character\Actions\IncrementExperience;
 use He4rt\Meeting\Actions\AttendMeeting;
 use He4rt\Message\Actions\NewMessage;
 use He4rt\Message\Actions\PersistMessage;
-use He4rt\Message\DTOs\NewMessageDTO;
+use He4rt\Message\DTO\NewMessageDTO;
 use He4rt\Provider\Actions\FindProvider;
 use He4rt\Provider\Actions\NewAccountByProvider;
 use He4rt\Provider\Entities\ProviderEntity;
 use Illuminate\Support\Facades\Cache;
-use src\Application\FindCharacterIdByUserId;
+use He4rt\Character\Actions\FindCharacterIdByUserId;
 
 test('new message', function (string $provider, array $payload): void {
     Cache::shouldReceive('tags->has')

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Heart\Integrations\Twitch\Subscriber\Client;
+namespace He4rt\Integrations\Twitch\Subscriber\Client;
 
 use GuzzleHttp\Client;
 use Heart\Autentication\DTO\OAuthAccessDTO;
-use Heart\Integrations\Twitch\Subscriber\Contracts\TwitchSubscribersService;
-use Heart\Integrations\Twitch\Subscriber\DTO\TwitchSubscriberDTO;
+use He4rt\Integrations\Twitch\Subscriber\Contracts\TwitchSubscribersService;
+use He4rt\Integrations\Twitch\Subscriber\DTO\TwitchSubscriberDTO;
 
 final readonly class TwitchSubscribersClient implements TwitchSubscribersService
 {

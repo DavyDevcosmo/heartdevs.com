@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Message\DTOs;
+namespace He4rt\Message\DTO;
 
+use He4rt\Character\Enums\VoiceStatesEnum;
 use He4rt\Provider\Enums\ProviderEnum;
-use src\Enums\VoiceStatesEnum;
 
 final readonly class NewVoiceMessageDTO
 {

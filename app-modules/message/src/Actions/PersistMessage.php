@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace He4rt\Message\Actions;
 
-use He4rt\Message\DTOs\NewMessageDTO;
+use He4rt\Message\Contracts\MessageRepository;
+use He4rt\Message\DTO\NewMessageDTO;
 use He4rt\Message\Entities\MessageEntity;
-use He4rt\Message\Repositories\MessageRepository;
 
 class PersistMessage
 {

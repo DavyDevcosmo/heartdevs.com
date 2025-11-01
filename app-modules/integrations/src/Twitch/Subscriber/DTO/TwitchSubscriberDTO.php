@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Heart\Integrations\Twitch\Subscriber\DTO;
+namespace He4rt\Integrations\Twitch\Subscriber\DTO;
 
-use Heart\Integrations\Twitch\Subscriber\Enum\SubscriptionTiersEnum;
+use He4rt\Integrations\Twitch\Subscriber\Enum\SubscriptionTiersEnum;
 
 final readonly class TwitchSubscriberDTO
 {

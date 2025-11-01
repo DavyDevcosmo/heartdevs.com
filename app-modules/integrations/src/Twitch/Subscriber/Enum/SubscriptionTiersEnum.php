@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Heart\Integrations\Twitch\Subscriber\Enum;
+namespace He4rt\Integrations\Twitch\Subscriber\Enum;
 
 enum SubscriptionTiersEnum: string
 {

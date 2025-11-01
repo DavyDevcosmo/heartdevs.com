@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Message\DTOs;
+namespace He4rt\Message\DTO;
 
 use DateTimeImmutable;
 use He4rt\Provider\Enums\ProviderEnum;

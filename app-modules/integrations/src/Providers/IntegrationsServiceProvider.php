@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace He4rt\Integrations\Providers;
 
-use Heart\Integrations\Common\Client\TwitchBaseClient;
-use Heart\Integrations\Common\Contracts\TwitchService;
-use Heart\Integrations\Twitch\OAuth\Client\TwitchOAuthClient;
-use Heart\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
+use He4rt\Integrations\Common\Client\TwitchBaseClient;
+use He4rt\Integrations\Common\Contracts\TwitchService;
+use He4rt\Integrations\Twitch\OAuth\Client\TwitchOAuthClient;
+use He4rt\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
 use Illuminate\Support\ServiceProvider;
 
 class IntegrationsServiceProvider extends ServiceProvider

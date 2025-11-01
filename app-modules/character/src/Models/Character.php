@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use He4rt\Badge\Models\Badge;
 use He4rt\Character\Database\Factories\CharacterFactory;
 use He4rt\Character\Entities\LevelEntity;
+use He4rt\User\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use src\Models\User;
+
 
 /**
  * @property int $user_id

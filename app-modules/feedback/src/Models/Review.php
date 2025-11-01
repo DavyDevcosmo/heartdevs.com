@@ -8,7 +8,7 @@ use He4rt\Feedback\Enum\ReviewTypeEnum;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use src\Models\User;
+use He4rt\User\Models\User;
 
 final class Review extends Model
 {

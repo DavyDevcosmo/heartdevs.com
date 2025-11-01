@@ -6,7 +6,7 @@ namespace He4rt\Provider\Database\Factories;
 
 use He4rt\Provider\Models\Provider;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use src\Models\User;
+use He4rt\User\Models\User;
 
 final class ProviderFactory extends Factory
 {

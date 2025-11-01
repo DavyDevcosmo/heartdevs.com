@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Heart\Integrations\Common\Client;
+namespace He4rt\Integrations\Common\Client;
 
 use GuzzleHttp\Client;
-use Heart\Integrations\Common\Contracts\TwitchService;
-use Heart\Integrations\Twitch\OAuth\Client\TwitchOAuthClient;
-use Heart\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
-use Heart\Integrations\Twitch\Subscriber\Client\TwitchSubscribersClient;
-use Heart\Integrations\Twitch\Subscriber\Contracts\TwitchSubscribersService;
+use He4rt\Integrations\Common\Contracts\TwitchService;
+use He4rt\Integrations\Twitch\OAuth\Client\TwitchOAuthClient;
+use He4rt\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
+use He4rt\Integrations\Twitch\Subscriber\Client\TwitchSubscribersClient;
+use He4rt\Integrations\Twitch\Subscriber\Contracts\TwitchSubscribersService;
 
 final readonly class TwitchBaseClient implements TwitchService
 {

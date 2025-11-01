@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use He4rt\Provider\Model\Provider;
+use He4rt\Meeting\Models\Meeting;
+use He4rt\Provider\Models\Provider;
 use Illuminate\Support\Facades\Cache;
-use src\Models\Character;
-use src\Models\Meeting;
-use src\Models\User;
+use He4rt\Character\Models\Character;
+use He4rt\User\Models\User;
 
 test('can create amessage', function (): void {
     Cache::tags(['meetings'])->flush();

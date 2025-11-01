@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Heart\Integrations\Twitch\OAuth\DTO;
+namespace He4rt\Integrations\Twitch\OAuth\DTO;
 
 use Heart\Autentication\DTO\OAuthAccessDTO;
 use Heart\Autentication\DTO\OAuthUserDTO;

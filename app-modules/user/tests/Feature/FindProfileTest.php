@@ -2,15 +2,14 @@
 
 declare(strict_types=1);
 
-use He4rt\Provider\Model\Provider;
-use Heart\Badges\Infrastructure\Model\Badge;
-use Heart\Message\Infrastructure\Models\Message;
+use He4rt\Character\Models\Character;
+use He4rt\Character\Models\PastSeason;
+use He4rt\Message\Models\Message;
+use He4rt\Provider\Models\Provider;
+use He4rt\User\Models\Address;
+use He4rt\User\Models\Information;
+use He4rt\User\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use src\Models\Address;
-use src\Models\Character;
-use src\Models\Information;
-use src\Models\PastSeason;
-use src\Models\User;
 use Symfony\Component\HttpFoundation\Response;
 
 uses(DatabaseTransactions::class);

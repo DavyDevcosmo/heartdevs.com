@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Heart\Integrations\Twitch\OAuth\Client;
+namespace He4rt\Integrations\Twitch\OAuth\Client;
 
 use GuzzleHttp\Client;
 use Heart\Autentication\DTO\OAuthAccessDTO;
-use Heart\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
-use Heart\Integrations\Twitch\OAuth\DTO\TwitchOAuthAccessDTO;
-use Heart\Integrations\Twitch\OAuth\DTO\TwitchOAuthDTO;
+use He4rt\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
+use He4rt\Integrations\Twitch\OAuth\DTO\TwitchOAuthAccessDTO;
+use He4rt\Integrations\Twitch\OAuth\DTO\TwitchOAuthDTO;
 
 final readonly class TwitchOAuthClient implements TwitchOAuthService
 {

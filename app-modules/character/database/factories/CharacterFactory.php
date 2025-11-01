@@ -7,7 +7,7 @@ namespace He4rt\Character\Database\Factories;
 use He4rt\Character\Models\Character;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
-use src\Models\User;
+use He4rt\User\Models\User;
 
 /**
  * @extends Factory<Model>

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace He4rt\Authentication\Enums;
 
 use He4rt\Authentication\Contracts\OAuthClientContract;
-use Heart\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
+use He4rt\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
 
 enum OAuthProviderEnum: string
 {
