@@ -10,7 +10,7 @@ use JsonSerializable;
 final readonly class NewProviderDTO implements JsonSerializable
 {
     public function __construct(
-        private string $tenantId,
+        private int $tenantId,
         private ProviderEnum $provider,
         private string $providerId
     ) {}

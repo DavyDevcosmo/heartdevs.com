@@ -17,7 +17,7 @@ class NewAccountByProvider
         private readonly ProviderRepository $providerRepository,
     ) {}
 
-    public function handle(string $tenantId, ProviderEnum $providerEnum, string $providerId, string $username): ProviderEntity
+    public function handle(int $tenantId, ProviderEnum $providerEnum, string $providerId, string $username): ProviderEntity
     {
         $existentProvider = $this->providerRepository->getProvider($providerEnum->value, $providerId);
 
