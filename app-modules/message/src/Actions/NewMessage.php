@@ -43,7 +43,7 @@ final readonly class NewMessage
         }
 
         $obtainedExperience = $this->persistCharacterExperience(
-            $providerEntity->userId,
+            $providerEntity->modelId,
             $messageDTO->content
         );
 
@@ -69,11 +69,11 @@ final readonly class NewMessage
             return;
         }
 
-        $userAttendedCacheKey = sprintf('meeting-%s-attended', $providerEntity->userId);
+        $userAttendedCacheKey = sprintf('meeting-%s-attended', $providerEntity->modelId);
         if (Cache::tags(['meetings'])->has($userAttendedCacheKey)) {
             return;
         }
 
-        $this->attendMeeting->handle($providerEntity->userId);
+        $this->attendMeeting->handle($providerEntity->modelId);
     }
 }

@@ -22,7 +22,7 @@ test('bot can start new meeting', function (): void {
 
     $expectedResponse = [
         'meeting_type_id' => $meetingType->getKey(),
-        'admin_id' => $provider->user_id,
+        'admin_id' => $provider->model_id,
     ];
 
     // Act

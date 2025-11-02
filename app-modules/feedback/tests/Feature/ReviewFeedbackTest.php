@@ -40,6 +40,6 @@ test('can handle feedback', function (string $action, array $payload, array $exp
 
     $response->assertStatus(Response::HTTP_CREATED);
 
-    $expected['staff_id'] = $staffProvider->user_id;
+    $expected['staff_id'] = $staffProvider->model_id;
     $this->assertDatabaseHas('feedback_reviews', $expected);
 })->with('data provider');
