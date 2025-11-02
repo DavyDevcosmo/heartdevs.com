@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\Authentication\DTO;
 
-abstract readonly class OAuthAccessDTO
+abstract class OAuthAccessDTO
 {
     public function __construct(
         public string $accessToken,
