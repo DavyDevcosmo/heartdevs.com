@@ -14,6 +14,7 @@ return new class() extends Migration
             'providers' => ['tenant_id', 'model_type', 'model_id'],
             'messages' => [],
             'characters' => [],
+            'voice_messages' => [],
         ];
 
         foreach ($tables as $table => $indexableColumns) {
