@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Heart\Meeting\Infrastructure\Models\MeetingType;
+use He4rt\Meeting\Models\MeetingType;
 use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration

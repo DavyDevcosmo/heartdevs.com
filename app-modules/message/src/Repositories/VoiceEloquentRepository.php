@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace He4rt\Message\Repositories;
 
-use He4rt\Message\DTOs\NewVoiceMessageDTO;
+use He4rt\Message\Contracts\VoiceRepository;
+use He4rt\Message\DTO\NewVoiceMessageDTO;
 use He4rt\Message\Entities\VoiceEntity;
 use He4rt\Message\Models\Voice;
 

@@ -1,0 +1,36 @@
+<?php
+
+declare(strict_types=1);
+
+use He4rt\Badge\Models\Badge;
+use He4rt\Character\Models\Character;
+use He4rt\Provider\Models\Provider;
+use He4rt\User\Models\User;
+use Symfony\Component\HttpFoundation\Response;
+
+test('can claim badge', function (): void {
+    $badge = Badge::factory()
+        ->create();
+
+    $user = User::factory()
+        ->has(Character::factory(), 'character')
+        ->has(Provider::factory(), 'providers')
+        ->create();
+
+    $provider = $user->providers[0];
+
+    $response = $this
+        ->actingAsAdmin()
+        ->postJson(route('characters.claimBadge', [
+            'provider' => $provider->provider,
+            'providerId' => $provider->provider_id,
+        ]), ['redeem_code' => $badge->redeem_code]);
+
+    $response->assertStatus(Response::HTTP_NO_CONTENT);
+
+    $this->assertDatabaseHas('characters_badges', [
+        'character_id' => $user->character->id,
+        'badge_id' => $badge->id,
+        'claimed_at' => now(),
+    ]);
+});

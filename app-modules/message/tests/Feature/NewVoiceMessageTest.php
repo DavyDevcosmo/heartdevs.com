@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Heart\Character\Domain\Enums\VoiceStatesEnum;
-use Heart\Character\Infrastructure\Models\Character;
-use Heart\Provider\Infrastructure\Models\Provider;
-use Heart\User\Infrastructure\Models\User;
+use He4rt\Character\Enums\VoiceStatesEnum;
+use He4rt\Character\Models\Character;
+use He4rt\Provider\Models\Provider;
+use He4rt\User\Models\User;
 
 test('can create voice message', function (): void {
     config(['he4rt.season.id' => 2]);

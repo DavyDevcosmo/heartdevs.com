@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\Message\Entities;
 
-use Heart\Character\Domain\Enums\VoiceStatesEnum;
+use He4rt\Character\Enums\VoiceStatesEnum;
 
 final class VoiceEntity
 {

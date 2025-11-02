@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c34adfb1cbd5a44b517c61d01b693d50",
+    "content-hash": "cde60ac59d1eb95e3da8ccb209e01663",
     "packages": [
         {
             "name": "brick/math",
@@ -1675,6 +1675,35 @@
             "time": "2025-08-22T14:27:06+00:00"
         },
         {
+            "name": "he4rt/authentication",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/authentication",
+                "reference": "378308b889c04819dd97619898a2107ebf09b68e"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Authentication\\Providers\\AuthenticationServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Authentication\\": "src/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "he4rt/badge",
             "version": "1.0.0",
             "dist": {
@@ -1695,6 +1724,128 @@
                     "He4rt\\Badge\\": "src/",
                     "He4rt\\Badge\\Tests\\": "tests/",
                     "He4rt\\Badge\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/character",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/character",
+                "reference": "bf450394fb6662fcc1b0cd3214f11edc86e6b9d0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Character\\Providers\\CharacterServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Character\\": "src/",
+                    "He4rt\\Character\\Tests\\": "tests/",
+                    "He4rt\\Character\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/feedback",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/feedback",
+                "reference": "454e99c8aa23d942e20fb183482bb4edd3ed4b84"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Feedback\\Providers\\FeedbackServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Feedback\\": "src/",
+                    "He4rt\\Feedback\\Tests\\": "tests/",
+                    "He4rt\\Feedback\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/integrations",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/integrations",
+                "reference": "0cbc485eef0eb216c9443cf7d19e36b6371dbbd2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Integrations\\Providers\\IntegrationsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Integrations\\": "src/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/meeting",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/meeting",
+                "reference": "8a43c60ddbe831bf61793cc328a3ce39c66845ce"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Meeting\\Providers\\MeetingServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Meeting\\": "src/",
+                    "He4rt\\Meeting\\Tests\\": "tests/",
+                    "He4rt\\Meeting\\Database\\Factories\\": "database/factories/"
                 }
             },
             "license": [
@@ -1738,6 +1889,67 @@
             }
         },
         {
+            "name": "he4rt/provider",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/provider",
+                "reference": "1eea8b77a31da8dadac2dad2c7a56be86f8dc756"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Provider\\Providers\\ProviderServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Provider\\": "src/",
+                    "He4rt\\Provider\\Tests\\": "tests/",
+                    "He4rt\\Provider\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/ranking",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/ranking",
+                "reference": "2db71fc3edecca56ba2640ca7e28d9eda8665e20"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Ranking\\Providers\\RankingServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Ranking\\": "src/",
+                    "He4rt\\Ranking\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "he4rt/season",
             "version": "1.0.0",
             "dist": {
@@ -1759,6 +1971,66 @@
                     "He4rt\\Season\\Tests\\": "tests/",
                     "He4rt\\Season\\Database\\Factories\\": "database/factories/",
                     "He4rt\\Season\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/shared",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/shared",
+                "reference": "0059504007723c94b1dbf03ffc035b2db8f5d5a3"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Shared\\Providers\\SharedServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Shared\\": "src/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/user",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/user",
+                "reference": "a0280b2b4fa029882895ebd8ba90ece3e65745e8"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\User\\Providers\\UserServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\User\\": "src/",
+                    "He4rt\\User\\Tests\\": "tests/",
+                    "He4rt\\User\\Database\\Factories\\": "database/factories/"
                 }
             },
             "license": [

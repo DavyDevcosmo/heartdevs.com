@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
+use He4rt\Character\Actions\FindCharacterIdByUserId;
+use He4rt\Character\Actions\IncrementExperience;
+use He4rt\Meeting\Actions\AttendMeeting;
 use He4rt\Message\Actions\NewMessage;
 use He4rt\Message\Actions\PersistMessage;
-use He4rt\Message\DTOs\NewMessageDTO;
-use Heart\Character\Application\FindCharacterIdByUserId;
-use Heart\Character\Domain\Actions\IncrementExperience;
-use Heart\Meeting\Application\AttendMeeting;
-use Heart\Provider\Application\FindProvider;
-use Heart\Provider\Application\NewAccountByProvider;
-use Heart\Provider\Domain\Entities\ProviderEntity;
+use He4rt\Message\DTO\NewMessageDTO;
+use He4rt\Provider\Actions\FindProvider;
+use He4rt\Provider\Actions\NewAccountByProvider;
+use He4rt\Provider\Entities\ProviderEntity;
 use Illuminate\Support\Facades\Cache;
 
 test('new message', function (string $provider, array $payload): void {
@@ -77,9 +77,9 @@ test('new message', function (string $provider, array $payload): void {
     );
 
     $action->persist($payload);
-})->with('dataProvider');
+})->with('data provider');
 
-dataset('dataProvider', fn () => [
+dataset('data provider', fn () => [
     'twitch #1' => [
         'provider' => 'twitch',
         'payload' => [

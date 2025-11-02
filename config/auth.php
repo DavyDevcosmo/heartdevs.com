@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Models\Users\User;
+use He4rt\User\Models\User;
 
 return [
 
