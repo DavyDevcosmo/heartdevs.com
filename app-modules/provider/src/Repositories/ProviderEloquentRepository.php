@@ -27,7 +27,7 @@ final class ProviderEloquentRepository implements ProviderRepository
     public function create(string $userId, NewProviderDTO $providerDTO): ProviderEntity
     {
         $model = Provider::query()->create([
-            'user_id' => $userId,
+            'model_id' => $userId,
             ...$providerDTO->jsonSerialize(),
         ]);
 
