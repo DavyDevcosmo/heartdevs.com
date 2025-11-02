@@ -15,6 +15,7 @@ test('can create amessage', function (): void {
         ->has(Character::factory(['experience' => 1]), 'character')
         ->has(Provider::factory(), 'providers')
         ->create();
+
     $provider = $user->providers[0];
     $payload = [
         'provider' => $provider->provider,
@@ -27,7 +28,10 @@ test('can create amessage', function (): void {
 
     $this
         ->actingAsAdmin()
-        ->postJson(route('messages.create', ['provider' => $provider->provider]), $payload)
+        ->postJson(route('messages.create', ['provider' => $provider->provider]), $payload, [
+            'X-He4rt-Provider' => 'discord',
+            'X-He4rt-Provider-Id' => '123',
+        ])
         ->assertNoContent();
 
     $this->assertDatabaseMissing('characters', [

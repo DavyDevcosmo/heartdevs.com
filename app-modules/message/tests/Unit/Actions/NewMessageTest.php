@@ -85,6 +85,7 @@ dataset('data provider', fn () => [
         'provider' => 'twitch',
         'payload' => [
             'provider' => 'twitch',
+            'tenant_id' => 1,
             'provider_id' => '1234',
             'provider_message_id' => '78781237',
             'channel_id' => '31231267312',
