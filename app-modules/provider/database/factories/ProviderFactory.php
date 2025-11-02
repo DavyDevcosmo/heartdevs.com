@@ -20,7 +20,7 @@ final class ProviderFactory extends Factory
             'tenant_id' => Tenant::factory(),
             'model_type' => User::class,
             'model_id' => User::factory(),
-            'provider' => fake()->randomElement(['twitch', 'discord']),
+            'provider' => fake()->randomElement(['discord']),
             'provider_id' => fake()->numerify('######'),
             'email' => fake()->unique()->email(),
         ];

@@ -9,6 +9,7 @@ use He4rt\Provider\DTO\NewProviderDTO;
 use He4rt\Provider\Entities\ProviderEntity;
 use He4rt\Provider\Exceptions\ProviderException;
 use He4rt\Provider\Models\Provider;
+use He4rt\User\Models\User;
 
 final class ProviderEloquentRepository implements ProviderRepository
 {
@@ -28,6 +29,7 @@ final class ProviderEloquentRepository implements ProviderRepository
     {
         $model = Provider::query()->create([
             'model_id' => $userId,
+            'model_type' => User::class, // Ok for now. The other type of models will be registered at Filament side.
             ...$providerDTO->jsonSerialize(),
         ]);
 
