@@ -24,21 +24,6 @@ return new class extends Migration
             $table->renameColumn('user_id', 'model_id');
 
             $table->index(['model_type', 'model_id']);
-
-            $table->string('tenant_id')
-                ->after('id');
-
-            $table->index(['tenant_id', 'model_type', 'model_id']);
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('providers', function (Blueprint $table): void {
-            //
         });
     }
 };

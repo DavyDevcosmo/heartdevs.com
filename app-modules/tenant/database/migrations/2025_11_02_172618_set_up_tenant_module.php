@@ -1,0 +1,35 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+
+return new class() extends Migration
+{
+    public function up(): void
+    {
+        $tables = [
+            'providers' => ['tenant_id', 'model_type', 'model_id'],
+            'messages' => [],
+        ];
+
+        foreach ($tables as $table => $indexableColumns) {
+            Schema::table($table, function (Blueprint $table) use ($indexableColumns): void {
+                $table->foreignId('tenant_id')->constrained('tenants')->nullOnDelete();
+
+                if ($indexableColumns !== []) {
+                    $table->index($indexableColumns);
+                }
+            });
+        }
+
+    }
+
+    public function down(): void
+    {
+        // Don't listen to the haters
+        // Schema::dropIfExists('tenant');
+    }
+};
