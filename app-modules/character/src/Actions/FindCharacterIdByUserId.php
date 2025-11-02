@@ -24,10 +24,12 @@ class FindCharacterIdByUserId
 
     private function findCharacterByUserId(string $userId): string
     {
+        $character = Character::query()
+            ->where('tenant_id', request()->tenant_id)
+            ->where('user_id', $userId)->firstOrFail();
+
         return CharacterEntity::make(
-            Character::query()
-                ->where('tenant_id', request()->tenant_id)
-                ->where('user_id', $userId)->first()->toArray()
+            $character->toArray()
         )->id;
     }
 }
