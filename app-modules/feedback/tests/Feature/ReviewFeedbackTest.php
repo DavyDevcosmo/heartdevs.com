@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use He4rt\Feedback\Models\Feedback;
 use He4rt\Provider\Models\Provider;
+use He4rt\Tenant\Models\Tenant;
 use Symfony\Component\HttpFoundation\Response;
 
 dataset('data provider', fn () => [
@@ -27,8 +28,19 @@ dataset('data provider', fn () => [
 ]);
 
 test('can handle feedback', function (string $action, array $payload, array $expected): void {
-    $feedback = Feedback::factory()->create();
-    $staffProvider = Provider::factory()->create(['provider' => 'discord']);
+
+    $tenant = Tenant::factory()
+        ->afterCreating(function (Tenant $tenant): void {
+            Provider::factory([
+                'tenant_id' => $tenant->getKey(),
+                'provider' => 'discord',
+                'provider_id' => '123',
+            ])->create();
+        })
+        ->create();
+
+    $feedback = Feedback::factory()->create(['tenant_id' => $tenant->getKey()]);
+    $staffProvider = Provider::factory()->create(['tenant_id' => $tenant->getKey(), 'provider' => 'discord']);
 
     $payload['staff_id'] = $staffProvider->provider_id;
     $response = $this
