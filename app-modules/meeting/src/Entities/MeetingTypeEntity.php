@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace He4rt\Meeting\Entities;
 
 use DateTimeImmutable;
+use DateTimeInterface;
 
 final readonly class MeetingTypeEntity
 {
@@ -17,11 +18,15 @@ final readonly class MeetingTypeEntity
 
     public static function make(array $payload): self
     {
+        $toImmutable = fn ($value) => $value instanceof DateTimeInterface
+            ? DateTimeImmutable::createFromMutable($value)
+            : new DateTimeImmutable($value);
+
         return new self(
             id: $payload['id'],
             name: $payload['name'],
             weekDay: $payload['week_day'],
-            startAt: new DateTimeImmutable($payload['start_at']),
+            startAt: $toImmutable($payload['start_at']),
         );
     }
 

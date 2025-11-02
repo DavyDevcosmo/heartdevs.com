@@ -3,12 +3,9 @@
 declare(strict_types=1);
 
 use He4rt\Meeting\Models\MeetingType;
-use He4rt\Provider\Model\Provider;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use He4rt\Provider\Models\Provider;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
-
-uses(DatabaseTransactions::class);
 
 test('bot can start new meeting', function (): void {
     // Arrange
@@ -40,6 +37,7 @@ test('bot can start new meeting', function (): void {
     $this->assertDatabaseHas('meetings', $expectedResponse);
     expect(Cache::tags(['meetings'])->has('current-meeting'))->toBeTrue();
 });
+
 test('meeting type not found', function (): void {
     // Arrange
     $providerName = 'discord';

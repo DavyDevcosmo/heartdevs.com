@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace He4rt\Integrations\Twitch\OAuth\DTO;
 
-use Heart\Autentication\DTO\OAuthAccessDTO;
-use Heart\Autentication\DTO\OAuthUserDTO;
+use He4rt\Authentication\DTO\OAuthAccessDTO;
+use He4rt\Authentication\DTO\OAuthUserDTO;
 
 final class TwitchOAuthDTO extends OAuthUserDTO
 {

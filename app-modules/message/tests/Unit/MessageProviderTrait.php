@@ -2,14 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Message;
+namespace He4rt\Message\Tests\Unit;
 
+use DateMalformedStringException;
 use DateTimeImmutable;
-use Heart\Message\Domain\Entities\MessageEntity;
+use He4rt\Message\Entities\MessageEntity;
 use Illuminate\Support\Facades\Date;
 
 trait MessageProviderTrait
 {
+    /**
+     * @throws DateMalformedStringException
+     */
     public function validMessagePayload(array $fields = []): array
     {
         return [
@@ -25,6 +29,9 @@ trait MessageProviderTrait
         ];
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     public function validMessageEntity(): MessageEntity
     {
         return MessageEntity::make($this->validMessagePayload());

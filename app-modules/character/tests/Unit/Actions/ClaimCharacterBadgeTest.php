@@ -3,29 +3,43 @@
 declare(strict_types=1);
 
 use He4rt\Badge\Actions\FindBadgeBySlug;
+use He4rt\Badge\Contracts\BadgeRepository;
 use He4rt\Badge\Tests\Unit\BadgeProviderTrait;
 use He4rt\Character\Actions\ClaimCharacterBadge;
 use He4rt\Character\Actions\FindCharacterIdByUserId;
 use He4rt\Character\Actions\PersistClaimedBadge;
+use He4rt\Character\Contracts\CharacterRepository;
 use He4rt\Character\Tests\Unit\ProviderProviderTrait;
 use He4rt\Provider\Actions\FindProvider;
-use Mockery as m;
+use He4rt\Provider\Contracts\ProviderRepository;
+use He4rt\User\Contracts\UserRepository;
 
-uses(BadgeProviderTrait::class);
-
-uses(ProviderProviderTrait::class);
+uses(BadgeProviderTrait::class, ProviderProviderTrait::class);
 
 beforeEach(function (): void {
-    $this->persistClaimBadgeStub = m::mock(PersistClaimedBadge::class);
-    $this->findProviderStub = m::mock(FindProvider::class);
-    $this->findCharacterIdByUserId = m::mock(FindCharacterIdByUserId::class);
-    $this->findBadgeBySlug = m::mock(FindBadgeBySlug::class);
+    // Repository stubs
+    $this->characterRepositoryStub = Mockery::mock(CharacterRepository::class);
+    $this->badgeRepositoryStub = Mockery::mock(BadgeRepository::class);
+    $this->providerRepositoryStub = Mockery::mock(ProviderRepository::class);
+    $this->userRepositoryStub = Mockery::mock(UserRepository::class);
+
+    // Action instances
+    $this->persistClaimedBadge = new PersistClaimedBadge($this->characterRepositoryStub);
+    $this->findBadgeBySlug = new FindBadgeBySlug($this->badgeRepositoryStub);
+
+    // Action stubs
+    $this->findProviderStub = Mockery::mock(FindProvider::class);
+    $this->findCharacterIdByUserId = Mockery::mock(FindCharacterIdByUserId::class);
+
+    // Sample entities
     $this->providerEntity = $this->validProviderEntity();
     $this->badgeEntity = $this->validBadgeEntity();
 });
+
 afterEach(function (): void {
-    m::close();
+    Mockery::close();
 });
+
 test('claim character badge success', function (): void {
     $this->findProviderStub
         ->shouldReceive('handle')
@@ -39,19 +53,19 @@ test('claim character badge success', function (): void {
         ->once()
         ->andReturn('character-id');
 
-    $this->findBadgeBySlug
-        ->shouldReceive('handle')
+    $this->badgeRepositoryStub
+        ->shouldReceive('findBySlug')
         ->with('é o canhas')
         ->once()
         ->andReturn($this->badgeEntity);
 
-    $this->persistClaimBadgeStub
-        ->shouldReceive('handle')
+    $this->characterRepositoryStub
+        ->shouldReceive('claimBadge')
         ->with('character-id', $this->badgeEntity->id)
         ->once();
 
     $test = new ClaimCharacterBadge(
-        $this->persistClaimBadgeStub,
+        $this->persistClaimedBadge,
         $this->findProviderStub,
         $this->findCharacterIdByUserId,
         $this->findBadgeBySlug

@@ -15,8 +15,5 @@ class RankingServiceProvider extends ServiceProvider
         $this->app->bind(RankingRepository::class, RankingEloquentRepository::class);
     }
 
-    public function boot(): void
-    {
-        $this->loadRoutesFrom(__DIR__.'/../../routes/ranking-routes.php');
-    }
+    public function boot(): void {}
 }

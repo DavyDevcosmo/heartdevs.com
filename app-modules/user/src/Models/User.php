@@ -55,4 +55,11 @@ final class User extends Model
     {
         return UserFactory::new();
     }
+
+    protected function casts(): array
+    {
+        return [
+            'is_donator' => 'boolean',
+        ];
+    }
 }

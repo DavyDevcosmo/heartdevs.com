@@ -1680,7 +1680,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/authentication",
-                "reference": "49d5901908d54157e9b6fc7f15da317dd3684180"
+                "reference": "378308b889c04819dd97619898a2107ebf09b68e"
             },
             "type": "library",
             "extra": {
@@ -1692,10 +1692,7 @@
             },
             "autoload": {
                 "psr-4": {
-                    "He4rt\\Authentication\\": "src/",
-                    "He4rt\\Authentication\\Tests\\": "tests/",
-                    "He4rt\\Authentication\\Database\\Factories\\": "database/factories/",
-                    "He4rt\\Authentication\\Database\\Seeders\\": "database/seeders/"
+                    "He4rt\\Authentication\\": "src/"
                 }
             },
             "license": [
@@ -1743,7 +1740,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/character",
-                "reference": "fe4157267a26c439c656930cde032403cc74bd58"
+                "reference": "bf450394fb6662fcc1b0cd3214f11edc86e6b9d0"
             },
             "type": "library",
             "extra": {
@@ -1757,8 +1754,7 @@
                 "psr-4": {
                     "He4rt\\Character\\": "src/",
                     "He4rt\\Character\\Tests\\": "tests/",
-                    "He4rt\\Character\\Database\\Factories\\": "database/factories/",
-                    "He4rt\\Character\\Database\\Seeders\\": "database/seeders/"
+                    "He4rt\\Character\\Database\\Factories\\": "database/factories/"
                 }
             },
             "license": [
@@ -1775,7 +1771,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/feedback",
-                "reference": "3198b1f07c4f741a537d0e7db676113d925741bc"
+                "reference": "454e99c8aa23d942e20fb183482bb4edd3ed4b84"
             },
             "type": "library",
             "extra": {
@@ -1789,8 +1785,7 @@
                 "psr-4": {
                     "He4rt\\Feedback\\": "src/",
                     "He4rt\\Feedback\\Tests\\": "tests/",
-                    "He4rt\\Feedback\\Database\\Factories\\": "database/factories/",
-                    "He4rt\\Feedback\\Database\\Seeders\\": "database/seeders/"
+                    "He4rt\\Feedback\\Database\\Factories\\": "database/factories/"
                 }
             },
             "license": [
@@ -1807,7 +1802,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/integrations",
-                "reference": "89c22f3466924b16e956e20c093a593dee2cbfce"
+                "reference": "0cbc485eef0eb216c9443cf7d19e36b6371dbbd2"
             },
             "type": "library",
             "extra": {
@@ -1819,10 +1814,7 @@
             },
             "autoload": {
                 "psr-4": {
-                    "He4rt\\Integrations\\": "src/",
-                    "He4rt\\Integrations\\Tests\\": "tests/",
-                    "He4rt\\Integrations\\Database\\Factories\\": "database/factories/",
-                    "He4rt\\Integrations\\Database\\Seeders\\": "database/seeders/"
+                    "He4rt\\Integrations\\": "src/"
                 }
             },
             "license": [
@@ -1839,7 +1831,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/meeting",
-                "reference": "6b0d3a5d1501c5ace72ae169a95e631a054b7e00"
+                "reference": "8a43c60ddbe831bf61793cc328a3ce39c66845ce"
             },
             "type": "library",
             "extra": {
@@ -1853,8 +1845,7 @@
                 "psr-4": {
                     "He4rt\\Meeting\\": "src/",
                     "He4rt\\Meeting\\Tests\\": "tests/",
-                    "He4rt\\Meeting\\Database\\Factories\\": "database/factories/",
-                    "He4rt\\Meeting\\Database\\Seeders\\": "database/seeders/"
+                    "He4rt\\Meeting\\Database\\Factories\\": "database/factories/"
                 }
             },
             "license": [
@@ -1903,7 +1894,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/provider",
-                "reference": "03eb94756cebf6d8fab1bb22a4ef7a86c463b8ca"
+                "reference": "1eea8b77a31da8dadac2dad2c7a56be86f8dc756"
             },
             "type": "library",
             "extra": {
@@ -1917,8 +1908,7 @@
                 "psr-4": {
                     "He4rt\\Provider\\": "src/",
                     "He4rt\\Provider\\Tests\\": "tests/",
-                    "He4rt\\Provider\\Database\\Factories\\": "database/factories/",
-                    "He4rt\\Provider\\Database\\Seeders\\": "database/seeders/"
+                    "He4rt\\Provider\\Database\\Factories\\": "database/factories/"
                 }
             },
             "license": [
@@ -1935,7 +1925,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/ranking",
-                "reference": "621560de8a9a0aeea465875ce76e84a8f06974e8"
+                "reference": "2db71fc3edecca56ba2640ca7e28d9eda8665e20"
             },
             "type": "library",
             "extra": {
@@ -1948,9 +1938,7 @@
             "autoload": {
                 "psr-4": {
                     "He4rt\\Ranking\\": "src/",
-                    "He4rt\\Ranking\\Tests\\": "tests/",
-                    "He4rt\\Ranking\\Database\\Factories\\": "database/factories/",
-                    "He4rt\\Ranking\\Database\\Seeders\\": "database/seeders/"
+                    "He4rt\\Ranking\\Tests\\": "tests/"
                 }
             },
             "license": [
@@ -1999,7 +1987,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/shared",
-                "reference": "2ff7b44be1a5a2bdfdd4cee8a92766af86bf04be"
+                "reference": "0059504007723c94b1dbf03ffc035b2db8f5d5a3"
             },
             "type": "library",
             "extra": {
@@ -2011,10 +1999,7 @@
             },
             "autoload": {
                 "psr-4": {
-                    "He4rt\\Shared\\": "src/",
-                    "He4rt\\Shared\\Tests\\": "tests/",
-                    "He4rt\\Shared\\Database\\Factories\\": "database/factories/",
-                    "He4rt\\Shared\\Database\\Seeders\\": "database/seeders/"
+                    "He4rt\\Shared\\": "src/"
                 }
             },
             "license": [
@@ -2031,7 +2016,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/user",
-                "reference": "8436883bb7249c8f78fc460ca3946a68bce8f4a9"
+                "reference": "a0280b2b4fa029882895ebd8ba90ece3e65745e8"
             },
             "type": "library",
             "extra": {
@@ -2045,8 +2030,7 @@
                 "psr-4": {
                     "He4rt\\User\\": "src/",
                     "He4rt\\User\\Tests\\": "tests/",
-                    "He4rt\\User\\Database\\Factories\\": "database/factories/",
-                    "He4rt\\User\\Database\\Seeders\\": "database/seeders/"
+                    "He4rt\\User\\Database\\Factories\\": "database/factories/"
                 }
             },
             "license": [
@@ -11899,12 +11883,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.3"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }

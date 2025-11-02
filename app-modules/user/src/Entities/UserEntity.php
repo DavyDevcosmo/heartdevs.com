@@ -30,7 +30,6 @@ final readonly class UserEntity
         }
     }
 
-    /** @throws UserEntityException */
     public static function fromArray(array $user): self
     {
         return new self(

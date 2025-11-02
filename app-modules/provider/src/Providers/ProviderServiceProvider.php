@@ -15,8 +15,5 @@ class ProviderServiceProvider extends ServiceProvider
         $this->app->bind(ProviderRepository::class, ProviderEloquentRepository::class);
     }
 
-    public function boot(): void
-    {
-        $this->loadRoutesFrom(__DIR__.'/../../routes/provider-routes.php');
-    }
+    public function boot(): void {}
 }

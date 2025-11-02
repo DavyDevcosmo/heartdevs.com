@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Feedback\Http\Requests\Requests;
+namespace He4rt\Feedback\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 

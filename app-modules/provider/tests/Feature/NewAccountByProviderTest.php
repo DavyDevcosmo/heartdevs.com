@@ -31,6 +31,7 @@ test('can create account by provider', function (): void {
         'user_id' => $response['userId'],
     ]);
 });
+
 test('should not create account with a registered provider', function (): void {
     $provider = Provider::factory()->create();
 

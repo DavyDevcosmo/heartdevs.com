@@ -41,8 +41,9 @@ final class MeetingType extends Model
 
     private function generateStartAt(string $value): string
     {
+        $value = (int) $value;
         $hours = (string) intdiv($value, 60);
-        $minutes = $value % 60;
+        $minutes = (string) ($value % 60);
 
         $hours = mb_str_pad($hours, 2, '0', STR_PAD_LEFT);
         $minutes = mb_str_pad($minutes, 2, '0', STR_PAD_LEFT);

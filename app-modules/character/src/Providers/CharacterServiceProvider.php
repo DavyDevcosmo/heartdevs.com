@@ -15,8 +15,5 @@ class CharacterServiceProvider extends ServiceProvider
         $this->app->bind(CharacterRepository::class, CharacterEloquentRepository::class);
     }
 
-    public function boot(): void
-    {
-        $this->loadRoutesFrom(__DIR__.'/../../routes/character-routes.php');
-    }
+    public function boot(): void {}
 }

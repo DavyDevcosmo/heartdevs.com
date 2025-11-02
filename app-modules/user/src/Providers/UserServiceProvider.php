@@ -15,8 +15,5 @@ class UserServiceProvider extends ServiceProvider
         $this->app->bind(UserRepository::class, UserEloquentRepository::class);
     }
 
-    public function boot(): void
-    {
-        $this->loadRoutesFrom(__DIR__.'/../../routes/user-routes.php');
-    }
+    public function boot(): void {}
 }

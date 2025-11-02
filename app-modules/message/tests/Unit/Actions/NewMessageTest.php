@@ -77,9 +77,9 @@ test('new message', function (string $provider, array $payload): void {
     );
 
     $action->persist($payload);
-})->with('dataProvider');
+})->with('data provider');
 
-dataset('dataProvider', fn () => [
+dataset('data provider', fn () => [
     'twitch #1' => [
         'provider' => 'twitch',
         'payload' => [

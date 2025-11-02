@@ -7,8 +7,8 @@ namespace He4rt\Feedback\Http\Controllers;
 use He4rt\Feedback\Actions\CreateFeedback;
 use He4rt\Feedback\Actions\GetFeedbackById;
 use He4rt\Feedback\Actions\ReviewFeedback;
-use He4rt\Feedback\Http\Requests\Requests\CreateFeedbackRequest;
-use He4rt\Feedback\Http\Requests\Requests\FeedbackReviewRequest;
+use He4rt\Feedback\Http\Requests\CreateFeedbackRequest;
+use He4rt\Feedback\Http\Requests\FeedbackReviewRequest;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
