@@ -8,27 +8,25 @@ use He4rt\User\Actions\FindProfile;
 use He4rt\User\Actions\GetProfile;
 use He4rt\User\Contracts\UserRepository;
 use He4rt\User\Exceptions\ProfileException;
-use Mockery as m;
-use Unit\ProfileProviderTrait;
-use Unit\UserProviderTrait;
+use He4rt\User\Tests\Unit\ProfileProviderTrait;
+use He4rt\User\Tests\Unit\UserProviderTrait;
 
-uses(ProfileProviderTrait::class);
-
-uses(ProviderProviderTrait::class);
-
-uses(UserProviderTrait::class);
+uses(ProfileProviderTrait::class, ProviderProviderTrait::class, UserProviderTrait::class);
 
 beforeEach(function (): void {
-    $this->userRepositoryStub = m::mock(UserRepository::class);
-    $this->getProfileStub = m::mock(GetProfile::class);
-    $this->providerRepositoryStub = m::mock(ProviderRepository::class);
+    $this->userRepositoryStub = Mockery::mock(UserRepository::class);
+    $this->providerRepositoryStub = Mockery::mock(ProviderRepository::class);
+    $this->getProfile = new GetProfile($this->userRepositoryStub);
+
     $this->providerEntity = $this->validProviderEntity();
     $this->userEntity = $this->validUserEntity();
     $this->profileEntity = $this->validProfileEntity();
 });
+
 afterEach(function (): void {
-    m::close();
+    Mockery::close();
 });
+
 test('find profile with username success', function (): void {
     $this->userRepositoryStub
         ->shouldReceive('findByUsername')
@@ -36,16 +34,17 @@ test('find profile with username success', function (): void {
         ->once()
         ->andReturn($this->userEntity);
 
-    $this->getProfileStub
-        ->shouldReceive('handle')
+    $this->userRepositoryStub
+        ->shouldReceive('findProfile')
         ->with($this->userEntity->id)
         ->once()
         ->andReturn($this->profileEntity);
 
-    $test = new FindProfile($this->getProfileStub, $this->userRepositoryStub, $this->providerRepositoryStub);
+    $test = new FindProfile($this->getProfile, $this->userRepositoryStub, $this->providerRepositoryStub);
 
     $test->handle('canhassi');
 });
+
 test('find profile with provider id success', function (): void {
     $this->userRepositoryStub
         ->shouldReceive('findByUsername')
@@ -58,16 +57,17 @@ test('find profile with provider id success', function (): void {
         ->once()
         ->andReturn($this->providerEntity);
 
-    $this->getProfileStub
-        ->shouldReceive('handle')
+    $this->userRepositoryStub
+        ->shouldReceive('findProfile')
         ->with($this->providerEntity->userId)
         ->once()
         ->andReturn($this->profileEntity);
 
-    $test = new FindProfile($this->getProfileStub, $this->userRepositoryStub, $this->providerRepositoryStub);
+    $test = new FindProfile($this->getProfile, $this->userRepositoryStub, $this->providerRepositoryStub);
 
     $test->handle('canhassi-id');
 });
+
 test('profile not found', function (): void {
     $this->expectException(ProfileException::class);
 
@@ -81,7 +81,11 @@ test('profile not found', function (): void {
         ->with('canhassi-id')
         ->once();
 
-    $test = new FindProfile($this->getProfileStub, $this->userRepositoryStub, $this->providerRepositoryStub);
+    $this->userRepositoryStub
+        ->shouldReceive('findProfile')
+        ->never();
+
+    $test = new FindProfile($this->getProfile, $this->userRepositoryStub, $this->providerRepositoryStub);
 
     $test->handle('canhassi-id');
 });

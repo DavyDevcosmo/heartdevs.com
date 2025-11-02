@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use He4rt\Badge\Models\Badge;
 use He4rt\Character\Models\Character;
 use He4rt\Character\Models\PastSeason;
 use He4rt\Message\Models\Message;
@@ -9,10 +10,7 @@ use He4rt\Provider\Models\Provider;
 use He4rt\User\Models\Address;
 use He4rt\User\Models\Information;
 use He4rt\User\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Symfony\Component\HttpFoundation\Response;
-
-uses(DatabaseTransactions::class);
 
 test('can find profile with username', function (): void {
     $user = User::factory()
@@ -54,6 +52,7 @@ test('can find profile with username', function (): void {
             ],
         ]);
 });
+
 test('can find profile with provider id', function (): void {
     $user = User::factory()
         ->has(Character::factory()->has(PastSeason::factory()), 'character')

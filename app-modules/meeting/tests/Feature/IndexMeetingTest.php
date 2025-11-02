@@ -3,9 +3,6 @@
 declare(strict_types=1);
 
 use He4rt\Meeting\Models\Meeting;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
-
-uses(DatabaseTransactions::class);
 
 test('bot can list all meetings', function (): void {
     // Arrange

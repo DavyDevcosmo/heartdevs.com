@@ -18,8 +18,5 @@ class MeetingServiceProvider extends ServiceProvider
         $this->app->bind(MeetingTypeRepository::class, MeetingTypeEloquentRepository::class);
     }
 
-    public function boot(): void
-    {
-        $this->loadRoutesFrom(__DIR__.'/../../routes/meeting-routes.php');
-    }
+    public function boot(): void {}
 }

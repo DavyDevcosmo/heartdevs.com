@@ -12,7 +12,7 @@ trait UserProviderTrait
     public function validUserPayload(array $fields = []): array
     {
         return [
-            'id' => 12,
+            'id' => '12',
             'username' => new UserName('canhassi'),
             'isDonator' => false,
             ...$fields,

@@ -5,21 +5,28 @@ declare(strict_types=1);
 use He4rt\Character\Actions\ClaimDailyBonus;
 use He4rt\Character\Actions\FindCharacterIdByUserId;
 use He4rt\Character\Actions\PersistDailyBonus;
+use He4rt\Character\Contracts\CharacterRepository;
+use He4rt\Character\Tests\Unit\CharacterProviderTrait;
 use He4rt\Character\Tests\Unit\ProviderProviderTrait;
 use He4rt\Provider\Actions\FindProvider;
-use Mockery as m;
 
-uses(ProviderProviderTrait::class);
+uses(ProviderProviderTrait::class, CharacterProviderTrait::class);
 
 beforeEach(function (): void {
-    $this->persistDailyStub = m::mock(PersistDailyBonus::class);
-    $this->findProviderStub = m::mock(FindProvider::class);
-    $this->findCharacterIdByUserId = m::mock(FindCharacterIdByUserId::class);
+    $this->characterRepositoryStub = Mockery::mock(CharacterRepository::class);
+    $this->persistDailyBonus = new PersistDailyBonus($this->characterRepositoryStub);
+    $this->findProviderStub = Mockery::mock(FindProvider::class);
+    $this->findCharacterIdByUserIdStub = Mockery::mock(FindCharacterIdByUserId::class);
     $this->providerEntity = $this->validProviderEntity();
+    $this->characterEntity = $this->validCharacterEntity([
+        'daily_bonus_claimed_at' => null,
+    ]);
 });
+
 afterEach(function (): void {
-    m::close();
+    Mockery::close();
 });
+
 test('claim daily bonus success', function (): void {
     $this->findProviderStub
         ->shouldReceive('handle')
@@ -27,21 +34,26 @@ test('claim daily bonus success', function (): void {
         ->once()
         ->andReturn($this->providerEntity);
 
-    $this->findCharacterIdByUserId
+    $this->findCharacterIdByUserIdStub
         ->shouldReceive('handle')
         ->with($this->providerEntity->userId)
         ->once()
         ->andReturn('character-id');
 
-    $this->persistDailyStub
-        ->shouldReceive('handle')
+    $this->characterRepositoryStub
+        ->shouldReceive('findById')
         ->with('character-id')
+        ->once()
+        ->andReturn($this->characterEntity);
+
+    $this->characterRepositoryStub
+        ->shouldReceive('claimDailyBonus')
         ->once();
 
     $test = new ClaimDailyBonus(
-        $this->persistDailyStub,
+        $this->persistDailyBonus,
         $this->findProviderStub,
-        $this->findCharacterIdByUserId
+        $this->findCharacterIdByUserIdStub
     );
 
     $test->handle('canhassi-provider', 'canhassi-id');

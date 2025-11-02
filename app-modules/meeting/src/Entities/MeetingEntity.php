@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace He4rt\Meeting\Entities;
 
 use DateTimeImmutable;
+use DateTimeInterface;
 
 final class MeetingEntity
 {
@@ -21,19 +22,19 @@ final class MeetingEntity
 
     public static function make(array $payload): self
     {
-        $endsAt = blank($payload['ends_at'])
-            ? null
-            : new DateTimeImmutable($payload['ends_at']);
+        $toImmutable = fn ($value) => $value instanceof DateTimeInterface
+            ? DateTimeImmutable::createFromMutable($value)
+            : new DateTimeImmutable($value);
 
         return new self(
             id: $payload['id'],
             content: $payload['content'] ?? null,
             meetingTypeId: $payload['meeting_type_id'],
             adminId: $payload['admin_id'],
-            startsAt: new DateTimeImmutable($payload['starts_at']),
-            endsAt: $endsAt,
-            createdAt: new DateTimeImmutable($payload['created_at']),
-            updatedAt: new DateTimeImmutable($payload['updated_at'])
+            startsAt: $toImmutable($payload['starts_at']),
+            endsAt: isset($payload['ends_at']) ? $toImmutable($payload['ends_at']) : null,
+            createdAt: $toImmutable($payload['created_at']),
+            updatedAt: $toImmutable($payload['updated_at'])
         );
     }
 }

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace He4rt\Integrations\Twitch\OAuth\Client;
 
 use GuzzleHttp\Client;
+use He4rt\Authentication\DTO\OAuthAccessDTO;
 use He4rt\Integrations\Twitch\OAuth\Contracts\TwitchOAuthService;
 use He4rt\Integrations\Twitch\OAuth\DTO\TwitchOAuthAccessDTO;
 use He4rt\Integrations\Twitch\OAuth\DTO\TwitchOAuthDTO;
-use Heart\Autentication\DTO\OAuthAccessDTO;
 
 final readonly class TwitchOAuthClient implements TwitchOAuthService
 {

@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 use He4rt\Feedback\Models\Feedback;
 use He4rt\Provider\Models\Provider;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Symfony\Component\HttpFoundation\Response;
 
-uses(DatabaseTransactions::class);
-
-dataset('dataProvider', fn () => [
+dataset('data provider', fn () => [
     'approve feedback' => [
         'action' => 'approved',
         'payload' => [],
@@ -28,6 +25,7 @@ dataset('dataProvider', fn () => [
         ],
     ],
 ]);
+
 test('can handle feedback', function (string $action, array $payload, array $expected): void {
     $feedback = Feedback::factory()->create();
     $staffProvider = Provider::factory()->create(['provider' => 'discord']);
@@ -44,4 +42,4 @@ test('can handle feedback', function (string $action, array $payload, array $exp
 
     $expected['staff_id'] = $staffProvider->user_id;
     $this->assertDatabaseHas('feedback_reviews', $expected);
-})->with('dataProvider');
+})->with('data provider');

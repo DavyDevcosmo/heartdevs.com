@@ -12,7 +12,7 @@ trait MeetingProviderTrait
     public function validMeetingPayload(array $fields = []): array
     {
         return [
-            'id' => 12,
+            'id' => '12',
             'content' => null,
             'meeting_type_id' => 12,
             'admin_id' => '12',

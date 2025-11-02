@@ -5,10 +5,7 @@ declare(strict_types=1);
 use He4rt\Character\Models\Character;
 use He4rt\Provider\Models\Provider;
 use He4rt\User\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Symfony\Component\HttpFoundation\Response;
-
-uses(DatabaseTransactions::class);
 
 test('success', function (): void {
     $user = User::factory()
@@ -32,6 +29,7 @@ test('success', function (): void {
         'daily_bonus_claimed_at' => $expected,
     ]);
 });
+
 test('should not claim before24 hours', function (): void {
     $user = User::factory()
         ->has(Provider::factory(), 'providers')

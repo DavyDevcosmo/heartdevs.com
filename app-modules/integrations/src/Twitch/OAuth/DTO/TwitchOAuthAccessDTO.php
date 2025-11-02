@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace He4rt\Integrations\Twitch\OAuth\DTO;
 
-use Heart\Autentication\DTO\OAuthAccessDTO;
+use He4rt\Authentication\DTO\OAuthAccessDTO;
 
-final class TwitchOAuthAccessDTO extends OAuthAccessDTO
+class TwitchOAuthAccessDTO extends OAuthAccessDTO
 {
     public static function make(array $payload): self
     {

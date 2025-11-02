@@ -18,8 +18,5 @@ class AuthenticationServiceProvider extends ServiceProvider
         $this->app->bind(TokenRepository::class, TokenEloquentRepository::class);
     }
 
-    public function boot(): void
-    {
-        $this->loadRoutesFrom(__DIR__.'/../../routes/authentication-routes.php');
-    }
+    public function boot(): void {}
 }

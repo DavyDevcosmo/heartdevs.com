@@ -18,7 +18,7 @@ final class ProviderFactory extends Factory
             'id' => fake()->uuid(),
             'user_id' => User::factory(),
             'provider' => fake()->randomElement(['twitch', 'discord']),
-            'provider_id' => fake()->randomNumber(6),
+            'provider_id' => fake()->numerify('######'),
             'email' => fake()->unique()->email(),
         ];
     }

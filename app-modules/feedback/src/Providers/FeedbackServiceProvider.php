@@ -15,8 +15,5 @@ class FeedbackServiceProvider extends ServiceProvider
         $this->app->bind(FeedbackRepository::class, FeedbackEloquentRepository::class);
     }
 
-    public function boot(): void
-    {
-        $this->loadRoutesFrom(__DIR__.'/../../routes/feedback-routes.php');
-    }
+    public function boot(): void {}
 }

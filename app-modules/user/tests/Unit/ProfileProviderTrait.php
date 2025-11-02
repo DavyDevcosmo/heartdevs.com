@@ -45,7 +45,7 @@ trait ProfileProviderTrait
                 ],
                 'past_seasons' => [
                     [
-                        'id' => 1,
+                        'id' => '1',
                         'season_id' => '2',
                         'character_id' => 'c58fde47-ec6f-31c2-82e1-0c929a9e181d',
                         'ranking_position' => 220,
