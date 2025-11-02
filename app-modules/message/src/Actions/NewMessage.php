@@ -36,6 +36,7 @@ final readonly class NewMessage
 
         } catch (ProviderException) {
             $providerEntity = $this->createAccount->handle(
+                $messageDTO->tenantId,
                 $messageDTO->provider,
                 $messageDTO->providerId,
                 'discord-'.$messageDTO->providerId
