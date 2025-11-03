@@ -16,8 +16,7 @@ final readonly class NewBadgeDTO implements JsonSerializable
         private string $redeemCode,
         private bool $active,
         private int $tenant_id
-    ) {
-    }
+    ) {}
 
     public static function make(array $payload): self
     {
@@ -41,7 +40,7 @@ final readonly class NewBadgeDTO implements JsonSerializable
             'image_url' => $this->imageUrl,
             'redeem_code' => $this->redeemCode,
             'active' => $this->active,
-            'tenant_id' => $this->tenant_id
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

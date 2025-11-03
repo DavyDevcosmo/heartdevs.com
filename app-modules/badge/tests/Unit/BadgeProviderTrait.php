@@ -17,7 +17,7 @@ trait BadgeProviderTrait
             'image_url' => 'vaicaralho.jpg',
             'redeem_code' => 'he4rtDevelopers',
             'active' => true,
-            'tenant_id' => 1
+            'tenant_id' => 1,
         ];
     }
 

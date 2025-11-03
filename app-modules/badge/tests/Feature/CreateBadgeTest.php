@@ -14,7 +14,7 @@ test('can create badge', function (): void {
         'image_url' => 'https://http.cat/200',
         'redeem_code' => '123',
         'active' => true,
-        'tenant_id' => $tenant->getKey()
+        'tenant_id' => $tenant->getKey(),
     ];
 
     $this->actingAsAdmin()

@@ -22,7 +22,7 @@ final class CreateBadgeRequest extends FormRequest
             'image_url' => ['required', 'url'],
             'redeem_code' => ['required', 'string'],
             'active' => ['required', 'boolean'],
-            'tenant_id' => ['required', 'int']
+            'tenant_id' => ['required', 'int'],
         ];
     }
 }

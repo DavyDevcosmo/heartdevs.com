@@ -16,8 +16,7 @@ final readonly class BadgeEntity implements JsonSerializable
         public bool $active,
         public string $imageUrl,
         public int $tenantId
-    ) {
-    }
+    ) {}
 
     public static function make(array $payload): self
     {
@@ -38,7 +37,7 @@ final readonly class BadgeEntity implements JsonSerializable
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'image_url' => $this->imageUrl
+            'image_url' => $this->imageUrl,
         ];
     }
 }

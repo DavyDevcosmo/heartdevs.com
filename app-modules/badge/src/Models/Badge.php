@@ -21,7 +21,7 @@ final class Badge extends Model
         'image_url',
         'redeem_code',
         'active',
-        'tenant_id'
+        'tenant_id',
     ];
 
     protected static function newFactory(): BadgeFactory
