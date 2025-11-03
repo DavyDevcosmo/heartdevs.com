@@ -4,15 +4,24 @@ declare(strict_types=1);
 
 use He4rt\Meeting\Models\MeetingType;
 use He4rt\Provider\Models\Provider;
+use He4rt\Tenant\Models\Tenant;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
 test('bot can start new meeting', function (): void {
     // Arrange
     $providerName = 'discord';
+    /** @var Tenant $tenant */
+    $tenant = Tenant::factory()
+        ->has(Provider::factory([
+            'tenant_id' => 1,
+            'provider' => 'discord',
+            'provider_id' => '123',
+        ])->count(1), 'providers')
+        ->create();
 
     /** @var Provider $provider */
-    $provider = Provider::factory()->create(['provider' => $providerName]);
+    $provider = Provider::factory()->create(['tenant_id' => $tenant->getKey(), 'provider' => $providerName]);
 
     $meetingType = MeetingType::factory()->create();
     $payload = [
