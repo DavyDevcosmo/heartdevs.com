@@ -17,6 +17,7 @@ return new class() extends Migration
             'voice_messages' => [],
             'feedbacks' => [],
             'feedback_reviews' => [],
+            'meetings' => [],
         ];
 
         foreach ($tables as $table => $indexableColumns) {

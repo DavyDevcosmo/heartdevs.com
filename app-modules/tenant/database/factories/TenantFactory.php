@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace He4rt\Tenant\Database\Factories;
 
+use He4rt\Provider\Enums\ProviderEnum;
+use He4rt\Provider\Models\Provider;
 use He4rt\Tenant\Models\Tenant;
 use He4rt\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -25,5 +27,26 @@ final class TenantFactory extends Factory
 
             'owner_id' => User::factory(),
         ];
+    }
+
+    public function withDiscordProvider(string $providerId = '123'): self
+    {
+        return $this->withProvider(ProviderEnum::Discord, $providerId);
+    }
+
+    public function withTwitchProvider(string $providerId = '123'): self
+    {
+        return $this->withProvider(ProviderEnum::Twitch, '456');
+    }
+
+    public function withProvider(ProviderEnum $provider = ProviderEnum::Discord, string $providerId = '123'): self
+    {
+        return $this->afterCreating(function (Tenant $tenant) use ($provider, $providerId): void {
+            Provider::factory()->create([
+                'tenant_id' => $tenant->getKey(),
+                'provider' => $provider,
+                'provider_id' => $providerId,
+            ]);
+        });
     }
 }

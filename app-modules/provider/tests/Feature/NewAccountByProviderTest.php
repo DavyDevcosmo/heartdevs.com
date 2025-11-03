@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use He4rt\Provider\Enums\ProviderEnum;
 use He4rt\Provider\Models\Provider;
-use He4rt\Tenant\Models\Tenant;
 use Symfony\Component\HttpFoundation\Response;
 
 test('can create account by provider', function (): void {
@@ -13,15 +12,6 @@ test('can create account by provider', function (): void {
         'provider_id' => '184789120940244992',
         'username' => 'danielhe4rt',
     ];
-
-    /** @var Tenant $tenant */
-    $tenant = Tenant::factory()
-        ->has(Provider::factory([
-            'tenant_id' => 1,
-            'provider' => 'discord',
-            'provider_id' => '123',
-        ])->count(1), 'providers')
-        ->create();
 
     $response = $this
         ->actingAsAdmin()

@@ -13,11 +13,7 @@ test('bot can start new meeting', function (): void {
     $providerName = 'discord';
     /** @var Tenant $tenant */
     $tenant = Tenant::factory()
-        ->has(Provider::factory([
-            'tenant_id' => 1,
-            'provider' => 'discord',
-            'provider_id' => '123',
-        ])->count(1), 'providers')
+        ->withDiscordProvider()
         ->create();
 
     /** @var Provider $provider */
