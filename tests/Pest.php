@@ -17,8 +17,11 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
+    ->in('../app-modules/*/tests/Unit');
+
+pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
-    ->in('Feature', 'Unit', '../app-modules/*/tests/Unit', '../app-modules/*/tests/Feature');
+    ->in('Feature', 'Unit', '../app-modules/*/tests/Feature');
 
 /*
 |--------------------------------------------------------------------------
