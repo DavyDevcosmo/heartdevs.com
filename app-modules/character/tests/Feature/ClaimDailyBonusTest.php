@@ -43,9 +43,20 @@ test('success', function (): void {
 });
 
 test('should not claim before24 hours', function (): void {
+
+    $tenant = Tenant::factory()
+        ->afterCreating(function (Tenant $tenant): void {
+            Provider::factory([
+                'tenant_id' => $tenant->getKey(),
+                'provider' => 'discord',
+                'provider_id' => '123',
+            ])->create();
+        })
+        ->create();
+
     $user = User::factory()
-        ->has(Provider::factory(), 'providers')
-        ->has(Character::factory(), 'character')
+        ->has(Provider::factory(['tenant_id' => $tenant->getKey()]), 'providers')
+        ->has(Character::factory(['tenant_id' => $tenant->getKey()]), 'character')
         ->create();
 
     $provider = $user->providers[0];
