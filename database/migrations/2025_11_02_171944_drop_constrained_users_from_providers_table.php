@@ -14,8 +14,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+            DB::statement('alter table public.providers drop constraint if exists providers_user_id_foreign');
+        }
 
-        DB::statement('alter table public.providers drop constraint if exists providers_user_id_foreign');
         Schema::table('providers', function (Blueprint $table): void {
             $table->string('user_id')->nullable()->change();
         });
