@@ -17,8 +17,7 @@ return new class() extends Migration {
             'feedbacks' => [],
             'feedback_reviews' => [],
             'meetings' => [],
-            'badges' => [],
-            'sessions' => []
+            'badges' => []
         ];
 
         foreach ($tables as $table => $indexableColumns) {
