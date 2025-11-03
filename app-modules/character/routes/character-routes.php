@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Http\Middleware\VerifyIfHasTenantProviderMiddleware;
 use App\Http\Middleware\BotAuthentication;
+use App\Http\Middleware\VerifyIfHasTenantProviderMiddleware;
 use He4rt\Character\Http\Controllers\CharactersController;
 use Illuminate\Support\Facades\Route;
 
