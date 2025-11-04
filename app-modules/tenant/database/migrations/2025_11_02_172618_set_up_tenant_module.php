@@ -19,12 +19,16 @@ return new class() extends Migration
             'feedback_reviews' => [],
             'meetings' => [],
             'badges' => [],
+            'characters_badges' => [],
             'seasons_rankings' => [],
         ];
 
         foreach ($tables as $table => $indexableColumns) {
             Schema::table($table, function (Blueprint $table) use ($indexableColumns): void {
-                $table->foreignId('tenant_id')->constrained('tenants')->nullOnDelete();
+                $table->foreignId('tenant_id')
+                    ->after('id')
+                    ->constrained('tenants')
+                    ->nullOnDelete();
 
                 if ($indexableColumns !== []) {
                     $table->index($indexableColumns);

@@ -43,6 +43,7 @@ test('can claim badge', function (): void {
     $response->assertStatus(Response::HTTP_NO_CONTENT);
 
     $this->assertDatabaseHas('characters_badges', [
+        'tenant_id' => $tenant->getKey(),
         'character_id' => $user->character->id,
         'badge_id' => $badge->id,
         'claimed_at' => now(),
