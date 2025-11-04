@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cde60ac59d1eb95e3da8ccb209e01663",
+    "content-hash": "7c9d5f58eebf2f8a0c7d3bfd5775488d",
     "packages": [
         {
             "name": "brick/math",
@@ -1680,7 +1680,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/authentication",
-                "reference": "378308b889c04819dd97619898a2107ebf09b68e"
+                "reference": "03784359502b30f8add6e88cf85f8aa2cbc07965"
             },
             "type": "library",
             "extra": {
@@ -1740,7 +1740,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/character",
-                "reference": "bf450394fb6662fcc1b0cd3214f11edc86e6b9d0"
+                "reference": "f7db0fec55103a51ec96da838731bb6e9554f53b"
             },
             "type": "library",
             "extra": {
@@ -1771,7 +1771,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/feedback",
-                "reference": "454e99c8aa23d942e20fb183482bb4edd3ed4b84"
+                "reference": "b8aa7ad4c4a19f366621cd7bdd533d34f2991558"
             },
             "type": "library",
             "extra": {
@@ -1802,7 +1802,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/integrations",
-                "reference": "0cbc485eef0eb216c9443cf7d19e36b6371dbbd2"
+                "reference": "1eb5590d8f46351b3c1c7dec68ab49d94aafbd3c"
             },
             "type": "library",
             "extra": {
@@ -1831,7 +1831,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/meeting",
-                "reference": "8a43c60ddbe831bf61793cc328a3ce39c66845ce"
+                "reference": "bb355f10487e267277247012a775b9e92a5ca6ba"
             },
             "type": "library",
             "extra": {
@@ -1894,7 +1894,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/provider",
-                "reference": "1eea8b77a31da8dadac2dad2c7a56be86f8dc756"
+                "reference": "2aa7bca9ad117070524f06bde1d5a6662eda6760"
             },
             "type": "library",
             "extra": {
@@ -1925,7 +1925,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/ranking",
-                "reference": "2db71fc3edecca56ba2640ca7e28d9eda8665e20"
+                "reference": "01b45cfc17673281aaa2438573d1b4cff456a7a3"
             },
             "type": "library",
             "extra": {
@@ -1987,7 +1987,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/shared",
-                "reference": "0059504007723c94b1dbf03ffc035b2db8f5d5a3"
+                "reference": "ca526534b27c69ed9b557d56233e5e328d084b6c"
             },
             "type": "library",
             "extra": {
@@ -2011,12 +2011,48 @@
             }
         },
         {
+            "name": "he4rt/tenant",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/tenant",
+                "reference": "ddcc46f6ce2c01460ed2b0e7652bf9efd225e838"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Tenant\\Providers\\TenantServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Tenant\\": "src/",
+                    "He4rt\\Tenant\\Database\\Factories\\": "database/factories/",
+                    "He4rt\\Tenant\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "He4rt\\Tenant\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "he4rt/user",
             "version": "1.0",
             "dist": {
                 "type": "path",
                 "url": "app-modules/user",
-                "reference": "a0280b2b4fa029882895ebd8ba90ece3e65745e8"
+                "reference": "04e0fdf2859651ef4803521124202f2ed18faf0b"
             },
             "type": "library",
             "extra": {
