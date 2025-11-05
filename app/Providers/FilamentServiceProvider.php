@@ -12,6 +12,11 @@ class FilamentServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->configureMacros();
+    }
+
+    private function configureMacros(): void
+    {
         Panel::macro('currentPanel', fn (): FilamentPanel => FilamentPanel::from($this->getId()));
 
         Panel::macro('discoverResourcesForPanel', function (string $module, FilamentPanel $panel): void {
@@ -37,6 +42,5 @@ class FilamentServiceProvider extends ServiceProvider
                     for: $filamentModuleNamespace.'\\Pages',
                 );
         });
-
     }
 }
