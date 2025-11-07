@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace He4rt\User\Plugins;
+namespace He4rt\Tenant\Plugins;
 
 use App\Enums\FilamentPanel;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
-use He4rt\User\Filament\Admin\Resources\Users\UserResource;
+use He4rt\Tenant\Filament\Admin\Resources\Tenants\TenantResource;
 
-class AdminUserPanelPlugin implements Plugin
+class AdminTenantPanelPlugin implements Plugin
 {
     public function getId(): string
     {
-        return FilamentPanel::Admin->moduleName('user');
+        return FilamentPanel::Admin->moduleName('tenant');
     }
 
     public function register(Panel $panel): void
     {
         $panel->resources([
-            UserResource::class,
+            TenantResource::class,
         ]);
     }
 
