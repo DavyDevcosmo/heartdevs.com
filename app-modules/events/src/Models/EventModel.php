@@ -120,6 +120,7 @@ class EventModel extends Model
     protected function casts(): array
     {
         return [
+            'active' => 'boolean',
             'event_at' => 'datetime',
             'start_at' => 'datetime',
             'end_at' => 'datetime',
