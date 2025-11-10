@@ -26,6 +26,7 @@ class AuthenticateAction
         $user = $clientProvider->getAuthenticatedUser($accessData);
 
         $provider = Provider::query()
+            ->where('tenant_id', $tenant->getKey())
             ->where('provider', $user->provider)
             ->where('provider_id', $user->providerId)
             ->first();
@@ -34,20 +35,24 @@ class AuthenticateAction
             $provider = $this->registerNewUser($user, $tenant);
         }
 
-        Auth::logout();
-        Auth::login($provider->user);
-        filament()->auth()->setUser($provider->user);
+        if (! auth()->check()) {
+            Auth::logout();
+            Auth::login($provider->user);
+            filament()->auth()->setUser($provider->user);
+        }
     }
 
     private function registerNewUser(OAuthUserDTO $userDTO, Tenant $tenant): Provider
     {
-        $user = User::query()->firstOrCreate(['email' => $userDTO->email], [
+        $user = auth()->check() ? auth()->user() : User::query()->firstOrCreate(['email' => $userDTO->email], [
             'id' => Uuid::uuid4()->toString(),
             'username' => $userDTO->username,
             'name' => $userDTO->name,
             'password' => Hash::make(Date::now()->getTimestamp().'-vai-brasil'),
             'is_donator' => false,
         ]);
+
+        $user->tenants()->attach($tenant);
 
         /** @var Provider $provider */
         $provider = $user->providers()->updateOrCreate([
