@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7683a048c4587981b4ec1802d7bc2e4c",
+    "content-hash": "306cf317839e814f13a9622f2ca3cc40",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -2822,6 +2822,35 @@
                     "He4rt\\Feedback\\": "src/",
                     "He4rt\\Feedback\\Tests\\": "tests/",
                     "He4rt\\Feedback\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/he4rt-core",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/he4rt",
+                "reference": "c2dae2577742891fc5268261792efc1cb0e4d14a"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Core\\Providers\\He4rtServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Core\\": "src/"
                 }
             },
             "license": [
@@ -15093,12 +15122,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.3"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }
