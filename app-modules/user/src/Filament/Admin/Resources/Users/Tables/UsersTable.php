@@ -17,9 +17,17 @@ class UsersTable
     {
         return $table
             ->columns([
-                TextColumn::make('username'),
-                TextColumn::make('email'),
-                IconColumn::make('is_donator'),
+                TextColumn::make('username')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('email')
+                    ->searchable()
+                    ->sortable(),
+                IconColumn::make('is_donator')
+                    ->sortable(),
             ])
             ->recordActions([
                 EditAction::make(),

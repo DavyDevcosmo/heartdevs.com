@@ -108,6 +108,7 @@ final class User extends Authenticatable implements HasName, HasTenants
     {
         return [
             'is_donator' => 'boolean',
+            'password' => 'hashed',
         ];
     }
 }
