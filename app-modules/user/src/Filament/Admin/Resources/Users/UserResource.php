@@ -12,10 +12,6 @@ use Filament\Tables\Table;
 use He4rt\User\Filament\Admin\Resources\Users\Pages\CreateUser;
 use He4rt\User\Filament\Admin\Resources\Users\Pages\EditUser;
 use He4rt\User\Filament\Admin\Resources\Users\Pages\ListUsers;
-use He4rt\User\Filament\Admin\Resources\Users\RelationManagers\AddressRelationManager;
-use He4rt\User\Filament\Admin\Resources\Users\RelationManagers\CharacterRelationManager;
-use He4rt\User\Filament\Admin\Resources\Users\RelationManagers\InformationRelationManager;
-use He4rt\User\Filament\Admin\Resources\Users\RelationManagers\ProvidersRelationManager;
 use He4rt\User\Filament\Admin\Resources\Users\Schemas\UserForm;
 use He4rt\User\Filament\Admin\Resources\Users\Tables\UsersTable;
 use He4rt\User\Models\User;
@@ -33,6 +29,11 @@ class UserResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) self::$model::count();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return UserForm::configure($schema);
@@ -41,21 +42,6 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return UsersTable::configure($table);
-    }
-
-    public static function getNavigationBadge(): ?string
-    {
-        return (string) self::$model::count();
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            ProvidersRelationManager::class,
-            AddressRelationManager::class,
-            InformationRelationManager::class,
-            CharacterRelationManager::class,
-        ];
     }
 
     public static function getPages(): array
