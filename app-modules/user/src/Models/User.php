@@ -9,6 +9,7 @@ use Filament\Models\Contracts\HasTenants;
 use He4rt\Character\Models\Character;
 use He4rt\Events\Models\EventModel;
 use He4rt\Events\Models\Pivot\EventAttend;
+use He4rt\Events\Models\Talk;
 use He4rt\Provider\Models\Provider;
 use He4rt\Tenant\Models\Concerns\InteractsWithTenants;
 use He4rt\User\Database\Factories\UserFactory;
@@ -21,6 +22,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * @property string $id
@@ -29,10 +32,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
  * @property bool $is_donator
  */
 #[ObservedBy(UserObserver::class)]
-final class User extends Authenticatable implements HasName, HasTenants
+final class User extends Authenticatable implements HasMedia, HasName, HasTenants
 {
     use HasFactory;
     use HasUuids;
+    use InteractsWithMedia;
     use InteractsWithTenants;
 
     protected $table = 'users';
@@ -93,6 +97,14 @@ final class User extends Authenticatable implements HasName, HasTenants
     }
 
     /**
+     * @return HasMany<Talk, $this>
+     */
+    public function talks(): HasMany
+    {
+        return $this->hasMany(Talk::class, 'user_id');
+    }
+
+    /**
      * @return HasOne<Character, $this>
      */
     public function character(): HasOne
@@ -103,6 +115,12 @@ final class User extends Authenticatable implements HasName, HasTenants
     public function getFilamentName(): string
     {
         return $this->username;
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('avatar')
+            ->useDisk('public');
     }
 
     protected static function newFactory(): UserFactory
