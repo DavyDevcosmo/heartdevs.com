@@ -36,9 +36,7 @@
                                 icon="heroicon-o-map-pin"
                                 class="text-icon-light w-fit bg-transparent p-0!"
                             />
-                            <x-he4rt::text class="font-bold">
-                                Endereço: Alameda Santos, 1165 – Jardim Paulista, São Paulo
-                            </x-he4rt::text>
+                            <x-he4rt::text class="font-bold">Endereço: {{ $event->location ?? '' }}</x-he4rt::text>
                         </div>
                         <div class="flex flex-col items-center gap-2 sm:flex-row">
                             <x-he4rt::icon
