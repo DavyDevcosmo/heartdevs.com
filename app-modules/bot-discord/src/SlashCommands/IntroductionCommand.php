@@ -126,7 +126,7 @@ class IntroductionCommand extends SlashCommand
             ->show($interaction);
     }
 
-    private function persistData(Interaction $interaction, Collection $components): void
+    private function persistData(Interaction $interaction, Collection $components)
     {
         $role = $interaction->guild->roles->find(fn (Role $role) => str($role->name)->lower()->contains('apresentou'));
 
@@ -164,6 +164,8 @@ class IntroductionCommand extends SlashCommand
 
             app(UpdateProfile::class)->handle($payload);
 
+            $interaction->member->addRole($role);
+
             $this
                 ->message('apresentou')
                 ->content('https://heartdevs.com/')
@@ -184,9 +186,17 @@ class IntroductionCommand extends SlashCommand
                 ->footerIcon($interaction->guild->icon)
                 ->footerText(Date::now()->format('Y').' © He4rt Developers')
                 ->timestamp(now())
+                ->send($interaction->guild->channels->get('id', '540993663468306433'));
+    
+                $this
+                ->message('apresentou')
+                ->content('https://heartdevs.com/')
+                ->color('800080')
+                ->title('Apresentação Feita!')
+                ->thumbnailUrl($interaction->user->avatar)
                 ->reply($interaction, true);
-
-            $interaction->member->addRole($role);
+                
+            
 
         } catch (Throwable $throwable) {
             $this->logger()->error($throwable->getMessage());
