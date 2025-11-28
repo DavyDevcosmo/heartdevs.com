@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace He4rt\User\Filament\Admin\Resources\Users\Schemas;
 
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Schemas\Schema;
 
 class UserForm
@@ -30,15 +31,14 @@ class UserForm
                     ->label('E-mail')
                     ->email()
                     ->placeholder('ex.: usuario@dominio.com')
-                    ->required()
+                    
                     ->maxLength(255),
 
-                TextInput::make('password')
-                    ->label('Senha')
-                    ->password()
-                    ->placeholder('Mínimo de 8 caracteres')
-                    ->required()
-                    ->minLength(8),
+                SpatieMediaLibraryFileUpload::make('avatar')
+                    ->label('Avatar')
+                    ->collection('avatar')
+                    ->image()
+                    ->required(),
             ]);
     }
 }

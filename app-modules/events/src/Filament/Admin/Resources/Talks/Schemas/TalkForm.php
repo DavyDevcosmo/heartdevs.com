@@ -10,6 +10,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Forms\Components\MarkdownEditor;
 use He4rt\Events\Enums\Talks\TalkStatusEnum;
 
 class TalkForm
@@ -40,6 +41,8 @@ class TalkForm
 
                             Select::make('user_id')
                                 ->label('User')
+                                ->native(false)
+                                ->preload()
                                 ->relationship('user', 'username')
                                 ->required()
                                 ->live()
@@ -66,7 +69,7 @@ class TalkForm
                     ->description('Forneça a descrição completa da sua palestra e o que o público aprenderá.')
                     ->icon('heroicon-m-document-text')
                     ->schema([
-                        RichEditor::make('description')
+                        MarkdownEditor::make('description')
                             ->label('Descrição Completa')
                             ->required()
                             ->columnSpanFull(),

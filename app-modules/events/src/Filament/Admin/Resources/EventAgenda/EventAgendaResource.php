@@ -14,6 +14,7 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\MorphToSelect;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\MorphToSelect\Type;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TimePicker;
@@ -67,12 +68,10 @@ class EventAgendaResource extends Resource
 
                 Fieldset::make('Schedule')
                     ->schema([
-                        TimePicker::make('starting_at')
-                            ->native(false)
+                        DateTimePicker::make('starting_at')
                             ->required(),
 
-                        TimePicker::make('ending_at')
-                            ->native(false)
+                        DateTimePicker::make('ending_at')
                             ->required(),
                     ]),
 
