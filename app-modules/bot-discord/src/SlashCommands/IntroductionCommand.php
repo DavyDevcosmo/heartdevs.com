@@ -65,6 +65,21 @@ class IntroductionCommand extends SlashCommand
      */
     public function handle(Interaction $interaction): void
     {
+        $role = $interaction->guild->roles->find(fn (Role $role) => str($role->name)->lower()->contains('apresentou'));
+
+        if (! $role) {
+            $interaction->respondWithMessage('Erro ao encontrar o role He4rt', true);
+
+            return;
+        }
+
+        $hasRole = $interaction->member->roles->find(fn (Role $item) => $item->id === $role->id);
+
+        if ($hasRole) {
+            $interaction->respondWithMessage('Você já apresentou!!', true);
+
+            return;
+        }
 
         $this->modal('Apresentar')
             ->components([
@@ -113,7 +128,7 @@ class IntroductionCommand extends SlashCommand
 
     private function persistData(Interaction $interaction, Collection $components): void
     {
-        $role = $interaction->guild->roles->find(fn (Role $role) => $role->name === '💜 He4rt');
+        $role = $interaction->guild->roles->find(fn (Role $role) => str($role->name)->lower()->contains('apresentou'));
 
         if (! $role) {
             $interaction->respondWithMessage('Erro ao encontrar o role He4rt', true);
