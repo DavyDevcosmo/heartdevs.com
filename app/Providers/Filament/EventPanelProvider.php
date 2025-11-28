@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use Filament\Enums\ThemeMode;
 use App\Http\Middleware\GuestTenantIdentifier;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -41,6 +42,7 @@ class EventPanelProvider extends PanelProvider
                 slugAttribute: app()->isProduction() ? 'domain' : 'slug',
                 ownershipRelationship: 'ownedTenants'
             )
+            ->defaultThemeMode(ThemeMode::Dark)
             ->login(EventLogin::class)
             ->path(app()->isProduction() ? '' : 'event')
             ->tenantDomain(app()->isProduction() ? '{tenant:domain}' : null)

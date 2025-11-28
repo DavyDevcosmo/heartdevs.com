@@ -16,6 +16,8 @@ class TalksTable
     {
         return $table
             ->columns([
+                TextColumn::make('event.title')
+                    ->searchable(),
                 TextColumn::make('title')
                     ->description(fn ($record) => $record->user->name)
                     ->searchable(),
