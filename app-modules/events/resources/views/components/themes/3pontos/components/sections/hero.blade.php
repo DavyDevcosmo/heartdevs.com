@@ -39,7 +39,13 @@
                 {{ $event->description }}
             </x-slot>
             <x-slot:actions>
-                <x-he4rt::button>Faça sua inscrição</x-he4rt::button>
+                <x-he4rt::button
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    href="https://docs.google.com/forms/d/e/1FAIpQLSdSI-r4i0MlOLm6dAVPgSeq-OxQWTOnlazAITYIquY5KY__lQ/viewform?fbclid=PAdGRleAOW4-5leHRuA2FlbQIxMQBzcnRjBmFwcF9pZA8xMjQwMjQ1NzQyODc0MTQAAaedZu4Lb4WgwEUXZFg1erfMavTsMXUZ6msiSqGGM2I7NIVMXvSFbpVLBf-8zA_aem__2CSVYLzFIHqv60nktI_qA&pli=1"
+                >
+                    Faça sua inscrição
+                </x-he4rt::button>
             </x-slot>
         </x-he4rt::headline>
 

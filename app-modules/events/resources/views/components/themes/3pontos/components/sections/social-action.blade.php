@@ -29,9 +29,6 @@
                         da sua inscrição será integralmente revertido para a compra de cestas básicas para uma
                         instituição no Alto do Tietê, que acolhe crianças em lar temporário.
                     </x-slot>
-                    <x-slot:actions>
-                        <x-he4rt::button>Button</x-he4rt::button>
-                    </x-slot>
                 </x-he4rt::headline>
             </div>
 

@@ -25,9 +25,8 @@
             <iframe
                 class="absolute inset-0 h-full w-full"
                 loading="lazy"
-                src="http://www.youtube.com/embed/dQw4w9WgXcQ"
-                title="YouTube video player"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                src="https://player.twitch.tv/?channel=3pontoshub&parent={{ filament()->getTenant()->domain }}&autoplay=true"
+                title="Twitch Live Player"
                 allowfullscreen
             ></iframe>
         </div>
