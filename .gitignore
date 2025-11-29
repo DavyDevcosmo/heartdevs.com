@@ -9,6 +9,7 @@
 /storage/debugbar
 /vendor
 .env
+/public/vendor
 .env.testing
 .env.backup
 .env.production

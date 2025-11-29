@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use GhostZero\TmiCluster\TmiCluster;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -14,3 +16,4 @@ declare(strict_types=1);
 */
 
 // Route::get('/', fn () => view('welcome'));
+TmiCluster::routes();
