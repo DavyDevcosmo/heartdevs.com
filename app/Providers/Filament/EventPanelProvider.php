@@ -18,6 +18,7 @@ use Filament\Support\Facades\FilamentIcon;
 use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsIconAlias;
 use Filament\View\PanelsRenderHook;
+use Filament\Support\Facades\FilamentView;
 use He4rt\Events\Filament\Shared\EventLogin;
 use He4rt\Events\Filament\Shared\GuestSidebar;
 use He4rt\Events\Filament\Shared\GuestTopbar;
@@ -98,6 +99,7 @@ class EventPanelProvider extends PanelProvider
         Filament::registerPanel(
             fn (): Panel => $this->panel(Panel::make()),
         );
+
 
         $this->app->bind(IdentifyTenant::class, GuestTenantIdentifier::class);
     }
