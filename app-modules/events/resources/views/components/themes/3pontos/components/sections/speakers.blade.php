@@ -11,40 +11,29 @@
             'avatar' => 'https://i.imgur.com/1mo38XW.jpeg',
             'name' => 'Eduardo Vogel',
             'role' => 'Coordenador de negócios',
+            'linkedin_url' => 'https://www.linkedin.com/in/eduardovogel11/',
             'description' => 'Atuante no setor de tecnologia há 10 anos, formado em Administração pelo Eckerd College em St. Petersburg, Flórida, e vencedor do hackathon da Câmara dos Vereadores de São Paulo.',
         ],
         [
             'avatar' => 'https://i.imgur.com/n7ZlSZ2.png',
             'name' => 'Filipe Augusto',
             'role' => 'CEO 3Pontos',
+            'linkedin_url' => 'https://www.linkedin.com/in/filipe-augustos',
             'description' => 'Empreendedor nos setores financeiro e de tecnologia, atuando na criação, expansão e gestão de negócios focados em educação financeira.',
         ],
         [
             'avatar' => 'https://i.imgur.com/lxh4vKh.jpeg',
             'name' => 'Joy Jesus',
             'role' => 'CMO 3Pontos',
+            'linkedin_url' => 'https://www.linkedin.com/in/joy-jesus-b14721221',
             'description' => 'CEO e fundador da Start Digital, especializado em consultoria de marketing e posicionamento de marca.',
         ],
         [
             'avatar' => 'https://i.imgur.com/UpJpsvk.jpeg',
             'name' => 'Juliano Kimura',
             'role' => 'CMO at Cursed Stone Game',
+            'linkedin_url' => 'https://www.linkedin.com/in/fernandokimura',
             'description' => 'Palestrante e consultor em inovação digital, especialista em redes sociais, premiado no setor e experiente na gestão de equipes e projetos criativos de alto impacto.',
-        ],
-    ];
-
-    $socials = [
-        [
-            'icon' => 'fab-instagram',
-            'link' => 'https://www.instagram.com/3pontos.hub/',
-        ],
-        [
-            'icon' => 'fab-square-facebook',
-            'link' => 'https://www.facebook.com/profile.php?id=61582825820628',
-        ],
-        [
-            'icon' => 'fab-x-twitter',
-            'link' => 'https://x.com/3Pontoshub',
         ],
     ];
 @endphp
@@ -116,16 +105,22 @@
                         </div>
 
                         <div class="flex gap-x-8 group-hover:flex lg:hidden">
-                            @foreach ($socials as $social)
-                                <x-he4rt::icon
-                                    rel="noopener noreferrer"
-                                    target="_blank"
-                                    size="sm"
-                                    :href="$social['link']"
-                                    :icon="$social['icon']"
-                                    class="text-icon-light h-full border-none bg-transparent p-0"
-                                />
-                            @endforeach
+                            <x-he4rt::icon
+                                rel="noopener noreferrer"
+                                target="_blank"
+                                size="sm"
+                                :href="$speaker->information->linkedin_url ?? 'https://www.linkedin.com/company/3pontos3/'"
+                                icon="fab-linkedin"
+                                class="text-icon-light h-full border-none bg-transparent p-0"
+                            />
+                            <x-he4rt::icon
+                                rel="noopener noreferrer"
+                                target="_blank"
+                                size="sm"
+                                :href="$speaker->information->github_url ?? 'https://github.com/3pontos-tech'"
+                                icon="fab-github"
+                                class="text-icon-light h-full border-none bg-transparent p-0"
+                            />
                         </div>
                     </x-he4rt::card>
                 </x-he4rt::animate-block>
@@ -174,16 +169,14 @@
                         </div>
 
                         <div class="flex gap-x-8 group-hover:flex lg:hidden">
-                            @foreach ($socials as $social)
-                                <x-he4rt::icon
-                                    rel="noopener noreferrer"
-                                    target="_blank"
-                                    size="sm"
-                                    :href="$social['link']"
-                                    :icon="$social['icon']"
-                                    class="text-icon-light h-full border-none bg-transparent p-0"
-                                />
-                            @endforeach
+                            <x-he4rt::icon
+                                rel="noopener noreferrer"
+                                target="_blank"
+                                size="sm"
+                                :href="$fodase['linkedin_url'] ?? 'https://www.linkedin.com/company/3pontos3/'"
+                                icon="fab-linkedin"
+                                class="text-icon-light h-full border-none bg-transparent p-0"
+                            />
                         </div>
                     </x-he4rt::card>
                 </x-he4rt::animate-block>
