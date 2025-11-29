@@ -1,8 +1,6 @@
 @props([
     'event',
-    'speakers' => $event->speakers->where('name',
-    '!=',
-    $event->slug),
+    'speakers' => $event->speakers()->where('status', '!=', 'rejected')->get(),
 ])
 
 @php
@@ -111,14 +109,6 @@
                                 size="sm"
                                 :href="$speaker->information->linkedin_url ?? 'https://www.linkedin.com/company/3pontos3/'"
                                 icon="fab-linkedin"
-                                class="text-icon-light h-full border-none bg-transparent p-0"
-                            />
-                            <x-he4rt::icon
-                                rel="noopener noreferrer"
-                                target="_blank"
-                                size="sm"
-                                :href="$speaker->information->github_url ?? 'https://github.com/3pontos-tech'"
-                                icon="fab-github"
                                 class="text-icon-light h-full border-none bg-transparent p-0"
                             />
                         </div>
