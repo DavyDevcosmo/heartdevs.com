@@ -19,7 +19,9 @@
                     acelerando soluções reais e transformando ideias em impacto.
                 </x-slot>
                 <x-slot:actions>
-                    <x-he4rt::button>Saiba mais</x-he4rt::button>
+                    <x-he4rt::button rel="noopener noreferrer" target="_blank" href="https://3pontos.work">
+                        Saiba mais
+                    </x-he4rt::button>
                 </x-slot>
             </x-he4rt::headline>
         </div>
