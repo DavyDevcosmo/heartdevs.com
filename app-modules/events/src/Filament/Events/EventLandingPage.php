@@ -31,7 +31,7 @@ class EventLandingPage extends Dashboard
             fn (): string => Blade::render('he4rt::components.metatags', [
                 'url' => url()->current(),
                 'title' => $this->getTitle(),
-                'description' => 'eae',
+                'description' => 'Um evento híbrido de 5 horas, em parceria com a He4rt, com palestras exclusivas, networking e uma missão social que transforma.',
                 'coverImage' => 'https://3pontos.work/images/seo.png',
                 'icon' => asset('logo3p-1.png'),
             ]),
