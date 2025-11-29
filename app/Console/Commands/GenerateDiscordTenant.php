@@ -15,7 +15,7 @@ class GenerateDiscordTenant extends Command
      *
      * @var string
      */
-    protected $signature = 'misc:generate-discord-tenant {guildId}';
+    protected $signature = 'misc:generate-provider-tenant {slug} {provider} {providerId}';
 
     /**
      * The console command description.
@@ -29,17 +29,14 @@ class GenerateDiscordTenant extends Command
      */
     public function handle(): void
     {
-        Tenant::factory()
-            ->afterCreating(function (Tenant $tenant): void {
-                $tenant
-                    ->providers()
-                    ->create([
-                        'tenant_id' => $tenant->getKey(),
-                        'provider' => ProviderEnum::Discord,
-                        'provider_id' => $this->argument('guildId'),
-                    ]);
-            })
-            ->create();
+        $tenant = Tenant::query()->where('slug', $this->argument('slug'))->first();
+        $tenant
+            ->providers()
+            ->create([
+                'tenant_id' => $tenant->getKey(),
+                'provider' => ProviderEnum::from($this->argument('provider')),
+                'provider_id' => $this->argument('providerId'),
+            ]);
 
         $this->info('Tenant created successfully!');
     }
