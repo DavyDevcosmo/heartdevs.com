@@ -1,5 +1,5 @@
-<title> {{ $title }} </title>
-<link rel="icon" href="favicon.ico">
+<title>{{ $title }}</title>
+<link rel="icon" href="{{ $icon ?? 'favicon.ico' }}" />
 
 <meta property="og:description" content="{{ $description }}" />
 <meta property="og:url" content="{{ $url }}" />

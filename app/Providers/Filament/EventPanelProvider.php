@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
-use Filament\Enums\ThemeMode;
 use App\Http\Middleware\GuestTenantIdentifier;
 use Filament\Actions\Action;
+use Filament\Enums\ThemeMode;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -18,7 +18,6 @@ use Filament\Support\Facades\FilamentIcon;
 use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsIconAlias;
 use Filament\View\PanelsRenderHook;
-use Filament\Support\Facades\FilamentView;
 use He4rt\Events\Filament\Shared\EventLogin;
 use He4rt\Events\Filament\Shared\GuestSidebar;
 use He4rt\Events\Filament\Shared\GuestTopbar;
@@ -99,7 +98,6 @@ class EventPanelProvider extends PanelProvider
         Filament::registerPanel(
             fn (): Panel => $this->panel(Panel::make()),
         );
-
 
         $this->app->bind(IdentifyTenant::class, GuestTenantIdentifier::class);
     }
