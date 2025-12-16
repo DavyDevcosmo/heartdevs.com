@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4862091fd3a7ba0fd6f839c3ed237f5b",
+    "content-hash": "dd287644c5e7434c110dfd270fc3b4b4",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -3158,7 +3158,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/bot-discord",
-                "reference": "84d2dac97e123b15e8c593a1c565770f4db7f576"
+                "reference": "0829cfa428eca9360a79a2d047405197b98c0c18"
             },
             "type": "library",
             "extra": {
@@ -3171,7 +3171,8 @@
             "autoload": {
                 "psr-4": {
                     "He4rt\\BotDiscord\\": "src/",
-                    "He4rt\\BotDiscord\\Tests\\": "tests/"
+                    "He4rt\\BotDiscord\\Tests\\": "tests/",
+                    "Fixtures\\": "tests/Fixtures/"
                 }
             },
             "license": [
@@ -3955,12 +3956,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/danielhe4rt/laracord-framework.git",
-                "reference": "225b8947c91a1b19bc13798d771f38d299460eac"
+                "reference": "e51c5cc6f4f2edf04b44ec214adc759132d7b067"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/danielhe4rt/laracord-framework/zipball/225b8947c91a1b19bc13798d771f38d299460eac",
-                "reference": "225b8947c91a1b19bc13798d771f38d299460eac",
+                "url": "https://api.github.com/repos/danielhe4rt/laracord-framework/zipball/e51c5cc6f4f2edf04b44ec214adc759132d7b067",
+                "reference": "e51c5cc6f4f2edf04b44ec214adc759132d7b067",
                 "shasum": ""
             },
             "require": {
@@ -4030,7 +4031,7 @@
                     "url": "https://github.com/Log1x"
                 }
             ],
-            "time": "2025-12-04T16:43:10+00:00"
+            "time": "2025-12-11T18:03:55+00:00"
         },
         {
             "name": "laravel/framework",
@@ -9932,20 +9933,20 @@
         },
         {
             "name": "symfony/css-selector",
-            "version": "v7.4.0",
+            "version": "v8.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/css-selector.git",
-                "reference": "ab862f478513e7ca2fe9ec117a6f01a8da6e1135"
+                "reference": "6225bd458c53ecdee056214cb4a2ffaf58bd592b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/css-selector/zipball/ab862f478513e7ca2fe9ec117a6f01a8da6e1135",
-                "reference": "ab862f478513e7ca2fe9ec117a6f01a8da6e1135",
+                "url": "https://api.github.com/repos/symfony/css-selector/zipball/6225bd458c53ecdee056214cb4a2ffaf58bd592b",
+                "reference": "6225bd458c53ecdee056214cb4a2ffaf58bd592b",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.2"
+                "php": ">=8.4"
             },
             "type": "library",
             "autoload": {
@@ -9977,7 +9978,7 @@
             "description": "Converts CSS selectors to XPath expressions",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/css-selector/tree/v7.4.0"
+                "source": "https://github.com/symfony/css-selector/tree/v8.0.0"
             },
             "funding": [
                 {
@@ -9997,7 +9998,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-10-30T13:39:42+00:00"
+            "time": "2025-10-30T14:17:19+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -12877,23 +12878,23 @@
         },
         {
             "name": "tijsverkoyen/css-to-inline-styles",
-            "version": "v2.3.0",
+            "version": "v2.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tijsverkoyen/CssToInlineStyles.git",
-                "reference": "0d72ac1c00084279c1816675284073c5a337c20d"
+                "reference": "f0292ccf0ec75843d65027214426b6b163b48b41"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tijsverkoyen/CssToInlineStyles/zipball/0d72ac1c00084279c1816675284073c5a337c20d",
-                "reference": "0d72ac1c00084279c1816675284073c5a337c20d",
+                "url": "https://api.github.com/repos/tijsverkoyen/CssToInlineStyles/zipball/f0292ccf0ec75843d65027214426b6b163b48b41",
+                "reference": "f0292ccf0ec75843d65027214426b6b163b48b41",
                 "shasum": ""
             },
             "require": {
                 "ext-dom": "*",
                 "ext-libxml": "*",
                 "php": "^7.4 || ^8.0",
-                "symfony/css-selector": "^5.4 || ^6.0 || ^7.0"
+                "symfony/css-selector": "^5.4 || ^6.0 || ^7.0 || ^8.0"
             },
             "require-dev": {
                 "phpstan/phpstan": "^2.0",
@@ -12926,9 +12927,9 @@
             "homepage": "https://github.com/tijsverkoyen/CssToInlineStyles",
             "support": {
                 "issues": "https://github.com/tijsverkoyen/CssToInlineStyles/issues",
-                "source": "https://github.com/tijsverkoyen/CssToInlineStyles/tree/v2.3.0"
+                "source": "https://github.com/tijsverkoyen/CssToInlineStyles/tree/v2.4.0"
             },
-            "time": "2024-12-21T16:25:41+00:00"
+            "time": "2025-12-02T11:56:42+00:00"
         },
         {
             "name": "torchlight/torchlight-commonmark",
@@ -13701,16 +13702,16 @@
         },
         {
             "name": "driftingly/rector-laravel",
-            "version": "2.1.6",
+            "version": "2.1.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/driftingly/rector-laravel.git",
-                "reference": "682d1e73ac79aced7e645141fd61a9ac468a0c44"
+                "reference": "2a64c96fa363bc85e4e6d4162c6a6bb7a78fd122"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/driftingly/rector-laravel/zipball/682d1e73ac79aced7e645141fd61a9ac468a0c44",
-                "reference": "682d1e73ac79aced7e645141fd61a9ac468a0c44",
+                "url": "https://api.github.com/repos/driftingly/rector-laravel/zipball/2a64c96fa363bc85e4e6d4162c6a6bb7a78fd122",
+                "reference": "2a64c96fa363bc85e4e6d4162c6a6bb7a78fd122",
                 "shasum": ""
             },
             "require": {
@@ -13731,9 +13732,9 @@
             "description": "Rector upgrades rules for Laravel Framework",
             "support": {
                 "issues": "https://github.com/driftingly/rector-laravel/issues",
-                "source": "https://github.com/driftingly/rector-laravel/tree/2.1.6"
+                "source": "https://github.com/driftingly/rector-laravel/tree/2.1.7"
             },
-            "time": "2025-12-04T13:37:33+00:00"
+            "time": "2025-12-10T11:30:42+00:00"
         },
         {
             "name": "fakerphp/faker",
@@ -17519,5 +17520,5 @@
         "php": "^8.3"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
