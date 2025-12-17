@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Providers\Tools\DebugbarServiceProvider;
+use App\Providers\Tools\TelescopeServiceProvider;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
@@ -18,6 +19,7 @@ final class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->registerDebugbar();
+        $this->registerTelescope();
     }
 
     /**
@@ -67,6 +69,13 @@ final class AppServiceProvider extends ServiceProvider
     {
         if (app()->isLocal() && class_exists(\Barryvdh\Debugbar\ServiceProvider::class)) {
             $this->app->register(DebugbarServiceProvider::class);
+        }
+    }
+
+    private function registerTelescope(): void
+    {
+        if (class_exists(TelescopeServiceProvider::class)) {
+            $this->app->register(TelescopeServiceProvider::class);
         }
     }
 }
