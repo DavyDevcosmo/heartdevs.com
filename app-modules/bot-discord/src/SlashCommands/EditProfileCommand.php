@@ -7,8 +7,8 @@ namespace He4rt\BotDiscord\SlashCommands;
 use Discord\Builders\Components\TextInput;
 use Discord\Helpers\Collection;
 use Discord\Parts\Interactions\Interaction;
-use He4rt\User\Actions\UpdateProfile;
 use He4rt\User\DTO\UpdateProfileDTO;
+use He4rt\User\Services\UpdateProfileService;
 use Illuminate\Support\Facades\Date;
 use Throwable;
 
@@ -131,15 +131,15 @@ class EditProfileCommand extends AbstractSlashCommand
                 'tenant_id' => $this->memberProvider->tenant_id,
                 'provider' => $this->memberProvider->provider,
                 'provider_id' => $interaction->user->id,
-                'name' => $components->get('custom_id', 'name')->value,
-                'nickname' => $components->get('custom_id', 'nickname')->value,
-                'linkedin_url' => $components->get('custom_id', 'linkedin_url')->value,
-                'github_url' => $components->get('custom_id', 'github_url')->value,
-                'birthdate' => $components->get('custom_id', 'birthdate')?->value ?? null,
-                'about' => $components->get('custom_id', 'about')->value,
+                'name' => $components->get('custom_id', 'name')?->value,
+                'nickname' => $components->get('custom_id', 'nickname')?->value,
+                'linkedin_url' => $components->get('custom_id', 'linkedin_url')?->value,
+                'github_url' => $components->get('custom_id', 'github_url')?->value,
+                'birthdate' => $components->get('custom_id', 'birthdate')?->value,
+                'about' => $components->get('custom_id', 'about')?->value,
             ]);
 
-            resolve(UpdateProfile::class)->handle($payload);
+            resolve(UpdateProfileService::class)->handle($payload);
 
             $this
                 ->message('Perfil atualizado!')
@@ -164,7 +164,7 @@ class EditProfileCommand extends AbstractSlashCommand
                 ->reply($interaction, true);
 
         } catch (Throwable $throwable) {
-            $this->logger()->error($throwable->getMessage());
+            $this->logger()->error('Error EditProfileCommand:', [$throwable->getMessage()]);
 
             $interaction->respondWithMessage('Erro ao persistir dados', true);
         }

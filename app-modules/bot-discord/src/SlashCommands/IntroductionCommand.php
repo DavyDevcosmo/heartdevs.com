@@ -8,63 +8,54 @@ use Discord\Builders\Components\TextInput;
 use Discord\Helpers\Collection;
 use Discord\Parts\Guild\Role;
 use Discord\Parts\Interactions\Interaction;
+use He4rt\Provider\DTO\ResolveUserProviderDTO;
 use He4rt\Provider\Models\Provider;
 use He4rt\Tenant\Models\Tenant;
-use He4rt\User\Actions\UpdateProfile;
-use He4rt\User\DTO\UpdateProfileDTO;
+use He4rt\User\Actions\InformationUserAction;
+use He4rt\User\DTO\UpsertInformationDTO;
+use He4rt\User\Models\User;
+use He4rt\User\Services\ResolveUserContextService;
 use Illuminate\Support\Facades\Date;
 use Laracord\Commands\SlashCommand;
 use Throwable;
 
 class IntroductionCommand extends SlashCommand
 {
-    /**
-     * The command name.
-     *
-     * @var string
-     */
     protected $name = 'apresentar';
 
-    /**
-     * The command description.
-     *
-     * @var string
-     */
     protected $description = 'Apresente-se no servidor!';
 
-    /**
-     * The command options.
-     *
-     * @var array
-     */
     protected $options = [];
 
-    /**
-     * The permissions required to use the command.
-     *
-     * @var array
-     */
     protected $permissions = [];
 
-    /**
-     * Indicates whether the command requires admin permissions.
-     *
-     * @var bool
-     */
     protected $admin = false;
 
-    /**
-     * Indicates whether the command should be displayed in the commands list.
-     *
-     * @var bool
-     */
     protected $hidden = false;
 
-    /**
-     * Handle the slash command.
-     */
+    private readonly string $roleId;
+
+    private readonly string $welcomeChannelId;
+
+    public function __construct()
+    {
+        $this->roleId = config('bot-discord.roles.presentation');
+        $this->welcomeChannelId = config('bot-discord.channels.presentations');
+    }
+
     public function handle(Interaction $interaction): void
     {
+        $hasRole = $interaction->member->roles
+            ->find(fn (Role $role) => $role->id === $this->roleId);
+
+        if ($hasRole) {
+            $interaction->respondWithMessage(
+                'Você já se apresentou. Esse comando só pode ser usado uma vez.',
+                true
+            );
+
+            return;
+        }
 
         $this->modal('Apresentar')
             ->components([
@@ -72,14 +63,14 @@ class IntroductionCommand extends SlashCommand
                     ->setCustomId('name')
                     ->setMinLength(2)
                     ->setMaxLength(32)
-                    ->setPlaceholder('Pride')
+                    ->setPlaceholder('Fulano de Tal')
                     ->setRequired(true),
 
                 TextInput::new('Nickname', TextInput::STYLE_SHORT)
                     ->setCustomId('nickname')
                     ->setMinLength(2)
                     ->setMaxLength(32)
-                    ->setPlaceholder('Pride')
+                    ->setPlaceholder('Fulano123')
                     ->setRequired(true),
 
                 TextInput::new('Git/Github (Opcional)', TextInput::STYLE_SHORT)
@@ -113,21 +104,6 @@ class IntroductionCommand extends SlashCommand
 
     private function persistData(Interaction $interaction, Collection $components): void
     {
-        $role = $interaction->guild->roles->find(fn (Role $role) => $role->name === '💜 He4rt');
-
-        if (! $role) {
-            $interaction->respondWithMessage('Erro ao encontrar o role He4rt', true);
-
-            return;
-        }
-
-        $hasRole = $interaction->member->roles->find(fn (Role $item) => $item->id === $role->id);
-
-        if ($hasRole) {
-            $interaction->respondWithMessage('Você já apresentou!!', true);
-
-            return;
-        }
 
         try {
             $tenantProvider = Provider::query()
@@ -135,46 +111,80 @@ class IntroductionCommand extends SlashCommand
                 ->where('provider_id', (string) $interaction->guild_id)
                 ->firstOrFail();
 
-            $payload = UpdateProfileDTO::fromPayload([
+            $userDto = ResolveUserProviderDTO::make([
                 'tenant_id' => $tenantProvider->tenant_id,
                 'provider' => $tenantProvider->provider,
                 'provider_id' => $interaction->user->id,
-                'name' => $components->get('custom_id', 'name')->value,
-                'nickname' => $components->get('custom_id', 'nickname')->value,
-                'linkedin_url' => $components->get('custom_id', 'linkedin_url')->value,
-                'github_url' => $components->get('custom_id', 'github_url')->value,
-                'birthdate' => $components->get('custom_id', 'birthdate')?->value ?? null,
-                'about' => $components->get('custom_id', 'about')->value,
+                'model_type' => User::class,
+                'username' => $interaction->user->username,
+                'avatar' => $interaction->user->avatar,
             ]);
 
-            resolve(UpdateProfile::class)->handle($payload);
+            $userContext = resolve(ResolveUserContextService::class)->handle($userDto);
+
+            $informationDto = UpsertInformationDTO::make([
+                'user' => $userContext->user,
+                'name' => $components->get('custom_id', 'name')->value,
+                'nickname' => $components->get('custom_id', 'nickname')->value,
+                'about' => $components->get('custom_id', 'about')->value,
+                'linkedin_url' => $components->get('custom_id', 'linkedin_url')?->value,
+                'github_url' => $components->get('custom_id', 'github_url')?->value,
+                'birthdate' => null,
+            ]);
+
+            $userInformation = resolve(InformationUserAction::class)->handle($informationDto);
 
             $this
-                ->message('apresentou')
-                ->content('https://heartdevs.com/')
-                ->color('800080')
-                ->title('Apresentação '.$payload->nickname)
-                ->thumbnailUrl($interaction->user->avatar)
-                ->fields([
-                    'Nome/Nickname' => $payload->nickname,
-                    'Sobre' => $payload->about,
-                ])
-                ->fields(
-                    [
-                        'Git/Github' => $payload->githubUrl ?? '-',
-                        'Linkedin' => $payload->linkedinUrl ?? '-',
-                    ],
-                    inline: false
+                ->message('Apresentação enviada com sucesso')
+                ->content(
+                    "Agora a comunidade já pode conhecer um pouco mais sobre você!\n"
+                    .'https://heartdevs.com/'
                 )
+                ->color((string) hexdec('4b0080'))
                 ->footerIcon($interaction->guild->icon)
                 ->footerText(Date::now()->format('Y').' © He4rt Developers')
                 ->timestamp(now())
                 ->reply($interaction, true);
 
-            $interaction->member->addRole($role);
+            $this
+                ->message('Nova apresentação')
+                ->title('Apresentação de '.$userInformation->nickname)
+                ->thumbnailUrl($interaction->user->avatar)
+                ->content(sprintf(
+                    '<@%s> acabou de se apresentar na comunidade. Sejam bem-vindo(a) e fique à vontade para interagir.',
+                    $interaction->user->id
+                ))
+                ->fields([
+                    'Nome' => $userInformation->name,
+                    'Nickname' => $userInformation->nickname,
+                ])
+                ->fields([
+                    'Sobre' => $userInformation->about,
+                ],
+                    inline: false
+                )
+                ->fields([
+                    'GitHub' => $userInformation->github_url ?? '-',
+                    'LinkedIn' => $userInformation->linkedin_url ?? '-',
+                ])
+                ->footerIcon($interaction->guild->icon)
+                ->footerText(Date::now()->format('Y').' © He4rt Developers')
+                ->timestamp(now())
+                ->color((string) hexdec('4b0080'))
+                ->send($this->welcomeChannelId);
+
+            $actualRoles = [];
+
+            foreach ($interaction->member->roles as $role) {
+                $actualRoles[] = $role->id;
+            }
+
+            $actualRoles[] = $this->roleId;
+
+            $interaction->member->setRoles($actualRoles);
 
         } catch (Throwable $throwable) {
-            $this->logger()->error($throwable->getMessage());
+            $this->logger()->error('Error IntroductionCommand', [$throwable->getMessage()]);
 
             $interaction->respondWithMessage(
                 'Ocorreu um erro ao processar sua apresentação. Por favor, tente novamente mais tarde.',

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace He4rt\Message\Actions;
 
-use He4rt\BotDiscord\Actions\UserCharacterResolver;
 use He4rt\Character\Entities\CharacterEntity;
 use He4rt\Message\DTO\NewMessageDTO;
+use He4rt\Provider\DTO\ResolveUserProviderDTO;
+use He4rt\User\Models\User;
+use He4rt\User\Services\ResolveUserContextService;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -14,32 +16,34 @@ final readonly class NewMessage
 {
     public function __construct(
         private PersistMessage $persistMessage,
-
     ) {}
 
     public function persist(NewMessageDTO $messageDTO): void
     {
         try {
-            $resolution = resolve(UserCharacterResolver::class)->resolve(
-                provider: $messageDTO->provider,
-                providerId: $messageDTO->providerId,
-                username: $messageDTO->providerUsername,
-                tenantId: $messageDTO->tenantId,
-            );
+            $userDto = ResolveUserProviderDTO::make([
+                'tenant_id' => $messageDTO->tenantId,
+                'provider' => $messageDTO->provider,
+                'provider_id' => $messageDTO->providerId,
+                'model_type' => User::class,
+                'username' => $messageDTO->providerUsername,
+            ]);
 
-            $character = $resolution->character;
+            $userContext = resolve(ResolveUserContextService::class)->handle($userDto);
 
-            $characterEntity = CharacterEntity::make($character->toArray());
+            $userContext->character->refresh();
+
+            $characterEntity = CharacterEntity::make($userContext->character->toArray());
             $obtainedExperience = $characterEntity->level->generateExperience($messageDTO->content);
 
-            $character->update([
+            $userContext->character->update([
                 'experience' => $characterEntity->level->getExperience(),
             ]);
 
             $this->persistMessage->handle(
                 $messageDTO,
                 $obtainedExperience,
-                $resolution->provider->id,
+                $userContext->provider->id,
             );
 
         } catch (Throwable $throwable) {
