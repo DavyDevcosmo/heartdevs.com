@@ -10,7 +10,7 @@ use Laracord\Tasks\Task;
 class RichPresence extends Task
 {
     /** @var int The task interval. */
-    protected int $interval = 3600;
+    protected int $interval = 600;
 
     /** @var bool Determine if the task handler should execute during boot. */
     protected bool $eager = true;
@@ -23,7 +23,7 @@ class RichPresence extends Task
         $this->discord()->updatePresence($activities[array_rand($activities)]);
     }
 
-    /** @returns Activity[] */
+    /** @return Activity[] */
     private function makeActivities(): array
     {
         return [
