@@ -13,7 +13,7 @@ class RichPresence extends Task
     protected int $interval = 3600;
 
     /** @var bool Determine if the task handler should execute during boot. */
-    protected bool $eager = false;
+    protected bool $eager = true;
 
     /** Handle the task. */
     public function handle(): void
