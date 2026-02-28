@@ -49,7 +49,8 @@
         "spatie/laravel-medialibrary": "^11.21.0",
         "symfony/browser-kit": "v7.0.8",
         "torchlight/torchlight-commonmark": "^0.6.0",
-        "torchlight/torchlight-laravel": "^0.6.1"
+        "torchlight/torchlight-laravel": "^0.6.1",
+        "ext-pdo": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^4.0.10",

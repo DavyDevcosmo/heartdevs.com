@@ -44,7 +44,6 @@ use Illuminate\Support\Js;
 use Illuminate\Validation\Rules\Password;
 use League\Uri\Components\Query;
 use LogicException;
-use OtavioAraujo\FilamentSmartCep\Forms\Components\SmartCep;
 use Throwable;
 
 /**
@@ -347,14 +346,11 @@ class UserProfile extends Page
                                 Section::make('Address Information')
                                     ->description('Fill in your current address. The ZIP Code will automatically fetch your city and state.')
                                     ->schema([
-                                        SmartCep::make('addressData.zip_code')
+                                        TextInput::make('addressData.zip_code')
                                             ->label('ZIP Code')
                                             ->placeholder('Enter your ZIP Code (e.g., 13000-000)')
                                             ->mask('99999-999')
                                             ->required()
-                                            ->bindCityField('addressData.city')
-                                            ->bindStateField('addressData.state')
-                                            ->bindCountryField('addressData.country')
                                             ->live()
                                             ->columnSpan(1),
 
