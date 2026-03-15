@@ -2,9 +2,9 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [3.x]
+    branches: [4.x]
   pull_request:
-    branches: [3.x]
+    branches: [4.x]
     types: [opened, reopened, synchronize, ready_for_review]
 
 concurrency:
