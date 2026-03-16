@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace He4rt\Integrations\Discord\OAuth;
 
-use He4rt\Authentication\Contracts\OAuthClientContract;
-use He4rt\Authentication\DTO\OAuthAccessDTO;
-use He4rt\Authentication\DTO\OAuthStateDTO;
-use He4rt\Authentication\DTO\OAuthUserDTO;
+use App\Contracts\OAuthClientContract;
+use He4rt\Identity\Auth\DTOs\OAuthAccessDTO;
+use He4rt\Identity\Auth\DTOs\OAuthStateDTO;
+use He4rt\Identity\Auth\DTOs\OAuthUserDTO;
 use Illuminate\Support\Facades\Http;
 
 class DiscordOAuthClient implements OAuthClientContract
