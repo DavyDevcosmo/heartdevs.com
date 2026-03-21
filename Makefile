@@ -50,18 +50,22 @@ check: test-rector test-pint test-phpstan ## Run Pint, PHPStan with Rector in dr
 
 .PHONY: test
 test: ## Run all tests
-	@$(CURDIR)/vendor/bin/pest --parallel --compact
+	@$(CURDIR)/vendor/bin/pest --compact
 
 .PHONY: t
 t: test ## Alias for test
 
 .PHONY: test-unit
 test-unit: ## Run unit tests
-	@$(CURDIR)/vendor/bin/pest --parallel --compact --group=unit
+	@$(CURDIR)/vendor/bin/pest --compact --group=unit
 
 .PHONY: test-feature
 test-feature: ## Run feature tests
-	@$(CURDIR)/vendor/bin/pest --parallel --compact --group=feature
+	@$(CURDIR)/vendor/bin/pest --compact --group=feature
+
+.PHONY: setup-test-db
+setup-test-db: ## Create the testing database for running tests
+	@PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres createdb test_he4rtbot 2>/dev/null || echo "Database test_he4rtbot already exists"
 
 .PHONY: migrate-fresh
 migrate-fresh: ## Run migrations and seed the database
@@ -88,6 +92,10 @@ setup: ## Setup the project
 	@php artisan key:generate --ansi
 	@php artisan storage:link --ansi
 	@composer run-script ide-helper
+
+.PHONY: import-db
+import-db: ## Import a PostgreSQL dump file (usage: make import-db file=path/to/dump)
+	@PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres pg_restore -x -O -cC -j 8 -d postgres $(file)
 
 .PHONY: bot
 bot: ## Run the Discord bot
