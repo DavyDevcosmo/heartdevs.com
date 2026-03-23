@@ -11,6 +11,7 @@ use He4rt\Events\Enums\AttendingStatusEnum;
 use He4rt\Events\Enums\EventTypeEnum;
 use He4rt\Events\Enums\Talks\TalkStatusEnum;
 use He4rt\Events\Models\Pivot\EventAttend;
+use He4rt\Events\Models\Pivot\SponsorAttend;
 use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -176,6 +177,17 @@ class EventModel extends Model
     {
         return $this->hasMany(EventAgenda::class, 'event_id')
             ->oldest('starting_at');
+    }
+
+    /**
+     * @return BelongsToMany<Sponsor, $this, SponsorAttend>
+     */
+    public function sponsors(): BelongsToMany
+    {
+        return $this->belongsToMany(Sponsor::class, 'events_sponsors', 'event_id', 'sponsor_id')
+            ->using(SponsorAttend::class)
+            ->withPivot(['level'])
+            ->withTimestamps();
     }
 
     /** @return Attribute<int, never> */

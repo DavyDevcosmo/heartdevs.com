@@ -35,28 +35,23 @@ final class AdminPanelProvider extends PanelProvider
                 ...Color::all(),
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
+            ->discoverResources(in: modules_path('panel-admin/src/Filament/Resources'), for: 'He4rt\\PanelAdmin\\Filament\\Resources')
+            ->discoverPages(in: modules_path('panel-admin/src/Filament/Pages'), for: 'He4rt\\PanelAdmin\\Filament\\Pages')
+            ->discoverWidgets(in: modules_path('panel-admin/src/Filament/Widgets'), for: 'He4rt\\PanelAdmin\\Filament\\Widgets')
+            ->discoverClusters(in: modules_path('panel-admin/src/Filament/Clusters'), for: 'He4rt\\PanelAdmin\\Filament\\Clusters')
             ->pages([
                 Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->navigationGroups([
-                NavigationGroup::make()
-                    ->label('Administration'),
-
-                NavigationGroup::make()
-                    ->label('Events'),
-
-                NavigationGroup::make()
-                    ->label('Gamefication'),
-
-                NavigationGroup::make()
-                    ->label('Meetings'),
-
-                NavigationGroup::make()
-                    ->label('General'),
+                NavigationGroup::make('Community'),
+                NavigationGroup::make('Gamification'),
+                NavigationGroup::make('Economy'),
+                NavigationGroup::make('Events'),
+                NavigationGroup::make('Activity'),
+                NavigationGroup::make('Meetings'),
+                NavigationGroup::make('Moderation'),
             ])
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
