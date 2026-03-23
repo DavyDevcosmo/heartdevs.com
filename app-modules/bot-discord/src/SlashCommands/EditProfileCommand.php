@@ -31,14 +31,14 @@ class EditProfileCommand extends AbstractSlashCommand
     /**
      * The command options.
      *
-     * @var array
+     * @var array<mixed>
      */
     protected $options = [];
 
     /**
      * The permissions required to use the command.
      *
-     * @var array
+     * @var array<mixed>
      */
     protected $permissions = [];
 
@@ -61,7 +61,7 @@ class EditProfileCommand extends AbstractSlashCommand
      */
     public function handle(Interaction $interaction): void
     {
-        if (! $this->memberProvider?->user?->information) {
+        if (!$this->memberProvider?->user?->information) {
             $interaction->respondWithMessage(
                 'Parece que você ainda não completou sua apresentação. Use o comando `/apresentar` para continuar.',
                 true
@@ -122,6 +122,9 @@ class EditProfileCommand extends AbstractSlashCommand
             ->show($interaction);
     }
 
+    /**
+     * @param  Collection<mixed, mixed>  $components
+     */
     private function persistData(
         Interaction $interaction,
         Collection $components

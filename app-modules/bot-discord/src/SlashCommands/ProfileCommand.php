@@ -29,7 +29,7 @@ class ProfileCommand extends AbstractSlashCommand
     /**
      * The command options.
      *
-     * @var array
+     * @var array<mixed>
      */
     protected $options = [
         [
@@ -43,7 +43,7 @@ class ProfileCommand extends AbstractSlashCommand
     /**
      * The permissions required to use the command.
      *
-     * @var array
+     * @var array<mixed>
      */
     protected $permissions = [];
 
@@ -75,7 +75,7 @@ class ProfileCommand extends AbstractSlashCommand
 
         try {
 
-            if (! $this->memberProvider instanceof ExternalIdentity || ! $this->memberProvider->user->information) {
+            if (!$this->memberProvider instanceof ExternalIdentity || !$this->memberProvider->user->information) {
                 $this
                     ->message()
                     ->content($mentionedUser.' ainda não se apresentou! Use o comando `/introduction` primeiro.')

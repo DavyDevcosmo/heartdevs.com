@@ -60,8 +60,14 @@ class UserProfile extends Page
      */
     public ?array $data = [];
 
+    /**
+     * @var array<string, mixed> | null
+     */
     public ?array $informationData = [];
 
+    /**
+     * @var array<string, mixed> | null
+     */
     public ?array $addressData = [];
 
     protected static bool $isDiscovered = false;
@@ -224,7 +230,7 @@ class UserProfile extends Page
     public function defaultForm(Schema $schema): Schema
     {
         return $schema
-            ->inlineLabel(! self::isSimple())
+            ->inlineLabel(!self::isSimple())
             ->model($this->getUser())
             ->operation('edit')
             ->statePath('data');
@@ -395,14 +401,14 @@ class UserProfile extends Page
                 Actions::make($this->getFormActions())
                     ->alignment($this->getFormActionsAlignment())
                     ->fullWidth($this->hasFullWidthFormActions())
-                    ->sticky((! self::isSimple()) && $this->areFormActionsSticky())
+                    ->sticky((!self::isSimple()) && $this->areFormActionsSticky())
                     ->key('form-actions'),
             ]);
     }
 
     public function getMultiFactorAuthenticationContentComponent(): ?Component
     {
-        if (! Filament::hasMultiFactorAuthentication()) {
+        if (!Filament::hasMultiFactorAuthentication()) {
             return null;
         }
 
@@ -529,7 +535,7 @@ class UserProfile extends Page
                 ['email' => $newEmail]));
     }
 
-    private function getSavedNotificationTitle(): ?string
+    private function getSavedNotificationTitle(): string
     {
         return __('filament-panels::auth/pages/edit-profile.notifications.saved.title');
     }
