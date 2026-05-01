@@ -8,16 +8,20 @@
     "autoload": {
         "psr-4": {
             "He4rt\\Events\\": "src/",
-            "He4rt\\Events\\Tests\\": "tests/",
             "He4rt\\Events\\Database\\Factories\\": "database/factories/",
             "He4rt\\Events\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "He4rt\\Events\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "stable",
     "extra": {
         "laravel": {
             "providers": [
-                "He4rt\\Events\\Providers\\EventsServiceProvider"
+                "He4rt\\Events\\EventsServiceProvider"
             ]
         }
     }

@@ -8,16 +8,20 @@
     "autoload": {
         "psr-4": {
             "He4rt\\Portal\\": "src/",
-            "He4rt\\Portal\\Tests\\": "tests/",
             "He4rt\\Portal\\Database\\Factories\\": "database/factories/",
             "He4rt\\Portal\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "He4rt\\Portal\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "stable",
     "extra": {
         "laravel": {
             "providers": [
-                "He4rt\\Portal\\Providers\\PortalServiceProvider"
+                "He4rt\\Portal\\PortalServiceProvider"
             ]
         }
     }

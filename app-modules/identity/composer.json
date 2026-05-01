@@ -8,16 +8,20 @@
     "autoload": {
         "psr-4": {
             "He4rt\\Identity\\": "src/",
-            "He4rt\\Identity\\Tests\\": "tests/",
             "He4rt\\Identity\\Database\\Factories\\": "database/factories/",
             "He4rt\\Identity\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "He4rt\\Identity\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "stable",
     "extra": {
         "laravel": {
             "providers": [
-                "He4rt\\Identity\\Providers\\IdentityServiceProvider"
+                "He4rt\\Identity\\IdentityServiceProvider"
             ]
         }
     }
