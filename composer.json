@@ -15,7 +15,7 @@
         "filament/spatie-laravel-media-library-plugin": "^5.6.1",
         "guzzlehttp/guzzle": "^7.10.0",
         "he4rt/activity": ">=1",
-        "he4rt/bot-discord": ">=1",
+        "he4rt/bot-discord": ">=1.0",
         "he4rt/community": ">=1",
         "he4rt/docs": ">=1",
         "he4rt/economy": ">=1",
