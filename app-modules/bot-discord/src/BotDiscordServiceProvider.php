@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace He4rt\BotDiscord;
 
+use He4rt\BotDiscord\Listeners\NotifyModerationChannel;
+use He4rt\BotDiscord\Moderation\DiscordModerationAdapter;
+use He4rt\Moderation\Cases\Events\CaseQueued;
+use Illuminate\Support\Facades\Event;
 use Laracord\Laracord;
 use Laracord\LaracordServiceProvider;
 
@@ -11,14 +15,19 @@ class BotDiscordServiceProvider extends LaracordServiceProvider
 {
     public function register(): void
     {
-        parent::register();
-
         $this->mergeConfigFrom(__DIR__.'/../config/bot-discord.php', 'bot-discord');
+
+        $this->app->singleton(DiscordModerationAdapter::class);
+        $this->app->tag([DiscordModerationAdapter::class], 'moderation.platforms');
+
+        parent::register();
     }
 
     public function boot(): void
     {
         parent::boot();
+
+        Event::listen(CaseQueued::class, [NotifyModerationChannel::class, 'handle']);
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
