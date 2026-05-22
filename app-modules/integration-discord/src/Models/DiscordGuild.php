@@ -36,18 +36,6 @@ final class DiscordGuild extends Model
     /** @use HasFactory<DiscordGuildFactory> */
     use HasFactory;
 
-    protected $fillable = [
-        'tenant_id',
-        'discord_guild_id',
-        'name',
-        'icon',
-        'description',
-        'member_count',
-        'premium_tier',
-        'features',
-        'synced_at',
-    ];
-
     /**
      * @return BelongsTo<Tenant, $this>
      */

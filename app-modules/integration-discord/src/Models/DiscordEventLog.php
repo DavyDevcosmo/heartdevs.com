@@ -19,14 +19,6 @@ use Illuminate\Database\Eloquent\Model;
  */
 final class DiscordEventLog extends Model
 {
-    protected $fillable = [
-        'event_type',
-        'guild_id',
-        'user_id',
-        'channel_id',
-        'payload',
-    ];
-
     /**
      * @return array<string, string>
      */

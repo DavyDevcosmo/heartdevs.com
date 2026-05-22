@@ -34,19 +34,6 @@ final class DiscordRole extends Model
     /** @use HasFactory<DiscordRoleFactory> */
     use HasFactory;
 
-    protected $fillable = [
-        'discord_guild_id',
-        'discord_role_id',
-        'name',
-        'color',
-        'position',
-        'permissions',
-        'is_hoisted',
-        'is_mentionable',
-        'is_managed',
-        'icon',
-    ];
-
     /**
      * @return BelongsTo<DiscordGuild, $this>
      */

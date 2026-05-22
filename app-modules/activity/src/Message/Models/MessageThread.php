@@ -6,6 +6,7 @@ namespace He4rt\Activity\Message\Models;
 
 use Carbon\Carbon;
 use He4rt\Identity\Tenant\Models\Tenant;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,21 +22,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
+#[Table(name: 'message_threads')]
 final class MessageThread extends Model
 {
     use HasUuids;
-
-    protected $table = 'message_threads';
-
-    protected $fillable = [
-        'id',
-        'tenant_id',
-        'message_id',
-        'provider_thread_id',
-        'name',
-        'archived',
-        'auto_archive_duration',
-    ];
 
     /**
      * @return BelongsTo<Message, $this>

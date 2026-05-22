@@ -14,6 +14,7 @@ use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use He4rt\Identity\Tenant\Concerns\InteractsWithTenants;
 use He4rt\Identity\User\Observers\UserObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -35,6 +36,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property Carbon $updated_at
  */
 #[ObservedBy(UserObserver::class)]
+#[Table(name: 'users')]
 final class User extends Authenticatable implements FilamentUser, HasMedia, HasName, HasTenants
 {
     /** @use HasFactory<UserFactory> */
@@ -43,19 +45,6 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
     use InteractsWithMedia;
     use InteractsWithTenants;
     use Notifiable;
-
-    protected $table = 'users';
-
-    protected $fillable = [
-        'id',
-        'username',
-        'name',
-        'email',
-        'password',
-        'is_donator',
-        'suspended_until',
-        'banned_at',
-    ];
 
     public function isAdmin(): bool
     {

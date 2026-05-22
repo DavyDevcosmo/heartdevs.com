@@ -36,19 +36,6 @@ final class DiscordChannel extends Model
     /** @use HasFactory<DiscordChannelFactory> */
     use HasFactory;
 
-    protected $fillable = [
-        'discord_guild_id',
-        'discord_channel_id',
-        'parent_id',
-        'name',
-        'type',
-        'topic',
-        'position',
-        'nsfw',
-        'bitrate',
-        'user_limit',
-    ];
-
     /**
      * @return BelongsTo<DiscordGuild, $this>
      */

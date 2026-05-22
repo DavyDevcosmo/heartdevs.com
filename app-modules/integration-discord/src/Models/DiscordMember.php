@@ -41,22 +41,6 @@ final class DiscordMember extends Model
     /** @use HasFactory<DiscordMemberFactory> */
     use HasFactory;
 
-    protected $fillable = [
-        'discord_guild_id',
-        'discord_user_id',
-        'external_identity_id',
-        'username',
-        'global_name',
-        'avatar',
-        'nickname',
-        'is_bot',
-        'is_pending',
-        'joined_at',
-        'premium_since',
-        'communication_disabled_until',
-        'left_at',
-    ];
-
     /**
      * @return BelongsTo<DiscordGuild, $this>
      */

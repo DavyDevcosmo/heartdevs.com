@@ -38,14 +38,6 @@ class Tenant extends Model
 
     use SoftDeletes;
 
-    protected $fillable = [
-        'name',
-        'slug',
-        'domain',
-        'owner_id',
-        'active',
-    ];
-
     /**
      * @return BelongsTo<User, $this>
      */
