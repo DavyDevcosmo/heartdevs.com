@@ -13,6 +13,9 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use He4rt\Identity\Tenant\Models\Tenant;
+use He4rt\PanelApp\Pages\EventPage;
+use He4rt\PanelApp\Pages\EventsPage;
+use He4rt\PanelApp\Pages\MyEventsPage;
 use He4rt\PanelApp\Pages\LoginPage;
 use He4rt\PanelApp\Pages\ProfilePage;
 use He4rt\PanelApp\Pages\ThreadPage;
@@ -46,6 +49,9 @@ class AppPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/App/Widgets'), for: 'App\Filament\App\Widgets')
             ->pages([
                 TimelinePage::class,
+                EventsPage::class,
+                MyEventsPage::class,
+                EventPage::class,
                 ThreadPage::class,
                 ProfilePage::class,
             ])
