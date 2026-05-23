@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Contracts\Paginator as PaginatorInterface;
+use App\Models\Address;
 use App\Providers\Tools\DebugbarServiceProvider;
 use App\Providers\Tools\TelescopeServiceProvider;
 use App\Support\Paginator;
@@ -40,6 +41,7 @@ final class AppServiceProvider extends ServiceProvider
         $this->configureHttp();
         $this->configureVite();
         $this->configureUrl();
+        $this->configureMorphMap();
     }
 
     private function configureCommands(): void
@@ -88,5 +90,12 @@ final class AppServiceProvider extends ServiceProvider
     private function registerTelescope(): void
     {
         $this->app->register(TelescopeServiceProvider::class);
+    }
+
+    private function configureMorphMap(): void
+    {
+        Relation::morphMap([
+            'address' => Address::class,
+        ]);
     }
 }

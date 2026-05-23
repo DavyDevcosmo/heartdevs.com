@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\Identity\User\Models;
 
+use App\Concerns\HasAddress;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
 use Filament\Models\Contracts\HasTenants;
@@ -39,6 +40,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 #[Table(name: 'users')]
 final class User extends Authenticatable implements FilamentUser, HasMedia, HasName, HasTenants
 {
+    use HasAddress;
     /** @use HasFactory<UserFactory> */
     use HasFactory;
     use HasUuids;
@@ -49,14 +51,6 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
     public function isAdmin(): bool
     {
         return in_array($this->username, str(config('he4rt.admins'))->explode(',')->toArray(), true);
-    }
-
-    /**
-     * @return HasOne<Address, $this>
-     */
-    public function address(): HasOne
-    {
-        return $this->hasOne(Address::class);
     }
 
     /**
