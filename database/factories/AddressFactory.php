@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\Address;
+use He4rt\Identity\User\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
+
+/**
+ * @extends Factory<Address>
+ */
 final class AddressFactory extends Factory
 {
     protected $model = Address::class;
@@ -29,8 +37,8 @@ final class AddressFactory extends Factory
     public function forUser(User $user): self
     {
         return $this->state([
-            'addressable_type' => 'user',
-            'addressable_id' => $user->id,
+            'addressable_type' => $user->getMorphClass(),
+            'addressable_id' => $user->getKey(),
         ]);
     }
 }

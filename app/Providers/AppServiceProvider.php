@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Contracts\Paginator as PaginatorInterface;
-use App\Models\Address;
 use App\Providers\Tools\DebugbarServiceProvider;
 use App\Providers\Tools\TelescopeServiceProvider;
 use App\Support\Paginator;
+use He4rt\Events\Models\EventModel;
+use He4rt\Identity\User\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\DB;
@@ -95,7 +96,8 @@ final class AppServiceProvider extends ServiceProvider
     private function configureMorphMap(): void
     {
         Relation::morphMap([
-            'address' => Address::class,
+            'user' => User::class,
+            'event' => EventModel::class,
         ]);
     }
 }
