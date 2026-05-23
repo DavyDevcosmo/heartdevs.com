@@ -15,7 +15,7 @@ use He4rt\Identity\Auth\DTOs\OAuthStateDTO;
 use He4rt\IntegrationDevTo\OAuth\DevToOAuthClient;
 use He4rt\IntegrationDiscord\ETL\Adapters\DiscordMessageAdapter;
 use He4rt\IntegrationDiscord\OAuth\DiscordOAuthClient;
-use He4rt\IntegrationTwitch\OAuth\Contracts\TwitchOAuthService;
+use He4rt\IntegrationTwitch\OAuth\TwitchOAuthClient;
 use LogicException;
 
 enum IdentityProvider: string implements HasColor, HasDescription, HasIcon, HasLabel
@@ -48,10 +48,20 @@ enum IdentityProvider: string implements HasColor, HasDescription, HasIcon, HasL
     case Bungie = 'bungie';
     case Ebay = 'ebay';
 
+    /** @return array<int, self> */
+    public static function supportedProviders(): array
+    {
+        return [
+            self::GitHub,
+            self::Discord,
+            self::Twitch,
+        ];
+    }
+
     public function getClient(): ?OAuthClientContract
     {
         return match ($this) {
-            self::Twitch => resolve(TwitchOAuthService::class),
+            self::Twitch => resolve(TwitchOAuthClient::class),
             self::Discord => resolve(DiscordOAuthClient::class),
             self::DevTo => resolve(DevToOAuthClient::class),
             default => null,
@@ -165,11 +175,11 @@ enum IdentityProvider: string implements HasColor, HasDescription, HasIcon, HasL
     /**
      * @return array<int, string>
      */
-    public function getScopes(): array
+    public function getScopes(?string $panel = null): array
     {
         $scopes = match ($this) {
             self::Discord => config('services.discord.scopes'),
-            self::Twitch => config('services.twitch.scopes'),
+            self::Twitch => config('services.twitch.scopes.'.($panel ?? 'app'), config('services.twitch.scopes.app')),
             self::DevTo => config('services.devto.scopes'),
             default => '',
         };
