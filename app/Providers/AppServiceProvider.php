@@ -8,7 +8,6 @@ use App\Contracts\Paginator as PaginatorInterface;
 use App\Providers\Tools\DebugbarServiceProvider;
 use App\Providers\Tools\TelescopeServiceProvider;
 use App\Support\Paginator;
-use He4rt\Events\Models\EventModel;
 use He4rt\Identity\User\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -97,7 +96,6 @@ final class AppServiceProvider extends ServiceProvider
     {
         Relation::morphMap([
             'user' => User::class,
-            'event' => EventModel::class,
         ]);
     }
 }
