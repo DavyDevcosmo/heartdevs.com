@@ -8,17 +8,20 @@ use He4rt\Identity\User\Models\User;
 it('user tem um endereço polimórfico', function (): void {
     $user = User::factory()->create();
 
-    $address = Address::factory()->forUser($user)->create([
+    Address::factory()->forUser($user)->create([
         'country' => 'BR',
         'state' => 'SP',
         'city' => 'São Paulo',
     ]);
 
-    expect($user->fresh()->address)->not->toBeNull();
-    expect($user->fresh()->address->addressable_type)->toBe('user');
-    expect($user->fresh()->address->addressable_id)->toBe($user->id);
-    expect($user->fresh()->address->country)->toBe('BR');
-    expect($user->fresh()->address->state)->toBe('SP');
+    $address = $user->fresh()->address;
+
+    expect($address)
+        ->not->toBeNull()
+        ->addressable_type->toBe('user')
+        ->addressable_id->toBe($user->id)
+        ->country->toBe('BR')
+        ->state->toBe('SP');
 });
 
 it('user sem endereço retorna null', function (): void {
@@ -44,8 +47,9 @@ it('factory cria address válido para user', function (): void {
 
     $address = Address::factory()->forUser($user)->create();
 
-    expect($address->addressable_type)->toBe('user');
-    expect($address->addressable_id)->toBe($user->id);
-    expect($address->country)->toBe('BR');
-    expect($address->state)->toBe('SP');
+    expect($address)
+        ->addressable_type->toBe('user')
+        ->addressable_id->toBe($user->id)
+        ->country->toBe('BR')
+        ->state->toBe('SP');
 });

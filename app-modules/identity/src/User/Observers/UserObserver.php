@@ -15,7 +15,7 @@ class UserObserver
         }
     }
 
-    public function deleting(User $user): void
+    public function deleted(User $user): void
     {
         $user->address()->delete();
     }

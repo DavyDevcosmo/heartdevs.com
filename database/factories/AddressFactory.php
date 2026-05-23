@@ -8,6 +8,7 @@ use App\Models\Address;
 use He4rt\Identity\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
 
 /**
  * @extends Factory<Address>
@@ -28,6 +29,8 @@ final class AddressFactory extends Factory
 
     public function forModel(Model $model): self
     {
+        throw_if(!$model->exists || $model->getKey() === null, InvalidArgumentException::class, 'Model must be persisted before using forModel().');
+
         return $this->state([
             'addressable_type' => $model->getMorphClass(),
             'addressable_id' => $model->getKey(),
@@ -36,9 +39,6 @@ final class AddressFactory extends Factory
 
     public function forUser(User $user): self
     {
-        return $this->state([
-            'addressable_type' => $user->getMorphClass(),
-            'addressable_id' => $user->getKey(),
-        ]);
+        return $this->forModel($user);
     }
 }
