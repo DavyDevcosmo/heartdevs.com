@@ -33,8 +33,10 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string $username
  * @property string $email
  * @property bool $is_donator
- * @property Carbon $created_at
- * @property Carbon $updated_at
+ * @property Carbon|null $suspended_until
+ * @property Carbon|null $banned_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 #[ObservedBy(UserObserver::class)]
 #[Table(name: 'users')]
@@ -51,14 +53,6 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
     public function isAdmin(): bool
     {
         return in_array($this->username, str(config('he4rt.admins'))->explode(',')->toArray(), true);
-    }
-
-    /**
-     * @return HasOne<Information, $this>
-     */
-    public function information(): HasOne
-    {
-        return $this->hasOne(Information::class);
     }
 
     /**
@@ -85,6 +79,11 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('avatar')
+            ->singleFile()
+            ->useDisk('public');
+
+        $this->addMediaCollection('cover')
+            ->singleFile()
             ->useDisk('public');
     }
 
