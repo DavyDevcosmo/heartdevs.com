@@ -31,10 +31,11 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string $id
  * @property string $name
  * @property string $username
- * @property string $email
+ * @property string|null $email
  * @property bool $is_donator
  * @property Carbon|null $suspended_until
  * @property Carbon|null $banned_at
+ * @property Carbon|null $first_login_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -132,6 +133,7 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
             'password' => 'hashed',
             'suspended_until' => 'datetime',
             'banned_at' => 'datetime',
+            'first_login_at' => 'datetime',
         ];
     }
 }

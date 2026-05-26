@@ -11,12 +11,11 @@ use Filament\Support\Contracts\HasDescription;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 use He4rt\Activity\Message\Contracts\MessageActivityAdapter;
-use He4rt\Identity\Auth\DTOs\OAuthStateDTO;
 use He4rt\IntegrationDevTo\OAuth\DevToOAuthClient;
 use He4rt\IntegrationDiscord\ETL\Adapters\DiscordMessageAdapter;
 use He4rt\IntegrationDiscord\OAuth\DiscordOAuthClient;
+use He4rt\IntegrationGithub\OAuth\GitHubOAuthClient;
 use He4rt\IntegrationTwitch\OAuth\TwitchOAuthClient;
-use LogicException;
 
 enum IdentityProvider: string implements HasColor, HasDescription, HasIcon, HasLabel
 {
@@ -63,6 +62,7 @@ enum IdentityProvider: string implements HasColor, HasDescription, HasIcon, HasL
         return match ($this) {
             self::Twitch => resolve(TwitchOAuthClient::class),
             self::Discord => resolve(DiscordOAuthClient::class),
+            self::GitHub => resolve(GitHubOAuthClient::class),
             self::DevTo => resolve(DevToOAuthClient::class),
             default => null,
         };
@@ -194,18 +194,11 @@ enum IdentityProvider: string implements HasColor, HasDescription, HasIcon, HasL
 
     public function getRedirectUri(?string $tenant = null): string
     {
-        $client = $this->getClient();
-
-        if (!$client instanceof OAuthClientContract) {
-            throw new LogicException(sprintf('Provider %s does not support OAuth authentication.', $this->name));
-        }
-
-        return $client->redirectUrl(
-            new OAuthStateDTO(
-                filament()->getCurrentPanel()->getId(),
-                $tenant
-            )
-        );
+        return route('oauth.redirect', [
+            'tenant' => $tenant ?? request()->getHost(),
+            'panel' => filament()->getCurrentPanel()->getId(),
+            'provider' => $this->value,
+        ]);
     }
 
     public function getType(): IdentityType
