@@ -15,6 +15,7 @@ use He4rt\Profile\Enums\SocialPlatform;
 use He4rt\Profile\Enums\StartAvailability;
 use He4rt\Profile\Models\Profile;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 
 class EditUser extends EditRecord
 {
@@ -53,7 +54,7 @@ class EditUser extends EditRecord
             'headline' => $profileData['headline'] ?? null,
             'seniority_level' => $profileData['seniority_level'] ?? null,
             'years_experience' => $profileData['years_experience'] ?? null,
-            'social_links' => $socialLinks !== [] ? $socialLinks : null,
+            'social_links' => $socialLinks,
         ]);
 
         resolve(UpsertProfile::class)->handle($profile, $dto);
@@ -73,6 +74,11 @@ class EditUser extends EditRecord
             ->success()
             ->title('Perfil atualizado com sucesso!')
             ->send();
+
+        $record->update([
+            'name' => $data['name'] ?? $record->name,
+            'email' => $data['email'] ?? $record->email,
+        ]);
 
         return $record;
     }
@@ -118,6 +124,13 @@ class EditUser extends EditRecord
 
             if (filled($platform) && filled($handle)) {
                 $key = $platform instanceof SocialPlatform ? $platform->value : (string) $platform;
+
+                if (isset($links[$key])) {
+                    throw ValidationException::withMessages([
+                        'profile.social_links' => ['Plataforma duplicada: '.$key],
+                    ]);
+                }
+
                 $links[$key] = (string) $handle;
             }
         }
