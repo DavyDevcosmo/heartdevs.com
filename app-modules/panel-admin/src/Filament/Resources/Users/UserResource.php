@@ -9,12 +9,15 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use He4rt\Identity\User\Models\User;
 use He4rt\PanelAdmin\Filament\Resources\Users\Pages\CreateUser;
 use He4rt\PanelAdmin\Filament\Resources\Users\Pages\EditUser;
 use He4rt\PanelAdmin\Filament\Resources\Users\Pages\ListUsers;
 use He4rt\PanelAdmin\Filament\Resources\Users\Schemas\UserForm;
+use Illuminate\Database\Eloquent\Builder;
 
 class UserResource extends Resource
 {
@@ -48,7 +51,15 @@ class UserResource extends Resource
                     ->dateTime('d/m/Y')
                     ->sortable(),
             ])
-            ->filters([]);
+            ->filters([
+                Filter::make('created_at')
+                    ->label('Criado este mês')
+                    ->query(fn (Builder $query) => $query->whereMonth('created_at', now()->month)),
+
+                SelectFilter::make('tenant')
+                    ->label('Tenant')
+                    ->relationship('tenants', 'name'),
+            ]);
     }
 
     public static function getPages(): array
