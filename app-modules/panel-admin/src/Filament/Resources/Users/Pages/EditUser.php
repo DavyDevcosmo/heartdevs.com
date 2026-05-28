@@ -88,6 +88,10 @@ class EditUser extends EditRecord
         ]);
     }
 
+    /**
+     * @param  array<string, string>|null  $socialLinks
+     * @return list<array{platform: string, handle: string}>
+     */
     private function socialLinksToRepeater(?array $socialLinks): array
     {
         if ($socialLinks === null) {
@@ -100,6 +104,10 @@ class EditUser extends EditRecord
             ->all();
     }
 
+    /**
+     * @param  array<int|string, array<string, mixed>>  $repeaterData
+     * @return array<string, string>
+     */
     private function repeaterToSocialLinks(array $repeaterData): array
     {
         $links = [];
