@@ -7,6 +7,7 @@ namespace He4rt\PanelAdmin\Filament\Resources\Users\Pages;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use He4rt\Identity\User\Models\User;
 use He4rt\PanelAdmin\Filament\Resources\Users\UserResource;
 use He4rt\Profile\Actions\ToggleAvailability;
 use He4rt\Profile\Actions\UpsertProfile;
@@ -75,6 +76,7 @@ class EditUser extends EditRecord
             ->title('Perfil atualizado com sucesso!')
             ->send();
 
+        /** @var User $record */
         $record->update([
             'name' => $data['name'] ?? $record->name,
             'email' => $data['email'] ?? $record->email,
