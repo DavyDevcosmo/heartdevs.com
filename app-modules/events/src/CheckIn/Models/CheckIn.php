@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Carbon $event_date
  * @property CheckInMethod $method
  * @property array<string, mixed>|null $payload
- * @property Carbon $checked_in_at
+ * @property Carbon|null $checked_in_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */

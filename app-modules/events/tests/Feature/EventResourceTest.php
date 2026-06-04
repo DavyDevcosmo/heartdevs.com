@@ -34,6 +34,8 @@ beforeEach(function (): void {
 
     Filament::setCurrentPanel(Filament::getPanel('admin'));
     Filament::setTenant($tenant);
+
+    $this->tenant = $tenant;
 });
 
 test('when visiting the events list page, then it renders successfully', function (): void {
@@ -42,10 +44,11 @@ test('when visiting the events list page, then it renders successfully', functio
 });
 
 test('when an event exists, then it appears in the events list', function (): void {
-    $event = Event::factory()->create(['title' => 'He4rt Meetup #42']);
+    $event = Event::factory()->recycle($this->tenant)->create(['title' => 'He4rt Meetup #42']);
 
     livewire(ListEvents::class)
-        ->assertSee($event->title);
+        ->loadTable()
+        ->assertCanSeeTableRecords([$event]);
 });
 
 test('when visiting the create event page, then it renders successfully', function (): void {
@@ -247,6 +250,7 @@ test('when enrollment has check-ins, then relation manager shows check-in histor
         'ownerRecord' => $event,
         'pageClass' => EditEvent::class,
     ])
+        ->loadTable()
         ->assertSee($startsAt->toDateString())
         ->assertSee($startsAt->clone()->addDay()->toDateString());
 });
