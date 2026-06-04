@@ -56,6 +56,7 @@ final class CheckInException extends Exception
             Response::HTTP_UNPROCESSABLE_ENTITY,
         );
     }
+
     public static function invalidCheckInCode(): self
     {
         return new self(
