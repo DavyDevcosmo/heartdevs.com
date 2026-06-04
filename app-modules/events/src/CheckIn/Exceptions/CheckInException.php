@@ -41,6 +41,21 @@ final class CheckInException extends Exception
         );
     }
 
+    public static function qrTokenNotFound(): self
+    {
+        return new self(
+            __('events::check_in.qr_token_not_found'),
+            Response::HTTP_NOT_FOUND,
+        );
+    }
+
+    public static function qrTokenExpired(): self
+    {
+        return new self(
+            __('events::check_in.qr_token_expired'),
+            Response::HTTP_UNPROCESSABLE_ENTITY,
+        );
+    }
     public static function invalidCheckInCode(): self
     {
         return new self(

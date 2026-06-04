@@ -7,6 +7,8 @@ return [
     'check_in_outside_event_date_range' => 'A data do check-in deve estar dentro do período do evento.',
     'already_checked_in_for_date' => 'Esta inscrição já possui check-in para essa data.',
     'invalid_check_in_actor' => 'Check-in manual exige o ID do usuário organizador.',
+    'qr_token_not_found' => 'Token QR não encontrado ou não pertence a este evento.',
+    'qr_token_expired' => 'Este token QR expirou.',
     'invalid_check_in_code' => 'Código de check-in inválido.',
     'invalid_check_in_code_format' => 'Informe um código de check-in com 4 ou 6 dígitos.',
     'check_in_code_expired' => 'O código expirou.',
