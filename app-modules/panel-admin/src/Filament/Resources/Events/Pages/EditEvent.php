@@ -58,7 +58,7 @@ final class EditEvent extends EditRecord
                         );
 
                         $checkIn->enrollment->loadMissing('user');
-                        $participantName = $checkIn->enrollment->user?->name ?? 'Participant';
+                        $participantName = $checkIn->enrollment->user->name ?? 'Participant';
 
                         Notification::make()
                             ->success()

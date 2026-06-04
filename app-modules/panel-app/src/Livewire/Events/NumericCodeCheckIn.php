@@ -18,6 +18,10 @@ use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
+/**
+ * @property-read Enrollment|null $enrollment
+ * @property-read bool $canCheckIn
+ */
 final class NumericCodeCheckIn extends Component
 {
     public string $eventId;

@@ -26,6 +26,16 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
+/**
+ * @property-read Event $event
+ * @property-read Enrollment|null $enrollment
+ * @property-read QrToken|null $qrToken
+ * @property-read string|null $qrCodeSvg
+ * @property-read Collection<int, CheckIn> $checkIns
+ * @property-read bool $hasCheckedInToday
+ * @property-read bool $canConfirmPresence
+ * @property-read bool $isEventFull
+ */
 final class EventDetail extends Component
 {
     public string $eventId;
