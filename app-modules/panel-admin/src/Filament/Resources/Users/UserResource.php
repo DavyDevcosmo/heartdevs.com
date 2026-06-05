@@ -37,14 +37,30 @@ class UserResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Nome')
+                    ->label('Membro')
+                    ->description(fn (User $record): string => $record->email)
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('email')
-                    ->label('Email')
-                    ->searchable()
-                    ->sortable(),
+                TextColumn::make('profile.headline')
+                    ->label('Headline')
+                    ->default('—')
+                    ->searchable(),
+
+                TextColumn::make('profile.seniority_level')
+                    ->label('Seniority')
+                    ->badge()
+                    ->default('—'),
+
+                TextColumn::make('profile.years_experience')
+                    ->label('Exp.')
+                    ->formatStateUsing(fn ($state) => $state ? $state.' anos' : '—'),
+
+                TextColumn::make('profile.available_for_proposals')
+                    ->label('Disponível')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state ? 'Sim' : 'Não')
+                    ->color(fn ($state) => $state ? 'success' : 'gray'),
 
                 TextColumn::make('created_at')
                     ->label('Criado em')
