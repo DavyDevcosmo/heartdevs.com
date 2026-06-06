@@ -7,7 +7,6 @@ namespace He4rt\PanelAdmin;
 use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationItem;
 use Filament\Panel;
-use He4rt\PanelAdmin\Filament\Resources\ExternalIdentities\ExternalIdentityResource;
 use He4rt\PanelAdmin\Filament\Resources\Users\UserResource;
 use He4rt\PanelAdmin\Marketing\MarketingCluster;
 use He4rt\PanelAdmin\Moderation\Livewire\AppealQueue;
@@ -34,7 +33,6 @@ class PanelAdminServiceProvider extends ServiceProvider
                 ->pages([ModerationCluster::class, MarketingCluster::class, TwitchCluster::class])
                 ->navigation($this->buildNavigation(...))
                 ->resources([
-                    ExternalIdentityResource::class,
                     UserResource::class,
                 ])
                 ->discoverResources(
@@ -105,7 +103,6 @@ class PanelAdminServiceProvider extends ServiceProvider
             ...ModerationCluster::getNavigationItems(),
             ...MarketingCluster::getNavigationItems(),
             ...TwitchCluster::getNavigationItems(),
-            ...ExternalIdentityResource::getNavigationItems(),
             ...UserResource::getNavigationItems(),
         ]);
     }
