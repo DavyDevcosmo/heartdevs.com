@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\IntegrationGithub;
 
+use He4rt\IntegrationGithub\Console\BackfillGithubCommand;
 use He4rt\IntegrationGithub\Transport\GitHubApiConnector;
 use He4rt\IntegrationGithub\Transport\GitHubOAuthConnector;
 use Illuminate\Support\ServiceProvider;
@@ -13,6 +14,8 @@ class IntegrationGithubServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->mergeConfigFrom(__DIR__.'/../config/integration-github.php', 'integration-github');
+
         $this->app->singleton(GitHubOAuthConnector::class, function (): GitHubOAuthConnector {
             $clientId = config('services.github.client_id');
             $clientSecret = config('services.github.client_secret');
@@ -28,5 +31,10 @@ class IntegrationGithubServiceProvider extends ServiceProvider
         $this->app->singleton(GitHubApiConnector::class, fn () => new GitHubApiConnector());
     }
 
-    public function boot(): void {}
+    public function boot(): void
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([BackfillGithubCommand::class]);
+        }
+    }
 }
