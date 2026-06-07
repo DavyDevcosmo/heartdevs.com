@@ -10,4 +10,7 @@ return [
     'invalid_enrollment_method' => 'Esse evento exige inscrição via formulário, não RSVP.',
     'event_full' => 'Este evento atingiu a capacidade máxima e não possui lista de espera.',
     'response_message_not_implemented' => 'Mensagem de resposta não implementada para o status de inscrição: :status.',
+    'override_reason_required' => 'É obrigatório informar um motivo ao sobrescrever o status de uma inscrição.',
+    'override_not_allowed' => 'Sobrescrita de :from para :to não é permitida.',
+    'override_status_changed' => 'O status da inscrição mudou de :expected para :actual antes da sobrescrita ser salva. Revise o status atual e tente novamente.',
 ];

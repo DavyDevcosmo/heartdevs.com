@@ -22,6 +22,7 @@ use He4rt\Events\CheckIn\Models\CheckIn;
 use He4rt\Events\Enrollment\Enums\EnrollmentStatus;
 use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Event\Models\Event;
+use He4rt\PanelAdmin\Filament\Resources\Events\RelationManagers\Actions\OverrideEnrollmentStatusAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Date;
@@ -84,6 +85,7 @@ final class EnrollmentsRelationManager extends RelationManager
             ])
             ->recordActions([
                 $this->checkInAction(),
+                OverrideEnrollmentStatusAction::make(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
