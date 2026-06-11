@@ -8,6 +8,7 @@ use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use He4rt\PanelAdmin\Filament\Resources\Users\UserResource;
+use He4rt\PanelAdmin\Github\GithubCluster;
 use He4rt\PanelAdmin\Marketing\MarketingCluster;
 use He4rt\PanelAdmin\Moderation\Livewire\AppealQueue;
 use He4rt\PanelAdmin\Moderation\Livewire\ModerationDashboardLivewire;
@@ -33,7 +34,7 @@ class PanelAdminServiceProvider extends ServiceProvider
                 ->pages([ModerationCluster::class, MarketingCluster::class, TwitchCluster::class])
                 ->navigation($this->buildNavigation(...))
                 ->resources([
-                    UserResource::class,
+                    ExternalIdentityResource::class,
                 ])
                 ->discoverResources(
                     in: __DIR__.'/Moderation/Resources',
@@ -103,7 +104,7 @@ class PanelAdminServiceProvider extends ServiceProvider
             ...ModerationCluster::getNavigationItems(),
             ...MarketingCluster::getNavigationItems(),
             ...TwitchCluster::getNavigationItems(),
-            ...UserResource::getNavigationItems(),
+            ...ExternalIdentityResource::getNavigationItems(),
         ]);
     }
 
