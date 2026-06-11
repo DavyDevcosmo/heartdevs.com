@@ -1,0 +1,839 @@
+Schema extracted from migrations (applied in order)
+
+Table: messages
+  - id: uuid
+  - provider_message_id: string
+  - channel_id: string
+  - content: text
+  - obtained_experience: integer
+  - sent_at: timestamp
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  - metadata: jsonb
+  - reactions_count: unsignedInteger
+  - reactions_total: unsignedInteger
+  - kind: string
+  - raw_message_type: smallInteger
+  - source_kind: string
+  - is_pinned: boolean
+  - mentions_everyone: boolean
+  - mention_role_count: smallInteger
+  - edited_at: timestamp
+  - reply_to_provider_message_id: index
+  - messages_tenant_sent_at_idx: dropIndex
+  - messages_tenant_channel_sent_at_idx: dropIndex
+  - messages_tenant_kind_idx: dropIndex
+  - messages_reply_to_provider_message_id_idx: dropIndex
+  - messages_tenant_provider_message_id_unique: dropUnique
+  - external_identity_id: foreignUuid
+  Index: external_identity_id
+  FK: provider_id -> providers.id
+  FK: tenant_id -> tenants.id
+  FK: reply_to_message_id -> messages.id
+  FK: external_identity_id -> .id
+
+Table: voice_messages
+  - id: id
+  - channel_name: string
+  - state: string
+  - obtained_experience: integer
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  - provider_message_id: string
+  - occurred_at: timestamp
+  - external_identity_id: foreignUuid
+  Primary: id
+  FK: provider_id -> providers.id
+  FK: tenant_id -> tenants.id
+  FK: external_identity_id -> .id
+
+Table: interactions
+  - id: uuid
+  - character_id: foreignUuid
+  - tenant_id: foreignUuid
+  - type: string
+  - provider: string
+  - value_tier: string
+  - coins_min: integer
+  - coins_max: integer
+  - coins_awarded: integer
+  - xp_awarded: integer
+  - status: string
+  - source: nullableUuidMorphs
+  - external_ref: string
+  - metadata: jsonb
+  - occurred_at: timestamp
+  - reviewed_at: timestamp
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: character_id -> characters.id
+  FK: tenant_id -> tenants.id
+
+Table: moderation_events
+  - id: uuid
+  - tenant_id: foreignUuid
+  - external_identity_id: foreignUuid
+  - moderator_identity_id: foreignUuid
+  - type: string
+  - reason: text
+  - source_identity_id: foreignUuid
+  - source_message_id: foreign
+  - metadata: jsonb
+  - occurred_at: timestamp
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: tenant_id -> tenants.id
+  FK: external_identity_id -> external_identities.id
+  FK: moderator_identity_id -> external_identities.id
+  FK: source_identity_id -> external_identities.id
+
+Table: activity_reactions
+  - id: uuid
+  - tenant_id: foreignUuid
+  - reactable: uuidMorphs
+  - emoji_key: string(128)
+  - emoji_id: string
+  - emoji_name: string
+  - count: unsignedInteger
+  - count_burst: unsignedInteger
+  - count_normal: unsignedInteger
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: tenant_id -> tenants.id
+
+Table: message_mentions
+  - id: uuid
+  - tenant_id: foreignUuid
+  - message_id: foreignUuid
+  - mentioned_identity_id: foreignUuid
+  - mentioned_provider_account_id: string
+  - mentioned_username: string
+  - position: unsignedSmallInteger
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: tenant_id -> tenants.id
+  FK: message_id -> messages.id
+  FK: mentioned_identity_id -> external_identities.id
+
+Table: message_threads
+  - id: uuid
+  - tenant_id: foreignUuid
+  - message_id: index
+  - provider_thread_id: string
+  - name: string
+  - archived: boolean
+  - auto_archive_duration: unsignedInteger
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: tenant_id -> tenants.id
+  FK: message_id -> messages.id
+
+Table: message_attachments
+  - id: uuid
+  - tenant_id: foreignUuid
+  - message_id: index
+  - provider_attachment_id: string
+  - url: text
+  - filename: text
+  - content_type: text
+  - size: unsignedBigInteger
+  - width: unsignedInteger
+  - height: unsignedInteger
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: tenant_id -> tenants.id
+  FK: message_id -> messages.id
+
+Table: message_embeds
+  - id: uuid
+  - tenant_id: foreignUuid
+  - message_id: index
+  - url: text
+  - title: text
+  - description: text
+  - source_domain: string
+  - kind: string
+  - thumbnail_url: text
+  - raw: jsonb
+  - position: unsignedSmallInteger
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: tenant_id -> tenants.id
+  FK: message_id -> messages.id
+
+Table: membership_events
+  - id: uuid
+  - tenant_id: foreignUuid
+  - external_identity_id: foreignUuid
+  - kind: string
+  - occurred_at: timestamp
+  - provider_message_id: string
+  - metadata: jsonb
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: tenant_id -> tenants.id
+  FK: external_identity_id -> external_identities.id
+
+Table: activity_timeline
+  - id: uuid
+  - user_id: foreignUuid
+  - tenant_id: foreignUuid
+  - postable: uuidMorphs
+  - root_id: foreignUuid
+  - parent_id: foreignUuid
+  - is_ignored: boolean
+  - pinned: boolean
+  - views: integer
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+
+Table: activity_post_entries
+  - id: uuid
+  - content: text
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  - deleted_at: timestamp nullable
+
+Table: meeting_types
+  - id: id
+  - name: string
+  - week_day: integer
+  - start_at: time
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+
+Table: meetings
+  - id: uuid
+  - admin_id: foreignUuid
+  - content: text
+  - meeting_type_id: foreignId
+  - starts_at: dateTime
+  - ends_at: dateTime
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: admin_id -> users.id
+  FK: meeting_type_id -> meeting_types.id
+
+Table: meeting_participants
+  - meeting_id: foreignUuid
+  - user_id: foreignUuid
+  - attend_at: dateTime
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: meeting_id -> meetings.id
+  FK: user_id -> users.id
+
+Table: feedbacks
+  - id: uuid
+  - sender_id: foreignUuid
+  - target_id: foreignUuid
+  - type: string
+  - message: text
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: sender_id -> users.id
+  FK: target_id -> users.id
+
+Table: feedback_reviews
+  - id: uuid
+  - feedback_id: foreignUuid
+  - staff_id: foreignUuid
+  - status: string
+  - reason: text
+  - received_at: timestamp
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: feedback_id -> feedbacks.id
+  FK: staff_id -> users.id
+
+Table: wallets
+  - id: uuid
+  - owner: uuidMorphs
+  - currency: string
+  - balance: integer
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+
+Table: transactions
+  - id: uuid
+  - wallet_id: foreignUuid
+  - type: string
+  - amount: integer
+  - balance_after: integer
+  - reference: nullableUuidMorphs
+  - description: string
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: wallet_id -> wallets.id
+
+Table: characters
+  - id: uuid
+  - user_id: foreignUuid
+  - experience: integer
+  - reputation: integer
+  - daily_bonus_claimed_at: timestamp
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: user_id -> users.id
+
+Table: badges
+  - id: id
+  - provider: string
+  - name: string
+  - description: text
+  - redeem_code: string
+  - active: boolean
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+
+Table: characters_badges
+  - character_id: foreignUuid
+  - badge_id: foreignId
+  - claimed_at: timestamp
+  FK: character_id -> characters.id
+  FK: badge_id -> badges.id
+
+Table: seasons_rankings
+  - id: uuid
+  - season_id: string
+  - character_id: foreignUuid
+  - ranking_position: integer
+  - level: integer
+  - experience: integer
+  - messages_count: integer
+  - badges_count: integer
+  - meetings_count: integer
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: character_id -> characters.id
+
+Table: seasons
+  - id: uuid
+  - name: string
+  - description: text
+  - started_at: timestamp
+  - ended_at: timestamp
+  - messages_count: integer
+  - participants_count: integer
+  - meeting_count: integer
+  - badges_count: integer
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+
+Table: characters_leveling_logs
+  - id: uuid
+  - character_id: foreignUuid
+  - level: integer
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: character_id -> characters.id
+
+Table: sessions
+  - id: string
+  - user_id: foreignUuid
+  - ip_address: string(45)
+  - user_agent: text
+  - payload: longText
+  - last_activity: integer
+
+Table: characters_wallet
+  - id: id
+  - balance: integer
+  - character_id: foreignUuid
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+  FK: character_id -> characters.id
+
+Table: users
+  - id: id
+  - username: string
+  - name: string
+  - email: string
+  - password: string
+  - is_donator: boolean
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  - first_login_at: timestamp
+  - suspended_until: timestampTz
+  - banned_at: timestampTz
+  - users_name_unique: dropUnique
+  - email_verified_at: timestamp
+  - deleted_at: timestamp nullable
+  Primary: id
+  Index: name
+  Unique: name
+
+Table: password_resets
+  - email: string
+  - token: string
+  - created_at: timestamp
+
+Table: providers
+  - id: uuid
+  - provider: string
+  - email: string
+  - avatar: string
+  - username: string
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  - model_type: string
+  - model_id: string
+  - type: string
+  - credentials_type: string
+  - credentials: text
+  - connected_by: uuid
+  - connected_at: timestamp
+  - disconnected_at: timestamp
+  - metadata: json
+  - external_account_id: string
+  Index: model_type, model_id
+  FK: user_id -> users.id
+
+Table: user_address
+  - id: uuid
+  - user_id: foreignUuid
+  - country: string(4)
+  - state: string(4)
+  - city: string
+  - zip_code: string
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: user_id -> users.id
+
+Table: user_information
+  - id: uuid
+  - user_id: foreignUuid
+  - name: string
+  - nickname: string
+  - linkedin_url: string
+  - github_url: string
+  - birthdate: date
+  - about: text
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: user_id -> users.id
+
+Table: tenants
+  - id: uuid
+  - name: string
+  - slug: string
+  - owner_id: foreignUuid
+  - active: boolean
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  - deleted_at: timestamp nullable
+  FK: owner_id -> users.id
+
+Table: provider_tokens
+  - id: uuid
+  - provider_id: foreignUuid
+  - access_token: string
+  - refresh_token: string
+  - expires_in: integer
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: provider_id -> providers.id
+
+Table: tenant_users
+  - tenant_id: foreignUuid
+  - user_id: foreignUuid
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: tenant_id -> tenants.id
+  FK: user_id -> users.id
+
+Table: external_identities
+  FK: connected_by -> .id
+
+Table: discord_event_logs
+  - id: id
+  - event_type: string
+  - guild_id: string
+  - user_id: string
+  - channel_id: string
+  - payload: jsonb
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+
+Table: discord_guilds
+  - id: id
+  - tenant_id: foreignUuid
+  - discord_guild_id: string
+  - name: string
+  - icon: string
+  - description: text
+  - member_count: integer
+  - premium_tier: smallInteger
+  - features: jsonb
+  - synced_at: timestamp
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+  FK: tenant_id -> tenants.id
+
+Table: discord_channels
+  - id: id
+  - discord_guild_id: index
+  - discord_channel_id: string
+  - parent_id: foreignId
+  - name: string
+  - type: smallInteger
+  - topic: text
+  - position: smallInteger
+  - nsfw: boolean
+  - bitrate: integer
+  - user_limit: integer
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+  FK: discord_guild_id -> discord_guilds.id
+  FK: parent_id -> discord_channels.id
+
+Table: discord_roles
+  - id: id
+  - discord_guild_id: index
+  - discord_role_id: string
+  - name: string
+  - color: integer
+  - position: smallInteger
+  - permissions: bigInteger
+  - is_hoisted: boolean
+  - is_mentionable: boolean
+  - is_managed: boolean
+  - icon: string
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+  FK: discord_guild_id -> discord_guilds.id
+
+Table: discord_members
+  - id: id
+  - discord_guild_id: foreignId
+  - discord_user_id: index
+  - external_identity_id: index
+  - username: string
+  - global_name: string
+  - avatar: string
+  - nickname: string
+  - is_bot: boolean
+  - is_pending: boolean
+  - joined_at: timestamp
+  - premium_since: timestamp
+  - communication_disabled_until: timestamp
+  - left_at: timestamp
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+  FK: discord_guild_id -> discord_guilds.id
+  FK: external_identity_id -> external_identities.id
+
+Table: discord_member_roles
+  - discord_member_id: foreignId
+  - discord_role_id: foreignId
+  - assigned_at: timestamp
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: discord_member_id -> discord_members.id
+  FK: discord_role_id -> discord_roles.id
+
+Table: discord_member_role_history
+  - id: id
+  - discord_member_id: index
+  - discord_role_id: index
+  - action: string
+  - occurred_at: index
+  - source_event_log_id: foreignId
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+  FK: discord_member_id -> discord_members.id
+  FK: discord_role_id -> discord_roles.id
+  FK: source_event_log_id -> discord_event_logs.id
+
+Table: twitch_event_logs
+  - id: id
+  - event_type: string
+  - broadcaster_user_id: string
+  - user_id: string
+  - twitch_message_id: string
+  - payload: jsonb
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  - tenant_id: dropConstrainedForeignId
+  Primary: id
+
+Table: twitch_subscriptions
+  - id: id
+  - subscription_id: string
+  - type: index
+  - status: string
+  - broadcaster_user_id: index
+  - condition: jsonb
+  - transport: string
+  - callback_url: string
+  - cost: integer
+  - version: string
+  - tenant_id: index
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+
+Table: moderation_cases
+  - id: uuid
+  - content_type: string(50)
+  - content_id: string(255)
+  - content_snapshot: jsonb
+  - source_platform: string(20)
+  - source: string(20)
+  - status: string(20)
+  - priority: integer
+  - severity: string(20)
+  - violation_type: string(30)
+  - ai_scores: jsonb
+  - classifier_version: string(50)
+  - suggested_action: string(30)
+  - assigned_to: foreignUuid
+  - assigned_at: timestampTz
+  - resolved_at: timestampTz
+  - author_id: foreignUuid
+  - tenant_id: foreignUuid
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: assigned_to -> users.id
+  FK: author_id -> users.id
+  FK: tenant_id -> tenants.id
+
+Table: moderation_reports
+  - id: uuid
+  - case_id: foreignUuid
+  - reporter_id: foreignUuid
+  - reason: string(30)
+  - details: text
+  - platform: string(20)
+  - created_at: timestampTz
+  FK: case_id -> moderation_cases.id
+  FK: reporter_id -> users.id
+
+Table: moderation_actions
+  - id: uuid
+  - case_id: foreignUuid
+  - moderator_id: foreignUuid
+  - action_type: string(30)
+  - target_platforms: jsonb
+  - duration: string(20)
+  - reason: text
+  - metadata: jsonb
+  - execution_results: jsonb
+  - automated: boolean
+  - created_at: timestampTz
+  - tenant_id: dropConstrainedForeignId
+  FK: case_id -> moderation_cases.id
+  FK: moderator_id -> users.id
+  FK: tenant_id -> tenants.id
+
+Table: moderation_appeals
+  - id: uuid
+  - action_id: foreignUuid
+  - appellant_id: foreignUuid
+  - reason_category: string(50)
+  - reason_text: text
+  - status: string(20)
+  - reviewer_id: foreignUuid
+  - reviewer_notes: text
+  - resolved_at: timestampTz
+  - sla_deadline: timestampTz
+  - created_at: timestampTz
+  - tenant_id: dropConstrainedForeignId
+  FK: action_id -> moderation_actions.id
+  FK: appellant_id -> users.id
+  FK: reviewer_id -> users.id
+  FK: tenant_id -> tenants.id
+
+Table: moderation_rules
+  - id: uuid
+  - name: string(100)
+  - type: string(20)
+  - platform: string(20)
+  - pattern: text
+  - violation_type: string(30)
+  - severity: string(20)
+  - action_on_match: string(30)
+  - is_active: boolean
+  - tenant_id: foreignUuid
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: tenant_id -> tenants.id
+
+Table: moderation_audit_log
+  - id: id
+  - event_type: string(50)
+  - actor_id: uuid
+  - actor_type: string(20)
+  - case_id: uuid
+  - details: jsonb
+  - platform: string(20)
+  - tenant_id: uuid
+  - created_at: timestampTz
+  Primary: id
+
+Table: notifications
+  - notifiable_id: unsignedBigInteger
+  - id: uuid
+  - type: string
+  - notifiable: morphs
+  - data: text
+  - read_at: timestamp
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+
+Table: user_profiles
+  - id: uuid
+  - user_id: foreignUuid
+  - tenant_id: foreignUuid
+  - nickname: string
+  - birthdate: date
+  - about: text
+  - headline: string
+  - seniority_level: string(30)
+  - years_experience: smallInteger
+  - social_links: jsonb
+  - available_for_proposals: boolean
+  - start_availability: string(30)
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  FK: user_id -> users.id
+  FK: tenant_id -> tenants.id
+
+Table: failed_jobs
+  - id: id
+  - uuid: string
+  - connection: text
+  - queue: text
+  - payload: longText
+  - exception: longText
+  - failed_at: timestamp
+  Primary: id
+
+Table: personal_access_tokens
+  - id: id
+  - tokenable: morphs
+  - name: text
+  - token: string(64)
+  - abilities: text
+  - last_used_at: timestamp
+  - expires_at: timestamp
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+
+Table: cache
+  - key: string
+  - value: mediumText
+  - expiration: integer
+
+Table: cache_locks
+  - key: string
+  - owner: string
+  - expiration: integer
+
+Table: job_batches
+  - id: string
+  - name: string
+  - total_jobs: integer
+  - pending_jobs: integer
+  - failed_jobs: integer
+  - failed_job_ids: longText
+  - options: mediumText
+  - cancelled_at: integer
+  - created_at: integer
+  - finished_at: integer
+
+Table: jobs
+  - id: bigIncrements
+  - queue: string
+  - payload: longText
+  - attempts: unsignedTinyInteger
+  - reserved_at: unsignedInteger
+  - available_at: unsignedInteger
+  - created_at: unsignedInteger
+
+Table: media
+  - id: id
+  - model_type: string
+  - model_id: string
+  - collection_name: string
+  - name: string
+  - file_name: string
+  - mime_type: string
+  - disk: string
+  - conversions_disk: string
+  - size: unsignedBigInteger
+  - manipulations: json
+  - custom_properties: json
+  - generated_conversions: json
+  - responsive_images: json
+  - order_column: unsignedInteger
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+
+Table: addresses
+  - id: uuid
+  - addressable: uuidMorphs
+  - country: string(4)
+  - state: string(4)
+  - city: string
+  - zip_code: string
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+
+Table: exports
+  - id: id
+  - completed_at: timestamp
+  - file_disk: string
+  - file_name: string
+  - exporter: string
+  - processed_rows: unsignedInteger
+  - total_rows: unsignedInteger
+  - successful_rows: unsignedInteger
+  - user_id: foreignId
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+
+Table: failed_import_rows
+  - id: id
+  - data: json
+  - import_id: foreignId
+  - validation_error: text
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+
+Table: imports
+  - id: id
+  - completed_at: timestamp
+  - file_name: string
+  - file_path: string
+  - importer: string
+  - processed_rows: unsignedInteger
+  - total_rows: unsignedInteger
+  - successful_rows: unsignedInteger
+  - user_id: foreignId
+  - created_at: timestamp nullable
+  - updated_at: timestamp nullable
+  Primary: id
+
+Table: phpdebugbar
+  - id: primary
+  - data: longText
+  - meta_utime: index
+  - meta_datetime: index
+  - meta_uri: index
+  - meta_ip: index
+  - meta_method: index
+

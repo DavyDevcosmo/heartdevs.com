@@ -39,36 +39,46 @@ class UserResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Membro')
-                    ->description(fn (User $record): string => $record->email)
+                    ->label('Usuário')
+                    ->description(fn (User $record): string => implode(' · ', array_filter([
+                        '@'.$record->username,
+                        $record->address?->state,
+                        'membro há '.now()->diffInMonths($record->created_at).'m',
+                    ])))
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('profile.headline')
-                    ->label('Headline')
-                    ->default('—')
-                    ->searchable(),
+                TextColumn::make('providers_list')
+                    ->label('Providers')
+                    ->getStateUsing(fn (User $record): string => $record->providers
+                        ->pluck('provider')
+                        ->map(fn ($p) => mb_strtoupper(mb_substr((string) $p, 0, 1)))
+                        ->join(' · ')
+                    )
+                    ->default('—'),
 
                 TextColumn::make('profile.seniority_level')
-                    ->label('Seniority')
+                    ->label('Senioridade')
+                    ->description(fn (User $record): string => $record->profile?->years_experience
+                        ? $record->profile->years_experience.'a'
+                        : '—'
+                    )
                     ->badge()
                     ->default('—'),
 
-                TextColumn::make('profile.years_experience')
-                    ->label('Exp.')
-                    ->formatStateUsing(fn ($state) => $state ? $state.' anos' : '—'),
-
-                TextColumn::make('profile.available_for_proposals')
-                    ->label('Disponível')
-                    ->badge()
-                    ->formatStateUsing(fn ($state) => $state ? 'Sim' : 'Não')
-                    ->color(fn ($state) => $state ? 'success' : 'gray'),
+                TextColumn::make('character_level')
+                    ->label('Nível / XP')
+                    ->getStateUsing(fn (User $record): string => $record->character
+                        ? $record->character->level.' · '.$record->character->percentage_experience.'%'
+                        : '—'
+                    ),
 
                 TextColumn::make('created_at')
                     ->label('Criado em')
                     ->dateTime('d/m/Y')
                     ->sortable(),
             ])
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['providers', 'character', 'address']))
             ->filters([
                 Filter::make('created_at')
                     ->label('Criado este mês')
