@@ -193,6 +193,80 @@ it('retries on 429 rate limit and succeeds', function (): void {
     Sleep::assertSleptTimes(1);
 });
 
+it('uses X-RateLimit-Reset-After header when body has no retry_after', function (): void {
+    Sleep::fake();
+
+    $invites = [
+        makeInvite('aaa', maxAge: 0, uses: 0),
+    ];
+
+    $mockClient = new MockClient([
+        MockResponse::make($invites),
+        MockResponse::make(['message' => 'You are being rate limited.'], 429, ['X-RateLimit-Reset-After' => '2.57']),
+        MockResponse::make([], 204),
+    ]);
+
+    $connector = new DiscordConnector('test-token');
+    $connector->withMockClient($mockClient);
+
+    $action = new PurgeUnusedInvitesAction($connector);
+    $result = $action->execute('guild-123', dryRun: false);
+
+    expect($result->deleted)->toBe(1)
+        ->and($result->failed)->toBe(0);
+});
+
+it('retries on cloudflare 429 with non-json body and short retry-after header', function (): void {
+    Sleep::fake();
+
+    $invites = [
+        makeInvite('aaa', maxAge: 0, uses: 0),
+    ];
+
+    $mockClient = new MockClient([
+        MockResponse::make($invites),
+        MockResponse::make('error code: 1015', 429, ['Retry-After' => '5']),
+        MockResponse::make([], 204),
+    ]);
+
+    $connector = new DiscordConnector('test-token');
+    $connector->withMockClient($mockClient);
+
+    $action = new PurgeUnusedInvitesAction($connector);
+    $result = $action->execute('guild-123', dryRun: false);
+
+    expect($result->deleted)->toBe(1)
+        ->and($result->failed)->toBe(0);
+});
+
+it('aborts entire purge on cloudflare ip ban', function (): void {
+    Sleep::fake();
+
+    $invites = [
+        makeInvite('aaa', maxAge: 0, uses: 0),
+        makeInvite('bbb', maxAge: 0, uses: 0),
+        makeInvite('ccc', maxAge: 0, uses: 0),
+    ];
+
+    $mockClient = new MockClient([
+        MockResponse::make($invites),
+        MockResponse::make([], 204),
+        MockResponse::make('error code: 1015', 429, ['Retry-After' => '80974']),
+    ]);
+
+    $connector = new DiscordConnector('test-token');
+    $connector->withMockClient($mockClient);
+
+    $action = new PurgeUnusedInvitesAction($connector);
+    $result = $action->execute('guild-123', dryRun: false);
+
+    expect($result->deleted)->toBe(1)
+        ->and($result->failed)->toBe(2);
+
+    $mockClient->assertSentCount(3);
+    Sleep::assertSleptTimes(1);
+});
+
 it('fails after exhausting retries on persistent 429', function (): void {
     Sleep::fake();
 

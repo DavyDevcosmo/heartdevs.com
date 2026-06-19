@@ -6,9 +6,11 @@ namespace He4rt\IntegrationDiscord\Sync\Actions;
 
 use He4rt\IntegrationDiscord\Sync\DTOs\MatchedInviteDTO;
 use He4rt\IntegrationDiscord\Sync\DTOs\PurgeInvitesResultDTO;
+use He4rt\IntegrationDiscord\Sync\Exceptions\CloudflareIpBanException;
 use He4rt\IntegrationDiscord\Transport\DiscordConnector;
 use He4rt\IntegrationDiscord\Transport\Requests\Invites\DeleteInvite;
 use He4rt\IntegrationDiscord\Transport\Requests\Invites\ListGuildInvites;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
 use JsonException;
@@ -16,6 +18,7 @@ use Random\RandomException;
 use RuntimeException;
 use Saloon\Exceptions\Request\FatalRequestException;
 use Saloon\Exceptions\Request\RequestException;
+use Saloon\Http\Response;
 use Throwable;
 
 final readonly class PurgeUnusedInvitesAction
@@ -69,6 +72,14 @@ final readonly class PurgeUnusedInvitesAction
             try {
                 $this->deleteInvite($invite['code']);
                 $deleted++;
+            } catch (CloudflareIpBanException $e) {
+                $failed += count($unused) - $index;
+                Log::warning('Cloudflare IP ban detected, aborting purge', [
+                    'code' => $invite['code'],
+                    'error' => $e->getMessage(),
+                ]);
+
+                break;
             } catch (Throwable $e) {
                 $failed++;
                 Log::warning('Failed to delete Discord invite', [
@@ -97,6 +108,7 @@ final readonly class PurgeUnusedInvitesAction
     }
 
     /**
+     * @throws CloudflareIpBanException
      * @throws RandomException
      * @throws FatalRequestException
      * @throws RequestException
@@ -111,14 +123,44 @@ final readonly class PurgeUnusedInvitesAction
                 return;
             }
 
-            if ($response->status() === 429 && $attempt < self::MAX_RETRIES) {
-                $retryAfter = (float) ($response->json('retry_after') ?? 1.0);
-                $this->jitteredSleep($retryAfter);
+            if ($response->status() === 429) {
+                $retryAfter = $this->parseRetryAfter($response);
 
-                continue;
+                if ($retryAfter > 60.0) {
+                    throw new CloudflareIpBanException(sprintf('Retry-After %ds', (int) $retryAfter));
+                }
+
+                if ($attempt < self::MAX_RETRIES) {
+                    $this->jitteredSleep($retryAfter);
+
+                    continue;
+                }
             }
 
             throw new RuntimeException(sprintf('HTTP %d: %s', $response->status(), $response->body()));
         }
+    }
+
+    private function parseRetryAfter(Response $response): float
+    {
+        $retryAfter = Arr::get(json_decode($response->body(), true), 'retry_after');
+
+        if ($retryAfter !== null) {
+            return (float) $retryAfter;
+        }
+
+        $resetAfter = $response->header('X-RateLimit-Reset-After');
+
+        if ($resetAfter !== '' && is_numeric($resetAfter)) {
+            return (float) $resetAfter;
+        }
+
+        $header = $response->header('Retry-After');
+
+        if ($header !== '' && is_numeric($header)) {
+            return (float) $header;
+        }
+
+        return 1.0;
     }
 }
