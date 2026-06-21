@@ -14,7 +14,7 @@ Essa Entrada — chamada no documento da P.O. de "pré-triagem" — é **univers
 ninguém se candidata a um squad nem propõe um squad novo sem concluí-la. Duas perguntas de fronteira
 apareceram:
 
-1. **Onde mora?** A pré-triagem é sobre pertencer à comunidade, não a um squad específico, e reusa
+1. **Esse onboarding é específico de um squad ou global da comunidade?** A pré-triagem é sobre pertencer à comunidade, não a um squad específico, e reusa
    pesado o `identity` (vínculo GitHub via `ExternalIdentity`). Colocá-la dentro de `squads`
    amarraria um conceito universal a um consumidor específico.
 2. **Quantos formatos?** O time já enxerga **mais de um tipo de entrada** — `Welcome` (entrada na
