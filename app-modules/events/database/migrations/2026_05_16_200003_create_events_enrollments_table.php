@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use He4rt\Events\Enrollment\Enums\EnrollmentStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,7 +15,9 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('event_id')->constrained('events')->cascadeOnDelete();
             $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
-            $table->string('status', 20)->default('pending');
+            $table->string('status', 20)
+                ->comment(EnrollmentStatus::stringifyCases())
+                ->default(EnrollmentStatus::Pending);
             $table->boolean('is_public')->default(true);
             $table->unsignedInteger('waitlist_position')->nullable();
             $table->jsonb('application_data')->nullable();

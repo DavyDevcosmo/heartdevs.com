@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\Events\Event\Enums;
 
+use App\Enums\Concerns\StringifyEnum;
 use Filament\Support\Colors\Color;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
@@ -12,6 +13,8 @@ use Filament\Support\Icons\Heroicon;
 
 enum EventType: string implements HasColor, HasIcon, HasLabel
 {
+    use StringifyEnum;
+
     case Meetup = 'meetup';
     case Workshop = 'workshop';
     case Conference = 'conference';

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\Events\Enrollment\Enums;
 
+use App\Enums\Concerns\StringifyEnum;
 use Filament\Support\Colors\Color;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
@@ -11,6 +12,8 @@ use He4rt\Events\Enrollment\Exceptions\EnrollmentException;
 
 enum EnrollmentStatus: string implements HasColor, HasLabel
 {
+    use StringifyEnum;
+
     case Pending = 'pending';
     case Confirmed = 'confirmed';
     case Waitlisted = 'waitlisted';

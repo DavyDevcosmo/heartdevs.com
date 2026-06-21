@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use He4rt\Events\Event\Enums\EventStatus;
+use He4rt\Events\Event\Enums\EventType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -16,11 +18,13 @@ return new class extends Migration
             $table->string('slug', 120);
             $table->string('title', 200);
             $table->longText('description')->nullable();
-            $table->string('event_type', 20);
+            $table->string('event_type', 20)->comment(EventType::stringifyCases());
             $table->string('location')->nullable();
             $table->timestampTz('starts_at');
             $table->timestampTz('ends_at');
-            $table->string('status', 20)->default('draft');
+            $table->string('status', 20)
+                ->comment(EventStatus::stringifyCases())
+                ->default(EventStatus::Draft);
             $table->timestampsTz();
             $table->unique(['tenant_id', 'slug'], 'idx_events_tenant_slug');
             $table->index(['tenant_id', 'starts_at'], 'idx_events_tenant_window');
