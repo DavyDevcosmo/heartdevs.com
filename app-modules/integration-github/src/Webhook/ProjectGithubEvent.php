@@ -7,6 +7,7 @@ namespace He4rt\IntegrationGithub\Webhook;
 use He4rt\IntegrationGithub\Contributions\DTOs\NewContributionDTO;
 use He4rt\IntegrationGithub\Contributions\RecordContribution;
 use He4rt\IntegrationGithub\Enums\ContributionType;
+use He4rt\IntegrationGithub\Events\GithubPullRequestApproved;
 use He4rt\IntegrationGithub\Models\GithubRepository;
 use Illuminate\Support\Str;
 
@@ -16,9 +17,7 @@ use Illuminate\Support\Str;
  */
 final readonly class ProjectGithubEvent
 {
-    public function __construct(
-        private RecordContribution $recorder,
-    ) {}
+    public function __construct(private RecordContribution $recorder) {}
 
     /**
      * @param  array<string, mixed>  $payload
@@ -53,12 +52,14 @@ final readonly class ProjectGithubEvent
      */
     private function tenantsTracking(string $repo): array
     {
-        return array_values(GithubRepository::query()
-            ->enabled()
-            ->where('full_name', $repo)
-            ->pluck('tenant_id')
-            ->map(static fn (mixed $tenantId): string => (string) $tenantId)
-            ->all());
+        return array_values(
+            GithubRepository::query()
+                ->enabled()
+                ->where('full_name', $repo)
+                ->pluck('tenant_id')
+                ->map(static fn (mixed $tenantId): string => (string) $tenantId)
+                ->all(),
+        );
     }
 
     /**
@@ -69,26 +70,29 @@ final readonly class ProjectGithubEvent
         $pr = $this->arrayFrom($payload, 'pull_request');
         $login = $this->stringFrom($pr, 'user.login', 'ghost');
 
-        $this->recorder->execute(new NewContributionDTO(
-            tenantId: $tenantId,
-            repo: $repo,
-            type: ContributionType::Pr,
-            externalRef: ContributionType::Pr->ref($this->stringFrom($pr, 'number')),
-            actorLogin: $login,
-            actorId: $this->intFrom($pr, 'user.id'),
-            occurredAt: $this->stringFrom($pr, 'created_at'),
-            targetRef: null,
-            metadata: [
-                'title' => data_get($pr, 'title'),
-                'state' => data_get($pr, 'state'),
-                'merged' => data_get($pr, 'merged_at') !== null,
-                'url' => data_get($pr, 'html_url'),
-                'additions' => $this->intFrom($pr, 'additions') ?? 0,
-                'deletions' => $this->intFrom($pr, 'deletions') ?? 0,
-                'changed_files' => $this->intFrom($pr, 'changed_files') ?? 0,
-                'is_bot' => $this->isBot($login),
-            ],
-        ), emit: true);
+        $this->recorder->execute(
+            new NewContributionDTO(
+                tenantId: $tenantId,
+                repo: $repo,
+                type: ContributionType::Pr,
+                externalRef: ContributionType::Pr->ref($this->stringFrom($pr, 'number')),
+                actorLogin: $login,
+                actorId: $this->intFrom($pr, 'user.id'),
+                occurredAt: $this->stringFrom($pr, 'created_at'),
+                targetRef: null,
+                metadata: [
+                    'title' => data_get($pr, 'title'),
+                    'state' => data_get($pr, 'state'),
+                    'merged' => data_get($pr, 'merged_at') !== null,
+                    'url' => data_get($pr, 'html_url'),
+                    'additions' => $this->intFrom($pr, 'additions') ?? 0,
+                    'deletions' => $this->intFrom($pr, 'deletions') ?? 0,
+                    'changed_files' => $this->intFrom($pr, 'changed_files') ?? 0,
+                    'is_bot' => $this->isBot($login),
+                ],
+            ),
+            emit: true,
+        );
     }
 
     /**
@@ -104,22 +108,37 @@ final readonly class ProjectGithubEvent
             return;
         }
 
+        $state = $this->stringFrom($review, 'state');
+        if ($state === 'approved') {
+            event(
+                new GithubPullRequestApproved(
+                    author_login: $this->stringFrom($payload, 'pull_request.user.login', 'ghost'),
+                    repo: $repo,
+                    pr_number: (int) $this->stringFrom($payload, 'pull_request.number'),
+                    approved_at: $submittedAt,
+                ),
+            );
+        }
+
         $login = $this->stringFrom($review, 'user.login', 'ghost');
 
-        $this->recorder->execute(new NewContributionDTO(
-            tenantId: $tenantId,
-            repo: $repo,
-            type: ContributionType::Review,
-            externalRef: ContributionType::Review->ref($this->stringFrom($review, 'id')),
-            actorLogin: $login,
-            actorId: $this->intFrom($review, 'user.id'),
-            occurredAt: $submittedAt,
-            targetRef: ContributionType::Pr->ref($this->stringFrom($payload, 'pull_request.number')),
-            metadata: [
-                'state' => data_get($review, 'state'),
-                'is_bot' => $this->isBot($login),
-            ],
-        ), emit: true);
+        $this->recorder->execute(
+            new NewContributionDTO(
+                tenantId: $tenantId,
+                repo: $repo,
+                type: ContributionType::Review,
+                externalRef: ContributionType::Review->ref($this->stringFrom($review, 'id')),
+                actorLogin: $login,
+                actorId: $this->intFrom($review, 'user.id'),
+                occurredAt: $submittedAt,
+                targetRef: ContributionType::Pr->ref($this->stringFrom($payload, 'pull_request.number')),
+                metadata: [
+                    'state' => data_get($review, 'state'),
+                    'is_bot' => $this->isBot($login),
+                ],
+            ),
+            emit: true,
+        );
     }
 
     /**
@@ -130,22 +149,25 @@ final readonly class ProjectGithubEvent
         $issue = $this->arrayFrom($payload, 'issue');
         $login = $this->stringFrom($issue, 'user.login', 'ghost');
 
-        $this->recorder->execute(new NewContributionDTO(
-            tenantId: $tenantId,
-            repo: $repo,
-            type: ContributionType::Issue,
-            externalRef: ContributionType::Issue->ref($this->stringFrom($issue, 'number')),
-            actorLogin: $login,
-            actorId: $this->intFrom($issue, 'user.id'),
-            occurredAt: $this->stringFrom($issue, 'created_at'),
-            targetRef: null,
-            metadata: [
-                'title' => data_get($issue, 'title'),
-                'state' => data_get($issue, 'state'),
-                'url' => data_get($issue, 'html_url'),
-                'is_bot' => $this->isBot($login),
-            ],
-        ), emit: true);
+        $this->recorder->execute(
+            new NewContributionDTO(
+                tenantId: $tenantId,
+                repo: $repo,
+                type: ContributionType::Issue,
+                externalRef: ContributionType::Issue->ref($this->stringFrom($issue, 'number')),
+                actorLogin: $login,
+                actorId: $this->intFrom($issue, 'user.id'),
+                occurredAt: $this->stringFrom($issue, 'created_at'),
+                targetRef: null,
+                metadata: [
+                    'title' => data_get($issue, 'title'),
+                    'state' => data_get($issue, 'state'),
+                    'url' => data_get($issue, 'html_url'),
+                    'is_bot' => $this->isBot($login),
+                ],
+            ),
+            emit: true,
+        );
     }
 
     /**
@@ -156,23 +178,28 @@ final readonly class ProjectGithubEvent
         $comment = $this->arrayFrom($payload, 'comment');
         $login = $this->stringFrom($comment, 'user.login', 'ghost');
         $isPr = data_get($payload, 'issue.pull_request') !== null;
-        $target = ($isPr ? ContributionType::Pr : ContributionType::Issue)->ref($this->stringFrom($payload, 'issue.number'));
+        $target = ($isPr ? ContributionType::Pr : ContributionType::Issue)->ref(
+            $this->stringFrom($payload, 'issue.number'),
+        );
 
-        $this->recorder->execute(new NewContributionDTO(
-            tenantId: $tenantId,
-            repo: $repo,
-            type: ContributionType::Comment,
-            externalRef: ContributionType::Comment->ref($this->stringFrom($comment, 'id')),
-            actorLogin: $login,
-            actorId: $this->intFrom($comment, 'user.id'),
-            occurredAt: $this->stringFrom($comment, 'created_at'),
-            targetRef: $target,
-            metadata: [
-                'url' => data_get($comment, 'html_url'),
-                'kind' => $isPr ? 'pr' : 'issue',
-                'is_bot' => $this->isBot($login),
-            ],
-        ), emit: true);
+        $this->recorder->execute(
+            new NewContributionDTO(
+                tenantId: $tenantId,
+                repo: $repo,
+                type: ContributionType::Comment,
+                externalRef: ContributionType::Comment->ref($this->stringFrom($comment, 'id')),
+                actorLogin: $login,
+                actorId: $this->intFrom($comment, 'user.id'),
+                occurredAt: $this->stringFrom($comment, 'created_at'),
+                targetRef: $target,
+                metadata: [
+                    'url' => data_get($comment, 'html_url'),
+                    'kind' => $isPr ? 'pr' : 'issue',
+                    'is_bot' => $this->isBot($login),
+                ],
+            ),
+            emit: true,
+        );
     }
 
     /**
@@ -183,21 +210,24 @@ final readonly class ProjectGithubEvent
         $comment = $this->arrayFrom($payload, 'comment');
         $login = $this->stringFrom($comment, 'user.login', 'ghost');
 
-        $this->recorder->execute(new NewContributionDTO(
-            tenantId: $tenantId,
-            repo: $repo,
-            type: ContributionType::ReviewComment,
-            externalRef: ContributionType::ReviewComment->ref($this->stringFrom($comment, 'id')),
-            actorLogin: $login,
-            actorId: $this->intFrom($comment, 'user.id'),
-            occurredAt: $this->stringFrom($comment, 'created_at'),
-            targetRef: ContributionType::Pr->ref($this->stringFrom($payload, 'pull_request.number')),
-            metadata: [
-                'url' => data_get($comment, 'html_url'),
-                'kind' => 'pr',
-                'is_bot' => $this->isBot($login),
-            ],
-        ), emit: true);
+        $this->recorder->execute(
+            new NewContributionDTO(
+                tenantId: $tenantId,
+                repo: $repo,
+                type: ContributionType::ReviewComment,
+                externalRef: ContributionType::ReviewComment->ref($this->stringFrom($comment, 'id')),
+                actorLogin: $login,
+                actorId: $this->intFrom($comment, 'user.id'),
+                occurredAt: $this->stringFrom($comment, 'created_at'),
+                targetRef: ContributionType::Pr->ref($this->stringFrom($payload, 'pull_request.number')),
+                metadata: [
+                    'url' => data_get($comment, 'html_url'),
+                    'kind' => 'pr',
+                    'is_bot' => $this->isBot($login),
+                ],
+            ),
+            emit: true,
+        );
     }
 
     /**
@@ -213,20 +243,23 @@ final readonly class ProjectGithubEvent
             $username = $this->stringFrom($commit, 'author.username');
             $login = $username !== '' ? $username : $this->stringFrom($commit, 'author.name', 'ghost');
 
-            $this->recorder->execute(new NewContributionDTO(
-                tenantId: $tenantId,
-                repo: $repo,
-                type: ContributionType::Commit,
-                externalRef: ContributionType::Commit->ref($this->stringFrom($commit, 'id')),
-                actorLogin: $login,
-                actorId: null,
-                occurredAt: $this->stringFrom($commit, 'timestamp'),
-                targetRef: null,
-                metadata: [
-                    'url' => data_get($commit, 'url'),
-                    'is_bot' => $this->isBot($login),
-                ],
-            ), emit: true);
+            $this->recorder->execute(
+                new NewContributionDTO(
+                    tenantId: $tenantId,
+                    repo: $repo,
+                    type: ContributionType::Commit,
+                    externalRef: ContributionType::Commit->ref($this->stringFrom($commit, 'id')),
+                    actorLogin: $login,
+                    actorId: null,
+                    occurredAt: $this->stringFrom($commit, 'timestamp'),
+                    targetRef: null,
+                    metadata: [
+                        'url' => data_get($commit, 'url'),
+                        'is_bot' => $this->isBot($login),
+                    ],
+                ),
+                emit: true,
+            );
         }
     }
 
