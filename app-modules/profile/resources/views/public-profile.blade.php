@@ -5,16 +5,11 @@
     Dados estáticos para aprovação visual do layout.
     Sem migrations, models, enums ou lógica de backend.
 --}}
-@extends('portal::components.layouts.app')
-
-@section('title', 'Rafael Mendes — He4rt Devs')
-
-@push('styles')
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    @vite(['app-modules/profile/resources/css/profile.css'])
-@endpush
-
-@section('content')
+<x-portal::layouts.app title="Rafael Mendes — He4rt Devs">
+    @push('styles')
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+        @vite(['app-modules/profile/resources/css/profile.css'])
+    @endpush
 <div class="mx-auto max-w-6xl px-4 py-10">
   <div class="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr]">
 
@@ -349,4 +344,4 @@
     </main>
   </div>
 </div>
-@endsection
+</x-portal::layouts.app>
