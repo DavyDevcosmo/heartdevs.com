@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Squads\Providers;
+namespace He4rt\Squads;
 
 use Illuminate\Support\ServiceProvider;
 
