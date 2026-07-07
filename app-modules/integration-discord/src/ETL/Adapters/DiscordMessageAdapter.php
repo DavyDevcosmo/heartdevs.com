@@ -17,6 +17,9 @@ use He4rt\IntegrationDiscord\ETL\Enums\DiscordMessageType;
 
 final class DiscordMessageAdapter implements MessageActivityAdapter
 {
+    /**
+     * @param  array<string, mixed>  $raw
+     */
     public function messageKind(array $raw): MessageKind
     {
         $type = $this->rawMessageType($raw);
@@ -29,6 +32,9 @@ final class DiscordMessageAdapter implements MessageActivityAdapter
         return $enum?->toCanonical() ?? MessageKind::Unknown;
     }
 
+    /**
+     * @param  array<string, mixed>  $raw
+     */
     public function rawMessageType(array $raw): ?int
     {
         return isset($raw['type']) ? (int) $raw['type'] : null;
@@ -162,6 +168,7 @@ final class DiscordMessageAdapter implements MessageActivityAdapter
                 continue;
             }
 
+            /** @var array<string, mixed> $embed */
             $url = isset($embed['url']) ? (string) $embed['url'] : null;
 
             $out[] = new EmbedData(

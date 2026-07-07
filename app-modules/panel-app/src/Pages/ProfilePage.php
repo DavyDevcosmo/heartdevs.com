@@ -165,7 +165,7 @@ class ProfilePage extends Page
                                         'TO' => 'Tocantins',
                                     ] : [])
                                     ->searchable()
-                                    ->allowHtml(false)
+                                    ->allowHtml(condition: false)
                                     ->live()
                                     ->columnSpan(1),
 
@@ -199,7 +199,7 @@ class ProfilePage extends Page
                                 ])
                                 ->addActionLabel(__('panel-app::profile.actions.add_social_link'))
                                 ->defaultItems(0)
-                                ->reorderable(false)
+                                ->reorderable(condition: false)
                                 ->columnSpanFull(),
                         ]),
 
@@ -307,20 +307,28 @@ class ProfilePage extends Page
     public function avatarPreviewUrl(): ?string
     {
         if ($this->avatarUpload instanceof TemporaryUploadedFile) {
+            /** @var string */
             return $this->avatarUpload->temporaryUrl();
         }
 
-        return auth()->user()->getFirstMediaUrl('avatar') ?: null;
+        /** @var User $user */
+        $user = auth()->user();
+
+        return $user->getFirstMediaUrl('avatar') ?: null;
     }
 
     #[Computed]
     public function coverPreviewUrl(): ?string
     {
         if ($this->coverUpload instanceof TemporaryUploadedFile) {
+            /** @var string */
             return $this->coverUpload->temporaryUrl();
         }
 
-        return auth()->user()->getFirstMediaUrl('cover') ?: null;
+        /** @var User $user */
+        $user = auth()->user();
+
+        return $user->getFirstMediaUrl('cover') ?: null;
     }
 
     public function removeAvatar(): void

@@ -13,13 +13,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('feedbacks', function (Blueprint $table): void {
+        Schema::create('feedbacks', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('sender_id')->constrained('users')->cascadeOnDelete();
             $table->foreignUuid('target_id')->constrained('users')->cascadeOnDelete();
             $table->string('type');
             $table->text('message');
-            $table->timestamps();
+            $table->timestampsTz();
         });
     }
 

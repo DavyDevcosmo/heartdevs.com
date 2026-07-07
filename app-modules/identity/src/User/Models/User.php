@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace He4rt\Identity\User\Models;
 
 use App\Concerns\HasAddress;
+use Carbon\CarbonInterface;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
 use Filament\Models\Contracts\HasTenants;
@@ -14,6 +15,7 @@ use He4rt\Identity\Database\Factories\UserFactory;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use He4rt\Identity\Tenant\Concerns\InteractsWithTenants;
 use He4rt\Identity\User\Observers\UserObserver;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -23,7 +25,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Carbon;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -33,14 +34,16 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string $username
  * @property string|null $email
  * @property bool $is_donator
- * @property Carbon|null $suspended_until
- * @property Carbon|null $banned_at
- * @property Carbon|null $first_login_at
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property CarbonInterface|null $suspended_until
+ * @property CarbonInterface|null $banned_at
+ * @property CarbonInterface|null $first_login_at
+ * @property string|null $remember_token
+ * @property CarbonInterface|null $created_at
+ * @property CarbonInterface|null $updated_at
  */
 #[ObservedBy(UserObserver::class)]
 #[Table(name: 'users')]
+#[Hidden('password', 'remember_token', 'email_verified_at')]
 final class User extends Authenticatable implements FilamentUser, HasMedia, HasName, HasTenants
 {
     use HasAddress;
@@ -53,7 +56,7 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
 
     public function isAdmin(): bool
     {
-        return in_array($this->username, str(config('he4rt.admins'))->explode(',')->toArray(), true);
+        return in_array($this->username, str(config('he4rt.admins'))->explode(',')->toArray(), strict: true);
     }
 
     /**

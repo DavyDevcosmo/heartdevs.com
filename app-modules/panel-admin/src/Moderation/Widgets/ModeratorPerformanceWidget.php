@@ -12,6 +12,7 @@ use He4rt\Identity\User\Models\User;
 use He4rt\Moderation\Appeals\ModerationAppeal;
 use He4rt\Moderation\Enforcement\ModerationAction;
 use He4rt\PanelAdmin\Moderation\Widgets\Concerns\ResolvesFilterPeriod;
+use Illuminate\Database\Query\Builder;
 
 class ModeratorPerformanceWidget extends TableWidget
 {
@@ -32,7 +33,7 @@ class ModeratorPerformanceWidget extends TableWidget
         return $table
             ->query(
                 User::query()
-                    ->whereIn('id', function ($query) use ($start): void {
+                    ->whereIn('id', static function (Builder $query) use ($start): void {
                         $query->select('moderator_id')
                             ->from('moderation_actions')
                             ->where('created_at', '>=', $start)
@@ -54,7 +55,7 @@ class ModeratorPerformanceWidget extends TableWidget
                         ->count()),
                 TextColumn::make('avg_time')
                     ->label(__('panel-admin::moderation.dashboard.moderator_performance.avg_time'))
-                    ->state(function (User $record) use ($start): string {
+                    ->state(static function (User $record) use ($start): string {
                         $avg = (int) ModerationAction::query()
                             ->where('moderation_actions.moderator_id', $record->id)
                             ->where('moderation_actions.created_at', '>=', $start)
@@ -66,7 +67,7 @@ class ModeratorPerformanceWidget extends TableWidget
                     }),
                 TextColumn::make('overturn_rate')
                     ->label(__('panel-admin::moderation.dashboard.moderator_performance.overturn'))
-                    ->state(function (User $record) use ($start): string {
+                    ->state(static function (User $record) use ($start): string {
                         $actionIds = ModerationAction::query()
                             ->where('moderator_id', $record->id)
                             ->where('created_at', '>=', $start)
@@ -84,8 +85,8 @@ class ModeratorPerformanceWidget extends TableWidget
                         return $rate.'%';
                     }),
             ])
-            ->paginated(false)
-            ->defaultSort(null);
+            ->paginated(condition: false)
+            ->defaultSort(column: null);
     }
 
     protected function getTableDescription(): ?string

@@ -14,10 +14,10 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasTable('password_resets')) {
-            Schema::create('password_resets', function (Blueprint $table): void {
+            Schema::create('password_resets', static function (Blueprint $table): void {
                 $table->string('email')->primary();
                 $table->string('token');
-                $table->timestamp('created_at')->nullable();
+                $table->timestampTz('created_at')->nullable();
             });
         }
     }

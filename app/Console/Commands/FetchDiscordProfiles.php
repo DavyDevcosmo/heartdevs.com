@@ -32,7 +32,7 @@ class FetchDiscordProfiles extends Command
 
     private const string STATUS_FILE = 'discord/profiles_status.csv';
 
-    private const int CHUNK_SIZE = 1000;
+    private const int CHUNK_SIZE = 1_000;
 
     private int $successCount = 0;
 
@@ -65,7 +65,7 @@ class FetchDiscordProfiles extends Command
 
         // Load members
         /** @var array<string, mixed> $membersData */
-        $membersData = (array) json_decode((string) Storage::disk('local')->get($membersFile), true);
+        $membersData = (array) json_decode((string) Storage::disk('local')->get($membersFile), associative: true);
         /** @var list<array<string, mixed>> $members */
         $members = is_array($membersData['members'] ?? null) ? $membersData['members'] : [];
         $allIds = array_map(static fn (array $m): string => (string) ($m['user']['id'] ?? ''), $members);
@@ -185,7 +185,7 @@ class FetchDiscordProfiles extends Command
 
                     // Jittered delay: 1.5s + random 0.2-0.3s
                     $jitter = random_int(200, 300);
-                    Sleep::usleep((1_500 + $jitter) * 1000);
+                    Sleep::usleep((1_500 + $jitter) * 1_000);
                 }
             },
             limit: 10,
@@ -265,14 +265,14 @@ class FetchDiscordProfiles extends Command
         $existing = [];
 
         if (Storage::disk('local')->exists($chunkFile)) {
-            $existing = json_decode((string) Storage::disk('local')->get($chunkFile), true) ?? [];
+            $existing = json_decode((string) Storage::disk('local')->get($chunkFile), associative: true) ?? [];
         }
 
         $existing[$discordId] = $profile;
 
         Storage::disk('local')->put(
             $chunkFile,
-            json_encode($existing, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            json_encode($existing, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)
         );
     }
 

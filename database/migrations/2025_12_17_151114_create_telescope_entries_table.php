@@ -23,15 +23,15 @@ return new class extends Migration
     {
         $schema = Schema::connection($this->getConnection());
 
-        $schema->create('telescope_entries', function (Blueprint $table): void {
+        $schema->create('telescope_entries', static function (Blueprint $table): void {
             $table->bigIncrements('sequence');
             $table->uuid('uuid');
             $table->uuid('batch_id');
             $table->string('family_hash')->nullable();
-            $table->boolean('should_display_on_index')->default(true);
+            $table->boolean('should_display_on_index')->default(value: true);
             $table->string('type', 20);
             $table->longText('content');
-            $table->dateTime('created_at')->nullable();
+            $table->dateTimeTz('created_at')->nullable();
 
             $table->unique('uuid');
             $table->index('batch_id');
@@ -40,7 +40,7 @@ return new class extends Migration
             $table->index(['type', 'should_display_on_index']);
         });
 
-        $schema->create('telescope_entries_tags', function (Blueprint $table): void {
+        $schema->create('telescope_entries_tags', static function (Blueprint $table): void {
             $table->uuid('entry_uuid');
             $table->string('tag');
 
@@ -53,7 +53,7 @@ return new class extends Migration
                 ->onDelete('cascade');
         });
 
-        $schema->create('telescope_monitoring', function (Blueprint $table): void {
+        $schema->create('telescope_monitoring', static function (Blueprint $table): void {
             $table->string('tag')->primary();
         });
     }

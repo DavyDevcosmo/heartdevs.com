@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace He4rt\Gamification\Character\Enums;
 
+use App\Enums\Concerns\StringifyEnum;
+
 enum VoiceStatesEnum: string
 {
+    use StringifyEnum;
+
     case Disabled = 'disabled';
     case Muted = 'muted';
     case Unmuted = 'unmuted';
@@ -14,8 +18,8 @@ enum VoiceStatesEnum: string
     {
         return match ($this) {
             self::Disabled => 0,
-            self::Muted => 3,
-            self::Unmuted => 5,
+            self::Muted => 1,
+            self::Unmuted => 3,
         };
     }
 }

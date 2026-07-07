@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\PanelAdmin\Moderation\Livewire;
 
-use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use He4rt\Moderation\Appeals\ModerationAppeal;
 use He4rt\Moderation\Cases\Models\ModerationCase;
 use He4rt\Moderation\Enforcement\ModerationAction;
@@ -17,8 +17,8 @@ use Livewire\Component;
 use stdClass;
 
 /**
- * @property Carbon $periodStart
- * @property Carbon $previousPeriodStart
+ * @property CarbonInterface $periodStart
+ * @property CarbonInterface $previousPeriodStart
  * @property int $pendingCount
  * @property int $resolvedCount
  * @property int $avgResolutionMinutes
@@ -57,7 +57,7 @@ class ModerationDashboardLivewire extends Component
     // --- Period helpers ---
 
     #[Computed]
-    public function periodStart(): Carbon
+    public function periodStart(): CarbonInterface
     {
         return match ($this->period) {
             '7d' => now()->subDays(7),
@@ -69,7 +69,7 @@ class ModerationDashboardLivewire extends Component
     }
 
     #[Computed]
-    public function previousPeriodStart(): Carbon
+    public function previousPeriodStart(): CarbonInterface
     {
         return match ($this->period) {
             '7d' => now()->subDays(14),
@@ -197,7 +197,7 @@ class ModerationDashboardLivewire extends Component
     public function automationRate(): int
     {
         $total = ModerationAction::query()->where('created_at', '>=', $this->periodStart)->count();
-        $auto = ModerationAction::query()->where('created_at', '>=', $this->periodStart)->where('automated', true)->count();
+        $auto = ModerationAction::query()->where('created_at', '>=', $this->periodStart)->where('automated', operator: true)->count();
 
         return $total > 0 ? (int) round(($auto / $total) * 100) : 0;
     }
@@ -206,8 +206,8 @@ class ModerationDashboardLivewire extends Component
     #[Computed]
     public function autoVsManualCounts(): array
     {
-        $auto = ModerationAction::query()->where('created_at', '>=', $this->periodStart)->where('automated', true)->count();
-        $manual = ModerationAction::query()->where('created_at', '>=', $this->periodStart)->where('automated', false)->count();
+        $auto = ModerationAction::query()->where('created_at', '>=', $this->periodStart)->where('automated', operator: true)->count();
+        $manual = ModerationAction::query()->where('created_at', '>=', $this->periodStart)->where('automated', operator: false)->count();
 
         return ['auto' => $auto, 'manual' => $manual, 'total' => $auto + $manual];
     }
@@ -220,7 +220,8 @@ class ModerationDashboardLivewire extends Component
     {
         $start = $this->periodStart;
 
-        return DB::table('moderation_actions')
+        /** @var Collection<int, stdClass> $rows */
+        $rows = DB::table('moderation_actions')
             ->join('users', 'moderation_actions.moderator_id', '=', 'users.id')
             ->join('moderation_cases', 'moderation_actions.case_id', '=', 'moderation_cases.id')
             ->where('moderation_actions.created_at', '>=', $start)
@@ -231,22 +232,26 @@ class ModerationDashboardLivewire extends Component
             ->groupBy('users.id', 'users.username')
             ->orderByDesc('total_cases')
             ->limit(10)
-            ->get()
-            ->map(function (object $row) use ($start): object {
-                $actionIds = ModerationAction::query()
-                    ->where('moderator_id', $row->id)
-                    ->where('created_at', '>=', $start)
-                    ->pluck('id');
+            ->get();
 
-                $overturned = ModerationAppeal::query()
-                    ->whereIn('action_id', $actionIds)
-                    ->where('status', 'overturned')
-                    ->count();
+        return $rows->map(static function (stdClass $row) use ($start): stdClass {
+            /** @var int $totalCases */
+            $totalCases = $row->total_cases;
 
-                $row->overturn_rate = $row->total_cases > 0 ? (int) round(($overturned / $row->total_cases) * 100) : 0;
+            $actionIds = ModerationAction::query()
+                ->where('moderator_id', $row->id)
+                ->where('created_at', '>=', $start)
+                ->pluck('id');
 
-                return $row;
-            });
+            $overturned = ModerationAppeal::query()
+                ->whereIn('action_id', $actionIds)
+                ->where('status', 'overturned')
+                ->count();
+
+            $row->overturn_rate = $totalCases > 0 ? (int) round(($overturned / $totalCases) * 100) : 0;
+
+            return $row;
+        });
     }
 
     #[Computed]
@@ -334,7 +339,8 @@ class ModerationDashboardLivewire extends Component
             ->orderByDesc('offense_count')
             ->limit(5)
             ->get()
-            ->map(function (object $row): object {
+            ->map(/** @param object{author_id: int, offense_count: int} $row */ static function (object $row): object {
+                /** @var object{username: string}|null $user */
                 $user = DB::table('users')->where('id', $row->author_id)->first(['username']);
                 $row->username = $user->username ?? 'unknown';
 
@@ -358,6 +364,7 @@ class ModerationDashboardLivewire extends Component
 
         $grid = array_fill(0, 7, array_fill(0, 24, 0));
 
+        /** @var object{dow: int, hour: int, total: int} $row */
         foreach ($dbData as $row) {
             $grid[(int) $row->dow][(int) $row->hour] = (int) $row->total;
         }
@@ -382,7 +389,7 @@ class ModerationDashboardLivewire extends Component
 
     // --- Private helpers ---
 
-    private function computeFpRate(Carbon $from, Carbon $to): int
+    private function computeFpRate(CarbonInterface $from, CarbonInterface $to): int
     {
         $base = ModerationCase::query()
             ->whereBetween('created_at', [$from, $to])
@@ -394,7 +401,7 @@ class ModerationDashboardLivewire extends Component
         return $total > 0 ? (int) round(($dismissed / $total) * 100) : 0;
     }
 
-    private function computeFpRateBySource(Carbon $from, Carbon $to, CaseSource $source): int
+    private function computeFpRateBySource(CarbonInterface $from, CarbonInterface $to, CaseSource $source): int
     {
         $base = ModerationCase::query()
             ->whereBetween('created_at', [$from, $to])

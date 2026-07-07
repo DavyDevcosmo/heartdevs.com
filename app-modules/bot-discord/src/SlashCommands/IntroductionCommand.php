@@ -8,9 +8,8 @@ use Discord\Builders\Components\TextInput;
 use Discord\Helpers\Collection;
 use Discord\Parts\Guild\Role;
 use Discord\Parts\Interactions\Interaction;
+use He4rt\BotDiscord\Actions\ResolveDiscordTenant;
 use He4rt\Identity\ExternalIdentity\DTOs\ResolveUserProviderDTO;
-use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Actions\ResolveUserContext;
 use He4rt\Identity\User\Models\User;
 use He4rt\Profile\Actions\UpsertProfile;
@@ -19,6 +18,8 @@ use He4rt\Profile\Models\Profile;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+
+use function React\Async\await;
 
 class IntroductionCommand extends AbstractSlashCommand
 {
@@ -52,7 +53,7 @@ class IntroductionCommand extends AbstractSlashCommand
             ->find(fn (Role $role) => $role->id === $this->roleId);
 
         if ($hasRole) {
-            $interaction->respondWithMessage('Você já se apresentou. Esse comando só pode ser usado uma vez.', true);
+            $interaction->respondWithMessage('Você já se apresentou. Esse comando só pode ser usado uma vez.', ephemeral: true);
 
             return;
         }
@@ -62,26 +63,23 @@ class IntroductionCommand extends AbstractSlashCommand
         $this->modal('Apresentar')
             ->id($modalId)
             ->components([
-                TextInput::new('Nome', TextInput::STYLE_SHORT)
-                    ->setCustomId('name')
+                TextInput::new('Nome', TextInput::STYLE_SHORT, 'name')
                     ->setMinLength(2)
                     ->setMaxLength(32)
                     ->setPlaceholder('Fulano de Tal')
-                    ->setRequired(true),
+                    ->setRequired(required: true),
 
-                TextInput::new('Nickname', TextInput::STYLE_SHORT)
-                    ->setCustomId('nickname')
+                TextInput::new('Nickname', TextInput::STYLE_SHORT, 'nickname')
                     ->setMinLength(2)
                     ->setMaxLength(32)
                     ->setPlaceholder('Fulano123')
-                    ->setRequired(true),
+                    ->setRequired(required: true),
 
-                TextInput::new('Nos conte um pouco sobre você', TextInput::STYLE_PARAGRAPH)
-                    ->setCustomId('about')
+                TextInput::new('Nos conte um pouco sobre você', TextInput::STYLE_PARAGRAPH, 'about')
                     ->setMinLength(5)
                     ->setMaxLength(500)
                     ->setPlaceholder('Entrei de curioso e acabei gostando do servidor!')
-                    ->setRequired(true),
+                    ->setRequired(required: true),
 
             ])
             ->submit(function (Interaction $interaction, Collection $components) use ($modalId): void {
@@ -92,7 +90,7 @@ class IntroductionCommand extends AbstractSlashCommand
                 try {
                     $this->persistData($interaction, $components);
 
-                    $interaction->respondWithMessage("Apresentação enviada com sucesso.\nhttps://heartdevs.com/", true);
+                    $interaction->respondWithMessage("Apresentação enviada com sucesso.\nhttps://heartdevs.com/", ephemeral: true);
 
                 } catch (Throwable $throwable) {
                     Log::channel('bot-discord')->error('IntroductionCommand: failed to process introduction', [
@@ -108,7 +106,7 @@ class IntroductionCommand extends AbstractSlashCommand
 
                     report($throwable);
 
-                    $interaction->respondWithMessage('Ocorreu um erro ao processar sua apresentação.', true);
+                    $interaction->respondWithMessage('Ocorreu um erro ao processar sua apresentação.', ephemeral: true);
                 }
             })
             ->show($interaction);
@@ -116,13 +114,12 @@ class IntroductionCommand extends AbstractSlashCommand
 
     /**
      * @param  Collection<mixed, mixed>  $components
+     *
+     * @throws Throwable
      */
     private function persistData(Interaction $interaction, Collection $components): void
     {
-        $tenantProvider = ExternalIdentity::query()
-            ->where('model_type', (new Tenant)->getMorphClass())
-            ->where('external_account_id', (string) $interaction->guild_id)
-            ->firstOrFail();
+        $tenantProvider = resolve(ResolveDiscordTenant::class)->handle((string) $interaction->guild_id);
 
         $userDto = ResolveUserProviderDTO::make([
             'tenant_id' => $tenantProvider->tenant_id,
@@ -135,9 +132,16 @@ class IntroductionCommand extends AbstractSlashCommand
 
         $userContext = resolve(ResolveUserContext::class)->handle($userDto);
 
-        $name = $components->get('custom_id', 'name')->value;
-        $nickname = $components->get('custom_id', 'nickname')->value;
-        $about = $components->get('custom_id', 'about')->value;
+        /** @var object{value: string} $nameComponent */
+        $nameComponent = $components->get('custom_id', 'name');
+        /** @var object{value: string} $nicknameComponent */
+        $nicknameComponent = $components->get('custom_id', 'nickname');
+        /** @var object{value: string} $aboutComponent */
+        $aboutComponent = $components->get('custom_id', 'about');
+
+        $name = $nameComponent->value;
+        $nickname = $nicknameComponent->value;
+        $about = $aboutComponent->value;
 
         $userContext->user->update(['name' => $name]);
 
@@ -177,6 +181,6 @@ class IntroductionCommand extends AbstractSlashCommand
 
         $roles[] = $this->roleId;
 
-        $interaction->member->setRoles($roles);
+        await($interaction->member->setRoles($roles));
     }
 }

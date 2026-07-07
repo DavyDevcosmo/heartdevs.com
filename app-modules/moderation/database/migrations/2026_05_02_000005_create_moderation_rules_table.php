@@ -10,7 +10,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('moderation_rules', function (Blueprint $table): void {
+        Schema::create('moderation_rules', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('name', 100);
             $table->string('type', 20);
@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('violation_type', 30);
             $table->string('severity', 20);
             $table->string('action_on_match', 30);
-            $table->boolean('is_active')->default(true);
+            $table->boolean('is_active')->default(value: true);
             $table->foreignUuid('tenant_id')->nullable()->constrained('tenants')->nullOnDelete();
             $table->timestampsTz();
 

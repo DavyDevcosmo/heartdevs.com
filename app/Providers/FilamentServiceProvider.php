@@ -112,7 +112,7 @@ class FilamentServiceProvider extends ServiceProvider
     private function configureSelectFilter(): void
     {
         SelectFilter::configureUsing(fn (SelectFilter $selectFilter): SelectFilter => $selectFilter
-            ->native(false));
+            ->native(condition: false));
     }
 
     private function configureTable(): void
@@ -143,7 +143,7 @@ class FilamentServiceProvider extends ServiceProvider
     private function configureSelect(): void
     {
         Select::configureUsing(fn (Select $select): Select => $select
-            ->native(false)
+            ->native(condition: false)
             ->selectablePlaceholder(fn (Select $component) => !$component->isRequired())
             ->searchable(fn (Select $component) => $component->hasRelationship())
             ->preload(fn (Select $component): bool => $component->isSearchable() && !$component->hasRelationship())
@@ -153,8 +153,8 @@ class FilamentServiceProvider extends ServiceProvider
     private function configureDateTimePicker(): void
     {
         DateTimePicker::configureUsing(fn (DateTimePicker $dateTimePicker): DateTimePicker => $dateTimePicker
-            ->native(false)
-            ->seconds(false)
+            ->native(condition: false)
+            ->seconds(condition: false)
             ->minDate(now()->subYears(25))
             ->maxDate(now()->addYears(25))
             ->defaultDateDisplayFormat(fn (): string => ApplicationLocale::dateFormat())

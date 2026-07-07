@@ -12,6 +12,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -75,7 +76,7 @@ class ModerationRuleResource extends Resource
                 ->options(ActionType::class)
                 ->required(),
             Toggle::make('is_active')
-                ->default(true),
+                ->default(state: true),
         ]);
     }
 
@@ -114,8 +115,11 @@ class ModerationRuleResource extends Resource
                     ->required()
                     ->rows(4),
             ])
-            ->action(function (array $data, ModerationRule $record): void {
-                if ($record->matches($data['test_input'])) {
+            ->action(static function (array $data, ModerationRule $record): void {
+                /** @var string $testInput */
+                $testInput = $data['test_input'];
+
+                if ($record->matches($testInput)) {
                     Notification::make()
                         ->success()
                         ->title(__('panel-admin::moderation.rules.actions.test_match', [
@@ -136,6 +140,9 @@ class ModerationRuleResource extends Resource
             });
     }
 
+    /**
+     * @return array<string, PageRegistration>
+     */
     public static function getPages(): array
     {
         return [

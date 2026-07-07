@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,15 +15,15 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasTable('providers')) {
-            Schema::create('providers', function (Blueprint $table): void {
+            Schema::create('providers', static function (Blueprint $table): void {
                 $table->uuid('id')->primary();
                 $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
-                $table->string('provider');
+                $table->string('provider')->comment(IdentityProvider::stringifyCases());
                 $table->string('provider_id');
                 $table->string('email')->nullable();
                 $table->string('avatar')->nullable();
                 $table->string('username')->nullable();
-                $table->timestamps();
+                $table->timestampsTz();
             });
         }
     }

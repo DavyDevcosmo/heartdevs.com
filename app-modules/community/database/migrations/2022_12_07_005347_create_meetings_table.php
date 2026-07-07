@@ -14,14 +14,14 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasTable('meetings')) {
-            Schema::create('meetings', function (Blueprint $table): void {
+            Schema::create('meetings', static function (Blueprint $table): void {
                 $table->uuid('id')->primary();
                 $table->foreignUuid('admin_id')->constrained('users')->cascadeOnDelete();
                 $table->text('content')->nullable();
                 $table->foreignId('meeting_type_id')->constrained('meeting_types')->cascadeOnDelete();
-                $table->dateTime('starts_at');
-                $table->dateTime('ends_at')->nullable();
-                $table->timestamps();
+                $table->dateTimeTz('starts_at');
+                $table->dateTimeTz('ends_at')->nullable();
+                $table->timestampsTz();
             });
         }
     }

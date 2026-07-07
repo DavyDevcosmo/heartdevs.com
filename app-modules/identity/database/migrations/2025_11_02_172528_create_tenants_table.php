@@ -10,14 +10,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('tenants', function (Blueprint $table): void {
+        Schema::create('tenants', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('name');
             $table->string('slug');
             $table->foreignUuid('owner_id')->constrained('users');
             $table->boolean('active');
-            $table->timestamps();
-            $table->softDeletes();
+            $table->timestampsTz();
+            $table->softDeletesTz();
         });
     }
 

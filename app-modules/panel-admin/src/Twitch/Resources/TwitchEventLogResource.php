@@ -7,6 +7,7 @@ namespace He4rt\PanelAdmin\Twitch\Resources;
 use BackedEnum;
 use Filament\Infolists\Components\CodeEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -120,12 +121,15 @@ class TwitchEventLogResource extends Resource
                     ->schema([
                         CodeEntry::make('payload')
                             ->extraAttributes(['class' => 'overflow-auto max-h-128'])
-                            ->formatStateUsing(fn (array $state): string => json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))
+                            ->formatStateUsing(fn (array $state): string => json_encode($state, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))
                             ->columnSpanFull(),
                     ]),
             ]);
     }
 
+    /**
+     * @return array<string, PageRegistration>
+     */
     public static function getPages(): array
     {
         return [

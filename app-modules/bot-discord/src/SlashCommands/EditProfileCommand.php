@@ -71,7 +71,7 @@ class EditProfileCommand extends AbstractSlashCommand
         if (!$profile) {
             $interaction->respondWithMessage(
                 'Parece que você ainda não completou sua apresentação. Use o comando `/apresentar` para continuar.',
-                true
+                ephemeral: true
             );
 
             return;
@@ -83,29 +83,26 @@ class EditProfileCommand extends AbstractSlashCommand
 
         $this->modal('Editar Perfil')
             ->components([
-                TextInput::new('Nome', TextInput::STYLE_SHORT)
-                    ->setCustomId('name')
+                TextInput::new('Nome', TextInput::STYLE_SHORT, 'name')
                     ->setMinLength(2)
                     ->setMaxLength(32)
                     ->setPlaceholder('Seu nome')
                     ->setValue(filled($name) && mb_strlen((string) $name) >= 2 ? $name : null)
-                    ->setRequired(true),
+                    ->setRequired(required: true),
 
-                TextInput::new('Nickname', TextInput::STYLE_SHORT)
-                    ->setCustomId('nickname')
+                TextInput::new('Nickname', TextInput::STYLE_SHORT, 'nickname')
                     ->setMinLength(2)
                     ->setMaxLength(32)
                     ->setPlaceholder('Seu nickname')
                     ->setValue(filled($nickname) && mb_strlen($nickname) >= 2 ? $nickname : null)
-                    ->setRequired(true),
+                    ->setRequired(required: true),
 
-                TextInput::new('Nos conte um pouco sobre você', TextInput::STYLE_PARAGRAPH)
-                    ->setCustomId('about')
+                TextInput::new('Nos conte um pouco sobre você', TextInput::STYLE_PARAGRAPH, 'about')
                     ->setMinLength(5)
                     ->setMaxLength(500)
                     ->setPlaceholder('Fale mais sobre você...')
                     ->setValue(filled($about) && mb_strlen($about) >= 5 ? $about : null)
-                    ->setRequired(true),
+                    ->setRequired(required: true),
 
             ])
             ->submit(fn (Interaction $interaction, Collection $components) => $this->persistData(
@@ -122,9 +119,16 @@ class EditProfileCommand extends AbstractSlashCommand
         Interaction $interaction,
         Collection $components
     ): void {
-        $name = $components->get('custom_id', 'name')?->value;
-        $nickname = $components->get('custom_id', 'nickname')?->value;
-        $about = $components->get('custom_id', 'about')?->value;
+        /** @var object{value: string}|null $nameComponent */
+        $nameComponent = $components->get('custom_id', 'name');
+        /** @var object{value: string}|null $nicknameComponent */
+        $nicknameComponent = $components->get('custom_id', 'nickname');
+        /** @var object{value: string}|null $aboutComponent */
+        $aboutComponent = $components->get('custom_id', 'about');
+
+        $name = $nameComponent->value ?? '';
+        $nickname = $nicknameComponent->value ?? '';
+        $about = $aboutComponent->value ?? '';
 
         try {
             $this->memberProvider->user->update(['name' => $name]);
@@ -154,7 +158,7 @@ class EditProfileCommand extends AbstractSlashCommand
                 ->footerIcon($interaction->guild->icon)
                 ->footerText(Date::now()->format('Y').' © He4rt Developers')
                 ->timestamp(now())
-                ->reply($interaction, true);
+                ->reply($interaction, ephemeral: true);
 
         } catch (Throwable $throwable) {
             Log::channel('bot-discord')->error('EditProfileCommand: failed to persist profile data', [
@@ -168,7 +172,7 @@ class EditProfileCommand extends AbstractSlashCommand
 
             report($throwable);
 
-            $interaction->respondWithMessage('Erro ao persistir dados', true);
+            $interaction->respondWithMessage('Erro ao persistir dados', ephemeral: true);
         }
     }
 }

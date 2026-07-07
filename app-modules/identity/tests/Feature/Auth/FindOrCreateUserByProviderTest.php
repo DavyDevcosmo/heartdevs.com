@@ -17,15 +17,15 @@ function makeOAuthUser(
     string $name = 'Test User',
     ?string $email = 'test@example.com',
 ): OAuthUserDTO {
-    $credentials = new class('token', 'refresh', 3600) extends OAuthAccessDTO
+    $credentials = new class('token', 'refresh', 3_600) extends OAuthAccessDTO
     {
         public static function make(array $payload): self
         {
-            return new self('token', 'refresh', 3600);
+            return new self('token', 'refresh', 3_600);
         }
     };
 
-    return new class($credentials, $providerId, $provider, $username, $name, $email, null) extends OAuthUserDTO
+    return new class($credentials, $providerId, $provider, $username, $name, $email, avatarUrl: null) extends OAuthUserDTO
     {
         public static function make(OAuthAccessDTO $credentials, array $payload): self
         {

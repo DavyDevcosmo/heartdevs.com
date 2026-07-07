@@ -20,8 +20,8 @@ final class RuleBasedClassifier implements ContentClassifierContract
     public function classify(ModerationContentDTO $content): ClassificationResultDTO
     {
         $rules = ModerationRule::query()
-            ->where('is_active', true)
-            ->when($content->tenantId, fn ($q) => $q->where(function (Builder $q) use ($content): void {
+            ->where('is_active', operator: true)
+            ->when($content->tenantId, fn ($q) => $q->where(static function (Builder $q) use ($content): void {
                 $q->where('tenant_id', $content->tenantId)->orWhereNull('tenant_id');
             }))
             ->get();

@@ -39,7 +39,7 @@ class RegisterSubscriptionsAction extends Action
                     'secret' => $this->maskSecret(),
                 ]);
             })
-            ->action(function (): void {
+            ->action(static function (): void {
                 /** @var Tenant|null $tenant */
                 $tenant = filament()->getTenant();
 
@@ -149,7 +149,7 @@ class RegisterSubscriptionsAction extends Action
                 'value' => $type->value,
                 'name' => $type->name,
                 'version' => $type->getVersion(),
-                'exists' => in_array($type->value, $existingTypes, true),
+                'exists' => in_array($type->value, $existingTypes, strict: true),
             ];
 
             $group = match (true) {

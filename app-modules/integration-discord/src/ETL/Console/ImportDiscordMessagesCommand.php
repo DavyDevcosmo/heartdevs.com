@@ -21,6 +21,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use RuntimeException;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use Symfony\Component\Console\Terminal;
@@ -123,7 +124,7 @@ class ImportDiscordMessagesCommand extends Command
             }
 
             $channelName = basename($channelDir);
-            $chunks = glob($channelDir.'/chunk_*.json');
+            $chunks = glob($channelDir.'/chunk_*.json') ?: [];
             sort($chunks);
 
             if ($chunksPerChannel !== null) {
@@ -147,7 +148,10 @@ class ImportDiscordMessagesCommand extends Command
                     break;
                 }
 
-                $allMessages = json_decode(file_get_contents($chunkFile), true);
+                $chunkContents = file_get_contents($chunkFile);
+                throw_if($chunkContents === false, RuntimeException::class, 'Falha ao ler chunk: '.$chunkFile);
+
+                $allMessages = json_decode($chunkContents, associative: true);
                 if (!is_array($allMessages)) {
                     $chunkCurrent++;
                     $this->renderBox($chunkSection, $chunkTitle, $chunkCurrent, $totalChunks);
@@ -155,7 +159,9 @@ class ImportDiscordMessagesCommand extends Command
                     continue;
                 }
 
-                $messages = $this->filterNewMessages($allMessages, $tenantId);
+                /** @var list<array<string, mixed>> $rawMessages */
+                $rawMessages = array_values(array_filter($allMessages, is_array(...)));
+                $messages = $this->filterNewMessages($rawMessages, $tenantId);
                 $stats['skipped'] += count($allMessages) - count($messages);
 
                 if ($messages !== []) {
@@ -219,7 +225,7 @@ class ImportDiscordMessagesCommand extends Command
                                     }
                                 }
 
-                                $now = microtime(true);
+                                $now = microtime(as_float: true);
                                 if ($now - $lastStatsRender > 0.1) {
                                     $this->renderStats($statsSection, $stats);
                                     $lastStatsRender = $now;
@@ -232,7 +238,7 @@ class ImportDiscordMessagesCommand extends Command
                 $chunkCurrent++;
                 $this->renderBox($chunkSection, $chunkTitle, $chunkCurrent, $totalChunks);
                 $this->renderStats($statsSection, $stats);
-                $lastStatsRender = microtime(true);
+                $lastStatsRender = microtime(as_float: true);
             }
 
             $canalCurrent++;
@@ -325,7 +331,9 @@ class ImportDiscordMessagesCommand extends Command
             'created_at', 'updated_at',
         ];
 
-        $existing = array_flip(Schema::getColumnListing('messages'));
+        /** @var array<int, string> $columns */
+        $columns = Schema::getColumnListing('messages');
+        $existing = array_flip($columns);
 
         return array_values(array_filter(
             $required,
@@ -413,7 +421,10 @@ class ImportDiscordMessagesCommand extends Command
             return [];
         }
 
-        $payload = json_decode(file_get_contents($channelsFile), true);
+        $channelsContents = file_get_contents($channelsFile);
+        throw_if($channelsContents === false, RuntimeException::class, 'Falha ao ler channels.json: '.$channelsFile);
+
+        $payload = json_decode($channelsContents, associative: true);
         $channels = is_array($payload) ? ($payload['channels'] ?? $payload) : [];
         $map = [];
 
@@ -453,7 +464,7 @@ class ImportDiscordMessagesCommand extends Command
             static function (string $dir) use ($needles): bool {
                 $name = basename($dir);
 
-                return array_any($needles, fn ($needle) => str_contains($name, $needle));
+                return array_any($needles, fn (string $needle) => str_contains($name, $needle));
             },
         ));
     }

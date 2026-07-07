@@ -15,7 +15,7 @@ class AsCredentials implements CastsAttributes
 {
     public function get(Model $model, string $key, mixed $value, array $attributes): ClientAccessManager
     {
-        $payload = json_decode((string) $value, true);
+        $payload = json_decode((string) $value, associative: true);
 
         return ClientAccessManager::makeFromPayload($payload ?? []);
     }
@@ -31,6 +31,6 @@ class AsCredentials implements CastsAttributes
             'username' => $value->username,
             'password' => $value->password,
             'api_key' => $value->apiKey,
-        ]);
+        ], JSON_THROW_ON_ERROR);
     }
 }

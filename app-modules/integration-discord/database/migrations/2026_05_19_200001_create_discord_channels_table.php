@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('discord_channels', function (Blueprint $table): void {
+        Schema::create('discord_channels', static function (Blueprint $table): void {
             $table->id();
             $table->foreignId('discord_guild_id')->constrained('discord_guilds')->cascadeOnDelete();
             $table->string('discord_channel_id')->unique();
@@ -22,10 +22,10 @@ return new class extends Migration
             $table->smallInteger('type');
             $table->text('topic')->nullable();
             $table->smallInteger('position')->default(0);
-            $table->boolean('nsfw')->default(false);
+            $table->boolean('nsfw')->default(value: false);
             $table->integer('bitrate')->nullable();
             $table->integer('user_limit')->nullable();
-            $table->timestamps();
+            $table->timestampsTz();
 
             $table->index('discord_guild_id');
         });

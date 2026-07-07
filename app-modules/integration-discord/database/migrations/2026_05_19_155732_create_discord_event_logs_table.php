@@ -13,14 +13,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('discord_event_logs', function (Blueprint $table): void {
+        Schema::create('discord_event_logs', static function (Blueprint $table): void {
             $table->id();
             $table->string('event_type')->index();
             $table->string('guild_id')->nullable()->index();
             $table->string('user_id')->nullable();
             $table->string('channel_id')->nullable();
             $table->jsonb('payload');
-            $table->timestamps();
+            $table->timestampsTz();
         });
     }
 

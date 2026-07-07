@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('discord_members', function (Blueprint $table): void {
+        Schema::create('discord_members', static function (Blueprint $table): void {
             $table->id();
             $table->foreignId('discord_guild_id')->constrained('discord_guilds')->cascadeOnDelete();
             $table->string('discord_user_id');
@@ -22,13 +22,13 @@ return new class extends Migration
             $table->string('global_name')->nullable();
             $table->string('avatar')->nullable();
             $table->string('nickname')->nullable();
-            $table->boolean('is_bot')->default(false);
-            $table->boolean('is_pending')->default(false);
-            $table->timestamp('joined_at')->nullable();
-            $table->timestamp('premium_since')->nullable();
-            $table->timestamp('communication_disabled_until')->nullable();
-            $table->timestamp('left_at')->nullable();
-            $table->timestamps();
+            $table->boolean('is_bot')->default(value: false);
+            $table->boolean('is_pending')->default(value: false);
+            $table->timestampTz('joined_at')->nullable();
+            $table->timestampTz('premium_since')->nullable();
+            $table->timestampTz('communication_disabled_until')->nullable();
+            $table->timestampTz('left_at')->nullable();
+            $table->timestampsTz();
 
             $table->unique(['discord_guild_id', 'discord_user_id']);
             $table->index('discord_user_id');

@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('discord_roles', function (Blueprint $table): void {
+        Schema::create('discord_roles', static function (Blueprint $table): void {
             $table->id();
             $table->foreignId('discord_guild_id')->constrained('discord_guilds')->cascadeOnDelete();
             $table->string('discord_role_id')->unique();
@@ -21,11 +21,11 @@ return new class extends Migration
             $table->integer('color')->default(0);
             $table->smallInteger('position')->default(0);
             $table->bigInteger('permissions')->default(0);
-            $table->boolean('is_hoisted')->default(false);
-            $table->boolean('is_mentionable')->default(false);
-            $table->boolean('is_managed')->default(false);
+            $table->boolean('is_hoisted')->default(value: false);
+            $table->boolean('is_mentionable')->default(value: false);
+            $table->boolean('is_managed')->default(value: false);
             $table->string('icon')->nullable();
-            $table->timestamps();
+            $table->timestampsTz();
 
             $table->index('discord_guild_id');
         });

@@ -47,7 +47,7 @@ class ViewModerationCase extends ViewRecord
                         ->badge(),
                     TextEntry::make('ai_scores')
                         ->label('AI Scores')
-                        ->formatStateUsing(function (mixed $state): string {
+                        ->formatStateUsing(static function (mixed $state): string {
                             /** @var array<string, float> $scores */
                             $scores = is_array($state) ? $state : [];
 
@@ -70,6 +70,9 @@ class ViewModerationCase extends ViewRecord
         ]);
     }
 
+    /**
+     * @return Action[]
+     */
     protected function getHeaderActions(): array
     {
         return [

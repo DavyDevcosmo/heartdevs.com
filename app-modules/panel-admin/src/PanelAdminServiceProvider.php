@@ -9,6 +9,7 @@ use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use He4rt\PanelAdmin\Filament\Resources\Events\EventResource;
 use He4rt\PanelAdmin\Filament\Resources\ExternalIdentities\ExternalIdentityResource;
+use He4rt\PanelAdmin\Github\GithubCluster;
 use He4rt\PanelAdmin\Marketing\MarketingCluster;
 use He4rt\PanelAdmin\Moderation\Livewire\AppealQueue;
 use He4rt\PanelAdmin\Moderation\Livewire\ModerationDashboardLivewire;
@@ -31,7 +32,7 @@ class PanelAdminServiceProvider extends ServiceProvider
             }
 
             $panel
-                ->pages([ModerationCluster::class, MarketingCluster::class, TwitchCluster::class])
+                ->pages([ModerationCluster::class, MarketingCluster::class, TwitchCluster::class, GithubCluster::class])
                 ->navigation($this->buildNavigation(...))
                 ->resources([
                     ExternalIdentityResource::class,
@@ -56,6 +57,10 @@ class PanelAdminServiceProvider extends ServiceProvider
                 ->discoverPages(
                     in: __DIR__.'/Twitch/Pages',
                     for: 'He4rt\\PanelAdmin\\Twitch\\Pages',
+                )
+                ->discoverResources(
+                    in: __DIR__.'/Github/Resources',
+                    for: 'He4rt\\PanelAdmin\\Github\\Resources',
                 );
         });
     }
@@ -105,6 +110,7 @@ class PanelAdminServiceProvider extends ServiceProvider
             ...ModerationCluster::getNavigationItems(),
             ...MarketingCluster::getNavigationItems(),
             ...TwitchCluster::getNavigationItems(),
+            ...GithubCluster::getNavigationItems(),
             ...ExternalIdentityResource::getNavigationItems(),
             ...EventResource::getNavigationItems(),
         ]);

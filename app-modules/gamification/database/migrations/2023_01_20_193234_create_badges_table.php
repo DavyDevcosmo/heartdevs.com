@@ -14,14 +14,14 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasTable('badges')) {
-            Schema::create('badges', function (Blueprint $table): void {
+            Schema::create('badges', static function (Blueprint $table): void {
                 $table->id();
                 $table->string('provider');
                 $table->string('name');
                 $table->text('description');
                 $table->string('redeem_code');
                 $table->boolean('active');
-                $table->timestamps();
+                $table->timestampsTz();
             });
         }
     }

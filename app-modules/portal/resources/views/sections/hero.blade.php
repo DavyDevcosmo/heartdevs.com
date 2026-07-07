@@ -1,6 +1,9 @@
-<section class="hp-section relative" id="community">
-    <div class="absolute -z-1 flex h-full w-full p-8 sm:p-16">
-        <img src="{{ asset('images/landingLogo.svg') }}" alt="Logo" class="h-full w-full" />
+<section class="hp-section relative min-h-[calc(100svh-6rem)]!" id="community">
+    <div
+        class="pointer-events-none absolute -z-1 flex h-full w-full items-center justify-center overflow-hidden p-8 opacity-40 sm:p-16"
+        aria-hidden="true"
+    >
+        <x-portal::animated-logo class="w-full max-w-5xl" />
     </div>
     <div class="hp-container">
         <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
@@ -43,8 +46,32 @@
                     </span>
                 </div>
             </div>
-            <div class="flex min-w-0 flex-col items-center justify-center">
+            <div class="flex min-w-0 flex-col items-center justify-center gap-6">
                 <x-portal::terminal :stats="$this->terminalStats" />
+
+                <x-he4rt::card
+                    href="/docs"
+                    density="compact"
+                    class="h-auto w-full max-w-md shadow-lg lg:max-w-lg"
+                    aria-label="Abrir documentação da comunidade"
+                >
+                    <div class="flex items-center gap-4">
+                        <div class="text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-current/15 bg-current/8">
+                            <x-filament::icon icon="heroicon-o-light-bulb" class="h-6 w-6" />
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+                            <p class="text-text-high text-base font-semibold">
+                                Novo por aqui?
+                            </p>
+                            <p class="text-text-medium text-sm">
+                                Confira nossa documentação e descubra como participar.
+                            </p>
+                        </div>
+
+                        <x-filament::icon icon="heroicon-o-chevron-right" class="text-primary h-5 w-5 shrink-0" />
+                    </div>
+                </x-he4rt::card>
             </div>
         </div>
     </div>

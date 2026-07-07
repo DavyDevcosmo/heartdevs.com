@@ -50,7 +50,7 @@ class FetchDiscordMembers extends Command
 
         do {
             $result = $this->discordGet($token, sprintf('/guilds/%s/members', $guildId), [
-                'limit' => 1000,
+                'limit' => 1_000,
                 'after' => $after,
             ]);
 
@@ -100,7 +100,7 @@ class FetchDiscordMembers extends Command
             'members' => $members,
         ];
 
-        Storage::disk('local')->put('discord/members.json', json_encode($output, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        Storage::disk('local')->put('discord/members.json', json_encode($output, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
 
         $this->info('Done! Saved '.count($members).sprintf(' members to storage/app/private/discord/members.json (skipped %d bots)', $botCount));
     }

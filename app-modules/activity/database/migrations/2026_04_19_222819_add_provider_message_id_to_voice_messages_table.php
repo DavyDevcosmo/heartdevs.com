@@ -11,9 +11,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('voice_messages', function (Blueprint $table): void {
+        Schema::table('voice_messages', static function (Blueprint $table): void {
             $table->string('provider_message_id')->nullable()->after('external_identity_id');
-            $table->timestamp('occurred_at')->nullable()->after('state');
+            $table->timestampTz('occurred_at')->nullable()->after('state');
         });
 
         // Partial unique index — only enforced when we have a provider_message_id
@@ -29,7 +29,7 @@ return new class extends Migration
     {
         DB::statement('DROP INDEX IF EXISTS voice_messages_tenant_provider_message_id_unique');
 
-        Schema::table('voice_messages', function (Blueprint $table): void {
+        Schema::table('voice_messages', static function (Blueprint $table): void {
             $table->dropColumn(['provider_message_id', 'occurred_at']);
         });
     }

@@ -24,8 +24,11 @@ class AnalyzeDiscordProfiles extends Command
         intro('Discord Profiles — Social Connections Report');
 
         // Load all chunk files
-        $files = collect(Storage::disk('local')->files('discord'))
-            ->filter(fn (string $f) => str_contains($f, 'profiles_chunk_'))
+        /** @var list<string> $allFiles */
+        $allFiles = Storage::disk('local')->files('discord');
+
+        $files = collect($allFiles)
+            ->filter(fn (string $f): bool => str_contains($f, 'profiles_chunk_'))
             ->sort()
             ->values();
 
@@ -44,7 +47,7 @@ class AnalyzeDiscordProfiles extends Command
         $topConnectors = [];
 
         foreach ($files as $file) {
-            $profiles = json_decode((string) Storage::disk('local')->get($file), true) ?? [];
+            $profiles = json_decode((string) Storage::disk('local')->get($file), associative: true) ?? [];
 
             foreach ($profiles as $discordId => $profile) {
                 $totalProfiles++;
@@ -116,7 +119,7 @@ class AnalyzeDiscordProfiles extends Command
         );
 
         // GitHub stats
-        $verifiedGh = collect($githubUsers)->where('verified', true)->count();
+        $verifiedGh = collect($githubUsers)->where('verified', operator: true)->count();
         info(sprintf('GitHub: %d verified out of ', $verifiedGh).count($githubUsers).' total');
 
         // Top connectors (3+ socials)
@@ -143,7 +146,7 @@ class AnalyzeDiscordProfiles extends Command
                 'total_profiles' => $totalProfiles,
                 'total_with_github' => count($githubUsers),
                 'connections' => $githubUsers,
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
         );
 
         info('GitHub connections saved to storage/app/private/discord/github_connections.json');
@@ -157,7 +160,7 @@ class AnalyzeDiscordProfiles extends Command
                 'with_connections' => $withConnections,
                 'platforms' => $socialCounts,
                 'github_users' => count($githubUsers),
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
         );
 
         outro(sprintf('Report complete — %d profiles analyzed', $totalProfiles));

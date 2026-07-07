@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_information', function (Blueprint $table): void {
+        Schema::create('user_information', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('name')->nullable();
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('github_url')->nullable();
             $table->date('birthdate')->nullable();
             $table->text('about')->nullable();
-            $table->timestamps();
+            $table->timestampsTz();
         });
     }
 

@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace He4rt\BotDiscord\SlashCommands;
 
 use Discord\Parts\Interactions\Interaction;
+use He4rt\BotDiscord\Actions\ResolveDiscordTenant;
 use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pipeline\Pipeline;
 use Laracord\Commands\Middleware\Context;
 use Laracord\Commands\SlashCommand;
+use Laracord\Discord\Message;
 
+/**
+ * @method Message message(string $content = '')
+ */
 abstract class AbstractSlashCommand extends SlashCommand
 {
     protected ?ExternalIdentity $memberProvider = null;
@@ -25,7 +29,7 @@ abstract class AbstractSlashCommand extends SlashCommand
         if ($interaction->guild_id === null) {
             $interaction->respondWithMessage(
                 'Este comando só pode ser usado em um servidor.',
-                true
+                ephemeral: true
             );
 
             return;
@@ -63,11 +67,7 @@ abstract class AbstractSlashCommand extends SlashCommand
 
     private function beforePipeline(Interaction $interaction): void
     {
-        $this->tenantProvider = ExternalIdentity::query()
-            ->where('model_type', (new Tenant)->getMorphClass())
-            ->where('provider', IdentityProvider::Discord)
-            ->where('external_account_id', $interaction->guild_id)
-            ->first();
+        $this->tenantProvider = resolve(ResolveDiscordTenant::class)->handle((string) $interaction->guild_id);
 
         $this->memberProvider = ExternalIdentity::query()
             ->where('tenant_id', $this->tenantProvider->tenant_id)

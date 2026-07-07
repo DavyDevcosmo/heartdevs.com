@@ -70,7 +70,7 @@ final class SubscribeTwitchEventsCommand extends Command
         $results = [];
 
         foreach ($types as $type) {
-            if (in_array($type->value, $existingTypes, true)) {
+            if (in_array($type->value, $existingTypes, strict: true)) {
                 $results[] = [$type->value, $type->getVersion(), 'already_exists'];
 
                 continue;
@@ -137,9 +137,7 @@ final class SubscribeTwitchEventsCommand extends Command
      */
     private function getExistingSubscriptionTypes(TwitchHelixConnector $helix, string $broadcasterId): array
     {
-        return collect($this->getExistingSubscriptions($helix, $broadcasterId))
-            ->pluck('type')
-            ->all();
+        return array_column($this->getExistingSubscriptions($helix, $broadcasterId), 'type');
     }
 
     /**

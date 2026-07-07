@@ -124,7 +124,7 @@ final readonly class SyncDiscordGuildAction
                 ],
             );
 
-            $roleMap[$roleData['id']] = $role->id;
+            $roleMap[(string) $roleData['id']] = $role->id;
         }
 
         return $roleMap;
@@ -138,7 +138,7 @@ final readonly class SyncDiscordGuildAction
         $after = null;
 
         do {
-            $response = $this->connector->send(new ListGuildMembers($discordGuildId, 1000, $after));
+            $response = $this->connector->send(new ListGuildMembers($discordGuildId, 1_000, $after));
 
             /** @var array<int, array<string, mixed>> $members */
             $members = $response->json();
@@ -183,6 +183,6 @@ final readonly class SyncDiscordGuildAction
 
                 $after = $userId;
             }
-        } while (count($members) === 1000);
+        } while (count($members) === 1_000);
     }
 }

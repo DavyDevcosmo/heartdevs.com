@@ -10,6 +10,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Database\Query\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -91,6 +92,7 @@ class CommunityReport extends Command
 
         $withInfo = DB::table('user_information')->distinct('user_id')->count('user_id');
 
+        /** @var object{github: int, linkedin: int, birthdate: int, about: int} $infoFills */
         $infoFills = DB::table('user_information')
             ->selectRaw('
                 COUNT(github_url) as github,
@@ -116,6 +118,7 @@ class CommunityReport extends Command
             ],
         );
 
+        /** @var Collection<int, object{country: string, cnt: int}> $topCountries */
         $topCountries = DB::table('user_address')
             ->select('country', DB::raw('COUNT(*) as cnt'))
             ->whereNotNull('country')
@@ -220,32 +223,39 @@ class CommunityReport extends Command
 
         $zeroXp = DB::table('characters')->where('experience', 0)->count();
 
-        // Build CASE expression from Character::LEVEL_THRESHOLDS
-        $thresholds = Character::LEVEL_THRESHOLDS;
-        $caseParts = [];
+        // Bucket characters into level ranges in PHP instead of building dynamic
+        // SQL. Each range maps to a half-open [lowerXp, upperXp) experience window
+        // derived from the level => XP threshold table, so the queries stay static.
+        $levelRanges = [
+            '1-5' => [1, 5],
+            '6-10' => [6, 10],
+            '11-20' => [11, 20],
+            '21-30' => [21, 30],
+            '31-40' => [31, 40],
+            '41-50' => [41, 50],
+        ];
 
-        foreach (array_reverse($thresholds, true) as $level => $xp) {
-            $caseParts[] = sprintf('WHEN experience >= %s THEN %s', $xp, $level);
+        /** @var array<string, int> $levelDistribution */
+        $levelDistribution = [];
+
+        foreach ($levelRanges as $label => [$minLevel, $maxLevel]) {
+            $lowerXp = Character::LEVEL_THRESHOLDS[$minLevel];
+            $upperXp = Character::LEVEL_THRESHOLDS[$maxLevel + 1] ?? null;
+
+            $rangeQuery = DB::table('characters')->where('experience', '>=', $lowerXp);
+
+            if ($upperXp !== null) {
+                $rangeQuery->where('experience', '<', $upperXp);
+            }
+
+            $count = $rangeQuery->count();
+
+            if ($count > 0) {
+                $levelDistribution[$label] = $count;
+            }
         }
 
-        $levelCase = 'CASE '.implode(' ', $caseParts).' ELSE 1 END';
-
-        $levelDistribution = DB::table('characters')
-            ->selectRaw("
-                CASE
-                    WHEN ({$levelCase}) BETWEEN 1 AND 5 THEN '1-5'
-                    WHEN ({$levelCase}) BETWEEN 6 AND 10 THEN '6-10'
-                    WHEN ({$levelCase}) BETWEEN 11 AND 20 THEN '11-20'
-                    WHEN ({$levelCase}) BETWEEN 21 AND 30 THEN '21-30'
-                    WHEN ({$levelCase}) BETWEEN 31 AND 40 THEN '31-40'
-                    WHEN ({$levelCase}) BETWEEN 41 AND 50 THEN '41-50'
-                END as level_range,
-                COUNT(*) as cnt
-            ")
-            ->groupBy('level_range')
-            ->orderByRaw(sprintf('MIN(%s)', $levelCase))
-            ->get();
-
+        /** @var object{p25: float, p50: float, p75: float, p90: float, p99: float, avg_xp: float, max_xp: int} $percentiles */
         $percentiles = DB::selectOne('
             SELECT
                 percentile_cont(0.25) WITHIN GROUP (ORDER BY experience) as p25,
@@ -270,14 +280,19 @@ class CommunityReport extends Command
             ],
         );
 
+        $distributionRows = [];
+        foreach ($levelDistribution as $range => $cnt) {
+            $distributionRows[] = [
+                $range,
+                number_format($cnt),
+                round($cnt / $totalCharacters * 100, 1).'%',
+            ];
+        }
+
         info('Level Distribution');
         table(
             headers: ['Level Range', 'Characters', '% of Total'],
-            rows: $levelDistribution->map(fn ($r) => [
-                $r->level_range,
-                number_format($r->cnt),
-                round($r->cnt / $totalCharacters * 100, 1).'%',
-            ])->all(),
+            rows: $distributionRows,
         );
 
         info('XP Percentiles');
@@ -304,7 +319,7 @@ class CommunityReport extends Command
                 'p90' => (int) $percentiles->p90,
                 'p99' => (int) $percentiles->p99,
             ],
-            'level_distribution' => $levelDistribution->pluck('cnt', 'level_range')->toArray(),
+            'level_distribution' => $levelDistribution,
         ];
     }
 
@@ -313,7 +328,7 @@ class CommunityReport extends Command
         info('=== 5. Badges ===');
 
         $totalBadges = DB::table('badges')->count();
-        $activeBadges = DB::table('badges')->where('active', true)->count();
+        $activeBadges = DB::table('badges')->where('active', operator: true)->count();
         $totalClaims = DB::table('characters_badges')->count();
         $totalCharacters = DB::table('characters')->count();
 
@@ -334,6 +349,7 @@ class CommunityReport extends Command
             ],
         );
 
+        /** @var Collection<int, object{name: string, claims: int}> $topBadges */
         $topBadges = DB::table('characters_badges')
             ->join('badges', 'badges.id', '=', 'characters_badges.badge_id')
             ->select('badges.name', DB::raw('COUNT(*) as claims'))
@@ -373,6 +389,7 @@ class CommunityReport extends Command
             return;
         }
 
+        /** @var Collection<int, object{currency: string, wallet_count: int, total_balance: int, avg_balance: float, max_balance: int}> $currencyStats */
         $currencyStats = DB::table('wallets')
             ->select(
                 'currency',
@@ -396,6 +413,7 @@ class CommunityReport extends Command
             ])->all(),
         );
 
+        /** @var Collection<int, object{type: string, cnt: int, total_amount: int}> $txByType */
         $txByType = DB::table('transactions')
             ->select('type', DB::raw('COUNT(*) as cnt'), DB::raw('SUM(amount) as total_amount'))
             ->groupBy('type')
@@ -444,6 +462,7 @@ class CommunityReport extends Command
 
         $userModelType = User::class;
 
+        /** @var object{unique_users: int, avg_msgs: int, median_msgs: int}|null $msgStats */
         $msgStats = DB::selectOne('
             SELECT
                 COUNT(*) as unique_users,
@@ -471,6 +490,7 @@ class CommunityReport extends Command
             ],
         );
 
+        /** @var Collection<int, object{channel_id: string, cnt: int}> $topChannels */
         $topChannels = DB::table('messages')
             ->select('channel_id', DB::raw('COUNT(*) as cnt'))
             ->whereNotNull('channel_id')
@@ -550,6 +570,7 @@ class CommunityReport extends Command
             );
         }
 
+        /** @var Collection<int, object{title: string, attendees_count: int, event_type: string, event_at: string|null}> $topEvents */
         $topEvents = DB::table('events')
             ->select('title', 'attendees_count', 'event_type', 'event_at')
             ->orderByDesc('attendees_count')
@@ -616,6 +637,7 @@ class CommunityReport extends Command
             ],
         );
 
+        /** @var Collection<int, object{name: string, cnt: int}> $topTypes */
         $topTypes = DB::table('meetings')
             ->join('meeting_types', 'meeting_types.id', '=', 'meetings.meeting_type_id')
             ->select('meeting_types.name', DB::raw('COUNT(*) as cnt'))
@@ -673,6 +695,7 @@ class CommunityReport extends Command
             ],
         );
 
+        /** @var Collection<int, object{type: string, cnt: int}> $byType */
         $byType = DB::table('feedbacks')
             ->select('type', DB::raw('COUNT(*) as cnt'))
             ->groupBy('type')
@@ -718,8 +741,9 @@ class CommunityReport extends Command
 
         $totalRankings = DB::table('seasons_rankings')->count();
 
+        /** @var object{id: int, name: string, started_at: string|null, ended_at: string|null}|null $currentSeason */
         $currentSeason = DB::table('seasons')
-            ->where(function (Builder $q): void {
+            ->where(static function (Builder $q): void {
                 $q->whereNull('ended_at')
                     ->orWhere('ended_at', '>', now());
             })
@@ -741,6 +765,7 @@ class CommunityReport extends Command
         $top10 = collect();
 
         if ($currentSeason) {
+            /** @var Collection<int, object{username: string, ranking_position: int, level: int, experience: int, messages_count: int}> $top10 */
             $top10 = DB::table('seasons_rankings')
                 ->join('characters', 'characters.id', '=', 'seasons_rankings.character_id')
                 ->join('users', 'users.id', '=', 'characters.user_id')
@@ -761,9 +786,9 @@ class CommunityReport extends Command
                 table(
                     headers: ['#', 'Username', 'Level', 'XP', 'Messages'],
                     rows: $top10->map(fn ($r) => [
-                        $r->ranking_position,
+                        (string) $r->ranking_position,
                         $r->username,
-                        $r->level,
+                        (string) $r->level,
                         number_format($r->experience),
                         number_format($r->messages_count),
                     ])->all(),
@@ -773,6 +798,7 @@ class CommunityReport extends Command
 
         // Fallback: live top 10 from characters table
         if ($top10->isEmpty()) {
+            /** @var Collection<int, object{username: string, experience: int, reputation: int}> $liveTop */
             $liveTop = DB::table('characters')
                 ->join('users', 'users.id', '=', 'characters.user_id')
                 ->select('users.username', 'characters.experience', 'characters.reputation')
@@ -813,7 +839,7 @@ class CommunityReport extends Command
         }
 
         /** @var array<string, mixed> $membersData */
-        $membersData = (array) json_decode((string) Storage::disk('local')->get('discord/members.json'), true);
+        $membersData = (array) json_decode((string) Storage::disk('local')->get('discord/members.json'), associative: true);
         /** @var list<array<string, mixed>> $members */
         $members = is_array($membersData['members'] ?? null) ? $membersData['members'] : [];
         $scrapedDiscordIds = collect($members)
@@ -856,15 +882,17 @@ class CommunityReport extends Command
 
         if (Storage::disk('local')->exists('discord/github_connections.json')) {
             /** @var array<string, mixed> $githubData */
-            $githubData = (array) json_decode((string) Storage::disk('local')->get('discord/github_connections.json'), true);
+            $githubData = (array) json_decode((string) Storage::disk('local')->get('discord/github_connections.json'), associative: true);
             /** @var list<array<string, mixed>> $connections */
             $connections = is_array($githubData['connections'] ?? null) ? $githubData['connections'] : [];
             $githubConnections = collect($connections);
 
             info('GitHub connections from scrape: '.$githubConnections->count());
 
+            /** @var Collection<string, array{discord_id: string, discord_username: string, github_username: string}> $scrapedGithub */
             $scrapedGithub = $githubConnections->keyBy('discord_id');
 
+            /** @var Collection<string, object{discord_id: string, github_url: string}> $platformGithub */
             $platformGithub = DB::table('providers')
                 ->join('user_information', 'providers.model_id', '=', 'user_information.user_id')
                 ->where('providers.provider', 'discord')
@@ -878,6 +906,7 @@ class CommunityReport extends Command
             $matches = 0;
             $conflicts = 0;
             $newFromScrape = 0;
+            /** @var list<array{string, string, string}> $conflictDetails */
             $conflictDetails = [];
 
             foreach ($scrapedGithub as $discordId => $conn) {
@@ -950,7 +979,7 @@ class CommunityReport extends Command
 
         Storage::disk('local')->put(
             'discord/community_report.json',
-            json_encode($this->report, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+            json_encode($this->report, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
         );
 
         info('Full report saved to storage/app/private/discord/community_report.json');

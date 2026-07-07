@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace He4rt\BotDiscord\SlashCommands;
 
+use Discord\Parts\Channel\Channel;
 use Discord\Parts\Interactions\Command\Option;
 use Discord\Parts\Interactions\Interaction;
 use Exception;
+use React\Promise\PromiseInterface;
 
 use function React\Async\await;
 
@@ -28,7 +30,7 @@ class EditVoiceChannelLimitCommand extends AbstractSlashCommand
         if (!$channelId) {
             $this->message()
                 ->content('❌ Você precisa estar em uma sala de voz para usar este comando!')
-                ->reply($interaction, true);
+                ->reply($interaction, ephemeral: true);
 
             return;
         }
@@ -39,7 +41,7 @@ class EditVoiceChannelLimitCommand extends AbstractSlashCommand
         if (!$channelDto) {
             $this->message()
                 ->content('❌ Este comando só funciona em salas criadas com /sala!')
-                ->reply($interaction, true);
+                ->reply($interaction, ephemeral: true);
 
             return;
         }
@@ -47,17 +49,18 @@ class EditVoiceChannelLimitCommand extends AbstractSlashCommand
         if ($channelDto->ownerId !== $userId) {
             $this->message()
                 ->content('❌ Apenas o dono da sala pode alterar o limite de membros!')
-                ->reply($interaction, true);
+                ->reply($interaction, ephemeral: true);
 
             return;
         }
 
+        /** @var Channel|null $voiceChannel */
         $voiceChannel = $interaction->guild->channels->get('id', $channelId);
 
         if (!$voiceChannel) {
             $this->message()
                 ->content('❌ Canal de voz não encontrado!')
-                ->reply($interaction, true);
+                ->reply($interaction, ephemeral: true);
 
             return;
         }
@@ -65,16 +68,18 @@ class EditVoiceChannelLimitCommand extends AbstractSlashCommand
         $newLimit = $this->value('limite');
 
         try {
-            $voiceChannel->user_limit = $newLimit;
-            await($interaction->guild->channels->save($voiceChannel));
+            $voiceChannel->user_limit = (int) $newLimit;
+            /** @var PromiseInterface<Channel> $promise */
+            $promise = $interaction->guild->channels->save($voiceChannel);
+            await($promise);
 
             $this->message()
                 ->content(sprintf('✅ Limite da sala atualizado para **%d** membros!', $newLimit))
-                ->reply($interaction, true);
+                ->reply($interaction, ephemeral: true);
         } catch (Exception) {
             $this->message()
                 ->content('❌ Erro ao atualizar o limite da sala. Tente novamente.')
-                ->reply($interaction, true);
+                ->reply($interaction, ephemeral: true);
         }
     }
 

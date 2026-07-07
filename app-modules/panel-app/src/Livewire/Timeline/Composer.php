@@ -12,9 +12,13 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use He4rt\Activity\Timeline\Actions\CreatePost;
 use He4rt\Activity\Timeline\DTOs\CreatePostDTO;
+use He4rt\Identity\User\Models\User;
 use Illuminate\View\View;
 use Livewire\Component;
 
+/**
+ * @property-read Schema $form
+ */
 final class Composer extends Component implements HasSchemas
 {
     use InteractsWithSchemas;
@@ -36,7 +40,7 @@ final class Composer extends Component implements HasSchemas
                     ->placeholder('O que está acontecendo?')
                     ->toolbarButtons([])
                     ->required()
-                    ->maxLength(5000),
+                    ->maxLength(5_000),
                 FileUpload::make('images')
                     ->hiddenLabel()
                     ->image()
@@ -56,13 +60,18 @@ final class Composer extends Component implements HasSchemas
 
     public function post(): void
     {
+        /** @var array{content: string, images?: list<string>} $state */
         $state = $this->form->getState();
 
-        $tenant = Filament::getTenant();
+        /** @var string $tenantId */
+        $tenantId = Filament::getTenant()->getKey();
+
+        /** @var User $user */
+        $user = auth()->user();
 
         resolve(CreatePost::class)->handle(new CreatePostDTO(
-            userId: auth()->id(),
-            tenantId: $tenant->id,
+            userId: $user->id,
+            tenantId: $tenantId,
             content: $state['content'],
             images: $state['images'] ?? [],
         ));

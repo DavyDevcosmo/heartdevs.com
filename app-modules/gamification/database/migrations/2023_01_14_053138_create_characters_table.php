@@ -14,13 +14,13 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasTable('characters')) {
-            Schema::create('characters', function (Blueprint $table): void {
+            Schema::create('characters', static function (Blueprint $table): void {
                 $table->uuid('id')->primary();
                 $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
                 $table->integer('experience')->default(0);
                 $table->integer('reputation')->default(0);
-                $table->timestamp('daily_bonus_claimed_at')->nullable();
-                $table->timestamps();
+                $table->timestampTz('daily_bonus_claimed_at')->nullable();
+                $table->timestampsTz();
             });
         }
     }

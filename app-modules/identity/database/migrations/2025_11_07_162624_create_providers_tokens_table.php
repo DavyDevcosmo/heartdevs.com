@@ -14,13 +14,13 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasTable('provider_tokens')) {
-            Schema::create('provider_tokens', function (Blueprint $table): void {
+            Schema::create('provider_tokens', static function (Blueprint $table): void {
                 $table->uuid('id')->primary();
                 $table->foreignUuid('provider_id')->constrained('providers')->cascadeOnDelete();
                 $table->string('access_token');
                 $table->string('refresh_token');
                 $table->integer('expires_in')->nullable();
-                $table->timestamps();
+                $table->timestampsTz();
             });
         }
     }

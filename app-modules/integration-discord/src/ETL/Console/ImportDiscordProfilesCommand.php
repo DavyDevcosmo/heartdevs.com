@@ -13,6 +13,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use RuntimeException;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use Symfony\Component\Console\Terminal;
@@ -98,7 +99,10 @@ class ImportDiscordProfilesCommand extends Command
 
         foreach ($chunks as $chunkFile) {
             $chunkName = basename($chunkFile);
-            $profiles = json_decode(file_get_contents($chunkFile), true);
+            $chunkContents = file_get_contents($chunkFile);
+            throw_if($chunkContents === false, RuntimeException::class, 'Falha ao ler chunk: '.$chunkFile);
+
+            $profiles = json_decode($chunkContents, associative: true);
 
             if (!is_array($profiles) || $profiles === []) {
                 $chunkCurrent++;
@@ -141,7 +145,7 @@ class ImportDiscordProfilesCommand extends Command
 
                         $profileCurrent++;
 
-                        $now = microtime(true);
+                        $now = microtime(as_float: true);
                         if ($now - $lastStatsRender > 0.1) {
                             $this->renderBox($profileSection, $profileTitle, $profileCurrent, $totalProfiles);
                             $this->renderStats($statsSection, $stats);
@@ -153,7 +157,7 @@ class ImportDiscordProfilesCommand extends Command
 
             $this->renderBox($profileSection, $profileTitle, $profileCurrent, $totalProfiles);
             $this->renderStats($statsSection, $stats);
-            $lastStatsRender = microtime(true);
+            $lastStatsRender = microtime(as_float: true);
 
             $chunkCurrent++;
             $this->renderBox($chunkSection, 'Chunks', $chunkCurrent, $totalChunks);
@@ -214,7 +218,9 @@ class ImportDiscordProfilesCommand extends Command
 
         $missing = [];
         foreach ($required as $table => $cols) {
-            $existing = array_flip(Schema::getColumnListing($table));
+            /** @var array<int, string> $columnList */
+            $columnList = Schema::getColumnListing($table);
+            $existing = array_flip($columnList);
             foreach ($cols as $col) {
                 if (!isset($existing[$col])) {
                     $missing[] = $table.'.'.$col;

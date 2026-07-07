@@ -240,8 +240,8 @@ final readonly class DiscordModerationAdapter implements ModerationPlatformContr
         ?string $duration,
     ): Response {
         $deleteSeconds = match ($duration) {
-            '24h' => 86400,
-            '7d' => 604800,
+            '24h' => 86_400,
+            '7d' => 604_800,
             default => 0,
         };
 
@@ -262,7 +262,7 @@ final readonly class DiscordModerationAdapter implements ModerationPlatformContr
             ActionType::Suspend,
             ActionType::Kick,
             ActionType::Ban,
-        ], true);
+        ], strict: true);
     }
 
     private function resolveDiscordId(User $target): ?string
@@ -319,7 +319,7 @@ final readonly class DiscordModerationAdapter implements ModerationPlatformContr
             'embeds' => [[
                 'title' => __('moderation::notifications.discord_dm.title'),
                 'description' => $this->buildDmDescription($action, $originalText),
-                'color' => 0xFF4444,
+                'color' => 0xFF_44_44,
                 'fields' => [
                     [
                         'name' => __('moderation::notifications.discord_dm.field_type'),
@@ -380,7 +380,7 @@ final readonly class DiscordModerationAdapter implements ModerationPlatformContr
 
     private function isPunitiveAction(ActionType $type): bool
     {
-        return in_array($type, [ActionType::Ban, ActionType::Kick, ActionType::Mute, ActionType::Suspend], true);
+        return in_array($type, [ActionType::Ban, ActionType::Kick, ActionType::Mute, ActionType::Suspend], strict: true);
     }
 
     private function actorIsAdmin(string $guildId, ModerationAction $action): bool

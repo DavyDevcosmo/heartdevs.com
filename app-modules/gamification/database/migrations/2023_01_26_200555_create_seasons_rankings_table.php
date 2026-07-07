@@ -10,7 +10,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('seasons_rankings', function (Blueprint $table): void {
+        Schema::create('seasons_rankings', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('season_id');
             $table->foreignUuid('character_id')->constrained('characters')->cascadeOnDelete();
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('messages_count');
             $table->integer('badges_count');
             $table->integer('meetings_count');
-            $table->timestamps();
+            $table->timestampsTz();
         });
     }
 

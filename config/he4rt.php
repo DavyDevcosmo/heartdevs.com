@@ -6,13 +6,15 @@ use Illuminate\Support\Facades\Date;
 
 return [
     'admins' => env('HE4RT_ADMINS_USERNAMES', 'danielhe4rt,kaster'),
+    'main_tenant' => env('HE4RT_MAIN_TENANT', 'he4rt'),
     'season' => [
         'id' => (int) env('HE4RT_SEASON_ID', 2),
         'minimum_level_for_retro' => env('HE4RT_SEASON_MIN_LEVEL', 3),
     ],
     'server_key' => env('HE4RT_BOT_SECRET', 'he4rt'),
     'discord' => [
-        'token' => env('HE4RT_DISCORD_BOT_KEY'),
+        'token' => env('DISCORD_TOKEN'),
+        'voice_xp_interval' => (int) env('HE4RT_DISCORD_VOICE_XP_INTERVAL', 1_200),
         'levelup_channel_id' => env('HE4RT_DISCORD_LEVELUP_CHANNEL', '552332704381927424'),
         'guild_id' => env('HE4RT_DISCORD_GUILD', '452926217558163456'),
         'moderation' => [

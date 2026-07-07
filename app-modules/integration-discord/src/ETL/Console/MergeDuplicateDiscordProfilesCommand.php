@@ -12,6 +12,7 @@ use He4rt\IntegrationDiscord\ETL\Actions\MergeDuplicateDiscordUserAction;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -80,7 +81,7 @@ class MergeDuplicateDiscordProfilesCommand extends Command
                 continue;
             }
 
-            $pair = json_decode($raw, true);
+            $pair = json_decode($raw, associative: true);
             if (!is_array($pair)) {
                 $stats['errors']++;
                 Log::error('merge-duplicate-profiles invalid JSONL line', ['line' => $line, 'raw' => $raw]);
@@ -200,7 +201,7 @@ class MergeDuplicateDiscordProfilesCommand extends Command
             ->where('provider', IdentityProvider::Discord)
             ->where('model_type', $userMorph)
             ->where('tenant_id', $tenant->getKey())
-            ->whereExists(fn ($q) => $q
+            ->whereExists(fn (Builder $q) => $q
                 ->select(DB::raw(1))
                 ->from('users')
                 ->whereRaw('users.id::text = external_identities.model_id')
