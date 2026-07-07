@@ -20,7 +20,7 @@ use Throwable;
 
 #[Backoff([1, 5, 10])]
 #[Tries(4)]
-#[UniqueFor(1800)]
+#[UniqueFor(1_800)]
 final class ProcessEventClosureJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable;

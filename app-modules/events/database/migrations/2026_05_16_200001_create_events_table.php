@@ -12,7 +12,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('events', function (Blueprint $table): void {
+        Schema::create('events', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->nullable()->constrained('tenants')->nullOnDelete();
             $table->string('slug', 120);

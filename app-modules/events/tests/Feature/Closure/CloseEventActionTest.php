@@ -223,7 +223,7 @@ test('when action processes more than one chunk of eligible enrollments, then al
     $event = createEventForClosure();
 
     Enrollment::factory()
-        ->count(1001)
+        ->count(1_001)
         ->create([
             'event_id' => $event->id,
             'status' => EnrollmentStatus::Confirmed,
@@ -243,5 +243,5 @@ test('when action processes more than one chunk of eligible enrollments, then al
         ->count();
 
     expect($remainingEligible)->toBe(0)
-        ->and($noShowTransitions)->toBe(1001);
+        ->and($noShowTransitions)->toBe(1_001);
 });

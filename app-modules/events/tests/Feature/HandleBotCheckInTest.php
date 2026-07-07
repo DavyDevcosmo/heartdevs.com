@@ -16,6 +16,7 @@ use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Event as EventFacade;
 
@@ -27,6 +28,9 @@ afterEach(function (): void {
     Date::setTestNow();
 });
 
+/**
+ * @return array<string, Tenant|Collection<int, Tenant>|User|Collection<int, User>|Event|Collection<int, Event>|Enrollment|Collection<int, Enrollment>|Collection<int, CheckInCode>|CheckInCode|string>
+ */
 function createBotCheckInScenario(array $codeOverrides = []): array
 {
     $tenant = Tenant::factory()->create();

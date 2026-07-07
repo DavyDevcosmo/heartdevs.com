@@ -80,7 +80,7 @@ final class GenerateCheckInCodeAction extends Action
                         ->afterStateUpdated(function (Set $set, ?string $state): void {
                             $set('code_preview', $this->generateNumericCode((int) ($state ?: 6)));
                         })
-                        ->selectablePlaceholder(false)
+                        ->selectablePlaceholder(condition: false)
                         ->required(),
 
                     TextInput::make('code_preview')

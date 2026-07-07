@@ -44,7 +44,7 @@ final class EventForm
                         table: Event::class,
                         column: 'slug',
                         ignoreRecord: true,
-                        modifyRuleUsing: function (Unique $rule, Get $get): Unique {
+                        modifyRuleUsing: static function (Unique $rule, Get $get): Unique {
                             $tenantId = $get('tenant_id');
 
                             return filled($tenantId)
@@ -112,7 +112,7 @@ final class EventForm
 
                         Toggle::make('has_waitlist')
                             ->label(__('panel-admin::events.form.waitlist_enabled'))
-                            ->default(false),
+                            ->default(state: false),
 
                         Select::make('attendance_requirement')
                             ->label(__('panel-admin::events.form.attendance_requirement'))
@@ -179,7 +179,7 @@ final class EventForm
                                     ->maxLength(255),
                                 Toggle::make('required')
                                     ->label('Required')
-                                    ->default(false),
+                                    ->default(state: false),
                                 TagsInput::make('options')
                                     ->label('Options')
                                     ->placeholder('Type an option and press Enter')

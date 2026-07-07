@@ -20,7 +20,7 @@ final class RevokeCheckInCodeAction extends Action
             ->color('danger')
             ->visible(fn (CheckInCode $record): bool => $record->revoked_at === null)
             ->requiresConfirmation()
-            ->action(function (CheckInCode $record): void {
+            ->action(static function (CheckInCode $record): void {
                 $record->update(['revoked_at' => now()]);
 
                 Notification::make()

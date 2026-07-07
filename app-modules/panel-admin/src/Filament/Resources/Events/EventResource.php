@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace He4rt\PanelAdmin\Filament\Resources\Events;
 
 use BackedEnum;
+use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -67,6 +68,9 @@ final class EventResource extends Resource
         ];
     }
 
+    /**
+     * @return array<string, PageRegistration>
+     */
     public static function getPages(): array
     {
         return [

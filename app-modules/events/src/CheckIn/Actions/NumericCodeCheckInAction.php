@@ -17,7 +17,7 @@ final readonly class NumericCodeCheckInAction
 {
     public function handle(NumericCodeCheckInDTO $dto): CheckIn
     {
-        return DB::transaction(function () use ($dto): CheckIn {
+        return DB::transaction(static function () use ($dto): CheckIn {
             $codeRecord = CheckInCode::query()
                 ->where('code', $dto->code)
                 ->where('event_id', $dto->enrollment->event_id)

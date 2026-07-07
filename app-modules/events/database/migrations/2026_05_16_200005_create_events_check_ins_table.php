@@ -11,7 +11,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('events_check_ins', function (Blueprint $table): void {
+        Schema::create('events_check_ins', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('enrollment_id')->constrained('events_enrollments')->cascadeOnDelete();
             $table->date('event_date');

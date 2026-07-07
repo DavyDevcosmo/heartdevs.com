@@ -67,14 +67,14 @@ test('when concurrent enrollment hits unique index, then already enrolled except
 
     $raced = false;
 
-    Enrollment::creating(function (Enrollment $enrollment) use (&$raced): void {
+    Enrollment::creating(static function (Enrollment $enrollment) use (&$raced): void {
         if ($raced) {
             return;
         }
 
         $raced = true;
 
-        Enrollment::withoutEvents(function () use ($enrollment): void {
+        Enrollment::withoutEvents(static function () use ($enrollment): void {
             Enrollment::factory()->create([
                 'event_id' => $enrollment->event_id,
                 'user_id' => $enrollment->user_id,
@@ -195,7 +195,7 @@ test('when event is at capacity without waitlist, then enrollment is rejected wi
 
     try {
         resolve(EnrollUserAction::class)->handle(EnrollUserDTO::fromModels($event, $user));
-        expect(false)->toBeTrue('Expected EnrollmentException was not thrown');
+        expect(value: false)->toBeTrue('Expected EnrollmentException was not thrown');
     } catch (EnrollmentException $enrollmentException) {
         expect($enrollmentException->getCode())->toBe(Response::HTTP_UNPROCESSABLE_ENTITY);
     }

@@ -10,7 +10,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('events_check_in_codes', function (Blueprint $table): void {
+        Schema::create('events_check_in_codes', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('event_id')->constrained('events')->cascadeOnDelete();
             $table->date('event_date');

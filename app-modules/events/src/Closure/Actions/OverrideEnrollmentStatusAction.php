@@ -15,6 +15,7 @@ use Throwable;
 
 final readonly class OverrideEnrollmentStatusAction
 {
+    /** @var list<array{from: EnrollmentStatus, to: EnrollmentStatus}> */
     private const array ALLOWED_OVERRIDES = [
         ['from' => EnrollmentStatus::NoShow, 'to' => EnrollmentStatus::Attended],
         ['from' => EnrollmentStatus::Confirmed, 'to' => EnrollmentStatus::CheckedIn],
@@ -23,11 +24,15 @@ final readonly class OverrideEnrollmentStatusAction
     /** @return list<EnrollmentStatus> */
     public static function allowedTargetsFor(EnrollmentStatus $from): array
     {
-        return collect(self::ALLOWED_OVERRIDES)
-            ->whereStrict('from', $from)
-            ->pluck('to')
-            ->values()
-            ->all();
+        $targets = [];
+
+        foreach (self::ALLOWED_OVERRIDES as $pair) {
+            if ($pair['from'] === $from) {
+                $targets[] = $pair['to'];
+            }
+        }
+
+        return $targets;
     }
 
     /**
@@ -75,6 +80,6 @@ final readonly class OverrideEnrollmentStatusAction
 
     private function isAllowed(EnrollmentStatus $from, EnrollmentStatus $to): bool
     {
-        return array_any(self::ALLOWED_OVERRIDES, fn ($pair) => $pair['from'] === $from && $pair['to'] === $to);
+        return array_any(self::ALLOWED_OVERRIDES, fn (array $pair) => $pair['from'] === $from && $pair['to'] === $to);
     }
 }

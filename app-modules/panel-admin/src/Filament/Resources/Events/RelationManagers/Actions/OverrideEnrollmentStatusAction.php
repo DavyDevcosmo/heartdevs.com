@@ -13,6 +13,7 @@ use He4rt\Events\Closure\Actions\OverrideEnrollmentStatusAction as OverrideEnrol
 use He4rt\Events\Closure\DTOs\OverrideEnrollmentStatusDTO;
 use He4rt\Events\Enrollment\Enums\EnrollmentStatus;
 use He4rt\Events\Enrollment\Models\Enrollment;
+use Illuminate\Support\Arr;
 
 final class OverrideEnrollmentStatusAction extends Action
 {
@@ -37,14 +38,14 @@ final class OverrideEnrollmentStatusAction extends Action
                     ->minLength(3)
                     ->rows(3),
             ])
-            ->action(function (Enrollment $record, array $data): void {
+            ->action(static function (Enrollment $record, array $data): void {
                 resolve(OverrideEnrollmentStatusDomainAction::class)->handle(
                     new OverrideEnrollmentStatusDTO(
                         enrollment: $record,
                         fromStatus: $record->status,
-                        toStatus: EnrollmentStatus::from($data['to_status']),
+                        toStatus: EnrollmentStatus::from(Arr::string($data, 'to_status')),
                         actorId: (string) auth()->id(),
-                        reason: $data['reason'],
+                        reason: Arr::string($data, 'reason'),
                     ),
                 );
 

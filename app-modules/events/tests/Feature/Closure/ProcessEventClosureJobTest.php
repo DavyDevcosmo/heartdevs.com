@@ -98,5 +98,5 @@ test('when job is configured, then it has correct backoff, tries, and unique ttl
 
     expect($tries)->toBe(4)
         ->and($backoff)->toBe([1, 5, 10])
-        ->and($uniqueFor)->toBe(1800);
+        ->and($uniqueFor)->toBe(1_800);
 });

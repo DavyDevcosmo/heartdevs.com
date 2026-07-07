@@ -26,7 +26,7 @@ final class ApproveApplicationAction extends Action
             ->requiresConfirmation()
             ->modalHeading(__('events::pages.admin_approve_application_modal_heading'))
             ->modalDescription(fn (Enrollment $record): string => __('events::pages.admin_approve_application_modal_description', ['name' => $record->user?->name]))
-            ->action(function (Enrollment $record): void {
+            ->action(static function (Enrollment $record): void {
                 try {
                     resolve(ApproveApplicationDomainAction::class)->handle(
                         new ApproveApplicationDTO(

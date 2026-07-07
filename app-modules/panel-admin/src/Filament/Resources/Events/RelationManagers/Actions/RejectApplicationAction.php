@@ -13,6 +13,7 @@ use He4rt\Events\Enrollment\DTOs\RejectApplicationDTO;
 use He4rt\Events\Enrollment\Enums\EnrollmentStatus;
 use He4rt\Events\Enrollment\Exceptions\EnrollmentException;
 use He4rt\Events\Enrollment\Models\Enrollment;
+use Illuminate\Support\Arr;
 
 final class RejectApplicationAction extends Action
 {
@@ -32,13 +33,13 @@ final class RejectApplicationAction extends Action
                     ->maxLength(500)
                     ->rows(3),
             ])
-            ->action(function (Enrollment $record, array $data): void {
+            ->action(static function (Enrollment $record, array $data): void {
                 try {
                     resolve(RejectApplicationDomainAction::class)->handle(
                         new RejectApplicationDTO(
                             enrollmentId: $record->id,
                             actorId: (string) auth()->id(),
-                            reason: $data['reason'],
+                            reason: Arr::string($data, 'reason'),
                         ),
                     );
 

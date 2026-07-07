@@ -195,7 +195,7 @@ test('when admin overrides a stale confirmed enrollment that is already no_show,
             actorId: User::factory()->create()->id,
             reason: 'Late arrival',
         ),
-    ))->toThrow(function (OverrideEnrollmentStatusException $exception): void {
+    ))->toThrow(static function (OverrideEnrollmentStatusException $exception): void {
         expect($exception->getCode())->toBe(409);
     });
 

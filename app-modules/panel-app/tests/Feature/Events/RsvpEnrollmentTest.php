@@ -108,8 +108,8 @@ test('when event is at capacity without waitlist, then event full message is sho
     ]);
 
     livewire(EventDetail::class, ['eventId' => $this->event->id])
-        ->assertSet('canConfirmPresence', false)
-        ->assertSet('isEventFull', true)
+        ->assertSet('canConfirmPresence', value: false)
+        ->assertSet('isEventFull', value: true)
         ->assertSee(__('events::pages.event_full'))
         ->assertDontSee(__('events::pages.confirm_presence'));
 });
@@ -151,7 +151,7 @@ test('when event is at capacity with waitlist, then confirm presence button is s
     ]);
 
     livewire(EventDetail::class, ['eventId' => $this->event->id])
-        ->assertSet('canConfirmPresence', true)
+        ->assertSet('canConfirmPresence', value: true)
         ->assertSee(__('events::pages.confirm_presence'));
 });
 
@@ -171,7 +171,7 @@ test('when enrolled event is completed, then event detail page is accessible', f
         ->assertSee('He4rt Meetup RSVP');
 
     livewire(EventDetail::class, ['eventId' => $this->event->id])
-        ->assertSet('canConfirmPresence', false);
+        ->assertSet('canConfirmPresence', value: false);
 });
 
 test('when enrolled event is draft, then my events list does not link to detail', function (): void {
@@ -188,7 +188,7 @@ test('when enrolled event is draft, then my events list does not link to detail'
     livewire(MyEventsList::class)
         ->assertSet('enrollments', fn ($enrollments): bool => $enrollments->count() === 1)
         ->assertSee('He4rt Meetup RSVP')
-        ->assertDontSee(EventPage::getUrl(['record' => $this->event->id]), false);
+        ->assertDontSee(EventPage::getUrl(['record' => $this->event->id]), escape: false);
 });
 
 test('past event does not show confirm presence button', function (): void {
@@ -200,6 +200,6 @@ test('past event does not show confirm presence button', function (): void {
         ->create(['title' => 'Past Meetup']);
 
     livewire(EventDetail::class, ['eventId' => $pastEvent->id])
-        ->assertSet('canConfirmPresence', false)
+        ->assertSet('canConfirmPresence', value: false)
         ->assertDontSee(__('events::pages.confirm_presence'));
 });

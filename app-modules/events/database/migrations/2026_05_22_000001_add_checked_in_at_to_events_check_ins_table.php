@@ -10,14 +10,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('events_check_ins', function (Blueprint $table): void {
+        Schema::table('events_check_ins', static function (Blueprint $table): void {
             $table->timestampTz('checked_in_at')->nullable()->after('payload');
         });
     }
 
     public function down(): void
     {
-        Schema::table('events_check_ins', function (Blueprint $table): void {
+        Schema::table('events_check_ins', static function (Blueprint $table): void {
             $table->dropColumn('checked_in_at');
         });
     }

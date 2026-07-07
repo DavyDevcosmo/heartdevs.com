@@ -9,12 +9,14 @@ use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Components\ViewComponent;
 use Filament\Support\Icons\Heroicon;
 use He4rt\Events\CheckIn\Actions\QrCheckInAction;
 use He4rt\Events\CheckIn\DTOs\QrCheckInDTO;
 use He4rt\Events\CheckIn\Exceptions\CheckInException;
 use He4rt\Events\Event\Models\Event;
 use He4rt\PanelAdmin\Filament\Resources\Events\EventResource;
+use Illuminate\Support\Arr;
 use Livewire\Attributes\On;
 use Throwable;
 
@@ -28,6 +30,9 @@ final class EditEvent extends EditRecord
         $this->mountAction('scanQr');
     }
 
+    /**
+     * @return ViewComponent[]
+     */
     protected function getHeaderActions(): array
     {
         return [
@@ -50,7 +55,7 @@ final class EditEvent extends EditRecord
                     try {
                         $checkIn = resolve(QrCheckInAction::class)->handle(
                             new QrCheckInDTO(
-                                token: $data['token'],
+                                token: Arr::string($data, 'token'),
                                 event: $event,
                                 eventDate: now(),
                                 actorUserId: (string) auth()->id(),

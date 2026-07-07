@@ -165,7 +165,7 @@ final class EventsSeeder extends Seeder
                 'attendance_requirement' => AttendanceRequirement::MinimumDays,
                 'minimum_days' => 2,
                 'cancellation_deadline_hours' => 48,
-                'xp' => [200, 300, 1000],
+                'xp' => [200, 300, 1_000],
                 'application_schema' => [
                     ['type' => 'text',     'label' => 'Por que quer participar da He4rt Conf?', 'required' => true],
                     ['type' => 'select',   'label' => 'Nível de experiência em desenvolvimento', 'required' => true, 'options' => ['Iniciante', 'Intermediário', 'Avançado']],
@@ -243,7 +243,7 @@ final class EventsSeeder extends Seeder
                 'attendance_requirement' => AttendanceRequirement::MinimumDays,
                 'minimum_days' => 4,
                 'cancellation_deadline_hours' => 72,
-                'xp' => [150, 250, 1500],
+                'xp' => [150, 250, 1_500],
                 'enrollments' => [],
             ],
 
@@ -275,6 +275,9 @@ final class EventsSeeder extends Seeder
         ];
     }
 
+    /**
+     * @param  array<string, mixed>  $spec
+     */
     private function seedPolicy(Event $event, array $spec): void
     {
         EnrollmentPolicy::factory()->create([
@@ -295,6 +298,7 @@ final class EventsSeeder extends Seeder
 
     /**
      * @param  Collection<int, User>  $participants
+     * @param  array<string, mixed>  $spec
      */
     private function seedEnrollments(Event $event, array $spec, Collection $participants): void
     {
@@ -329,6 +333,8 @@ final class EventsSeeder extends Seeder
      * Creates a representative set of codes for numeric-code events so every
      * branch of the check-in flow (valid / expired / revoked / exhausted) is
      * reachable from the admin panel and the participant component.
+     *
+     * @param  array<string, mixed>  $spec
      */
     private function seedCheckInCodes(Event $event, array $spec): void
     {

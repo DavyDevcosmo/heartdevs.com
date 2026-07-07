@@ -12,7 +12,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('events_enrollment_transitions', function (Blueprint $table): void {
+        Schema::create('events_enrollment_transitions', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('enrollment_id')->constrained('events_enrollments')->cascadeOnDelete();
             $table->string('from_status', 20)->nullable()->comment(EnrollmentStatus::stringifyCases());

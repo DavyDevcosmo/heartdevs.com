@@ -63,7 +63,7 @@ final readonly class HandleBotCheckIn
         $enrollments = Enrollment::query()
             ->where('user_id', $userId)
             ->whereIn('status', [EnrollmentStatus::Confirmed, EnrollmentStatus::CheckedIn])
-            ->whereHas('event', function (Builder $query) use ($event, $today): void {
+            ->whereHas('event', static function (Builder $query) use ($event, $today): void {
                 $query->where('tenant_id', $event->tenantId)
                     ->where('status', EventStatus::Published)
                     ->whereDate('starts_at', '<=', $today)

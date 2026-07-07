@@ -224,7 +224,7 @@ final readonly class EnrollUserAction
                 continue;
             }
 
-            if (($field['required'] ?? false) && (in_array($value, [null, '', false], true))) {
+            if (($field['required'] ?? false) && (in_array($value, [null, '', false], strict: true))) {
                 throw EnrollmentException::applicationDataInvalid();
             }
 

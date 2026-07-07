@@ -69,7 +69,7 @@ final class EventFactory extends Factory
         return $this->state(fn (): array => [
             'event_type' => EventType::Workshop,
             'status' => EventStatus::Published,
-        ])->afterCreating(function (Event $event): void {
+        ])->afterCreating(static function (Event $event): void {
             EnrollmentPolicy::factory()->create([
                 'event_id' => $event->id,
                 'enrollment_method' => EnrollmentMethod::RsvpCheckin,
@@ -89,7 +89,7 @@ final class EventFactory extends Factory
         return $this->state(fn (): array => [
             'event_type' => EventType::Meetup,
             'status' => EventStatus::Published,
-        ])->afterCreating(function (Event $event): void {
+        ])->afterCreating(static function (Event $event): void {
             EnrollmentPolicy::factory()->create([
                 'event_id' => $event->id,
                 'enrollment_method' => EnrollmentMethod::Rsvp,
@@ -109,7 +109,7 @@ final class EventFactory extends Factory
         return $this->state(fn (): array => [
             'event_type' => EventType::Conference,
             'status' => EventStatus::Published,
-        ])->afterCreating(function (Event $event): void {
+        ])->afterCreating(static function (Event $event): void {
             EnrollmentPolicy::factory()->create([
                 'event_id' => $event->id,
                 'enrollment_method' => EnrollmentMethod::Application,
@@ -121,7 +121,7 @@ final class EventFactory extends Factory
                 'cancellation_deadline_hours' => 48,
                 'xp_on_confirmed' => 200,
                 'xp_on_checked_in' => 300,
-                'xp_on_attended' => 1000,
+                'xp_on_attended' => 1_000,
             ]);
         });
     }

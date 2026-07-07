@@ -11,14 +11,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('events_enrollments', function (Blueprint $table): void {
+        Schema::create('events_enrollments', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('event_id')->constrained('events')->cascadeOnDelete();
             $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('status', 20)
                 ->comment(EnrollmentStatus::stringifyCases())
                 ->default(EnrollmentStatus::Pending);
-            $table->boolean('is_public')->default(true);
+            $table->boolean('is_public')->default(value: true);
             $table->unsignedInteger('waitlist_position')->nullable();
             $table->jsonb('application_data')->nullable();
             $table->string('rejection_reason', 500)->nullable();

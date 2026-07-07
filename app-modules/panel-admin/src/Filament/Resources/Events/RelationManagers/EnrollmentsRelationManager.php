@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\PanelAdmin\Filament\Resources\Events\RelationManagers;
 
+use Carbon\CarbonInterface;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -29,6 +30,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Date;
 
 final class EnrollmentsRelationManager extends RelationManager
@@ -43,7 +45,7 @@ final class EnrollmentsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitle(fn (Enrollment $record): string => $record->user?->name ?? $record->id)
+            ->recordTitle(fn (Enrollment $record): string => $record->user->name ?? $record->id)
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['checkIns', 'user']))
             ->columns([
                 TextColumn::make('user.name')
@@ -115,8 +117,8 @@ final class EnrollmentsRelationManager extends RelationManager
             ->icon(Heroicon::OutlinedDocumentText)
             ->color('gray')
             ->visible(fn (Enrollment $record): bool => $record->application_data !== null)
-            ->modalContent(function (Enrollment $record): View {
-                $schema = $record->event?->enrollmentPolicy?->application_schema ?? [];
+            ->modalContent(static function (Enrollment $record): View {
+                $schema = $record->event?->enrollmentPolicy->application_schema ?? [];
                 $data = $record->application_data ?? [];
 
                 $answers = collect($schema)
@@ -132,7 +134,7 @@ final class EnrollmentsRelationManager extends RelationManager
                     'record' => $record,
                 ]);
             })
-            ->modalSubmitAction(false);
+            ->modalSubmitAction(action: false);
     }
 
     private function checkInAction(): Action
@@ -144,7 +146,7 @@ final class EnrollmentsRelationManager extends RelationManager
             ->visible(fn (Enrollment $record): bool => $record->status->is(EnrollmentStatus::Confirmed, EnrollmentStatus::CheckedIn))
             ->schema($this->checkInSchema())
             ->action(function (Enrollment $record, array $data): void {
-                $this->checkIn($record, $data);
+                $this->checkIn($record, Date::parse(Arr::string($data, 'event_date')));
 
                 Notification::make()
                     ->success()
@@ -166,7 +168,7 @@ final class EnrollmentsRelationManager extends RelationManager
                         continue;
                     }
 
-                    $this->checkIn($record, $data);
+                    $this->checkIn($record, Date::parse(Arr::string($data, 'event_date')));
                 }
 
                 Notification::make()
@@ -195,16 +197,13 @@ final class EnrollmentsRelationManager extends RelationManager
         ];
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    private function checkIn(Enrollment $enrollment, array $data): CheckIn
+    private function checkIn(Enrollment $enrollment, CarbonInterface $eventDate): CheckIn
     {
         return resolve(ManualCheckInAction::class)->handle(
             new ManualCheckInDTO(
                 enrollment: $enrollment,
                 actorUserId: (string) auth()->id(),
-                eventDate: Date::parse($data['event_date']),
+                eventDate: $eventDate,
             ),
         );
     }

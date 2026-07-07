@@ -12,6 +12,9 @@ final class ListEvents extends ListRecords
 {
     protected static string $resource = EventResource::class;
 
+    /**
+     * @return CreateAction[]
+     */
     protected function getHeaderActions(): array
     {
         return [

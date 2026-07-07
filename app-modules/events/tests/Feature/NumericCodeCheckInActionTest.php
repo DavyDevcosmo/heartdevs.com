@@ -15,6 +15,7 @@ use He4rt\Events\Event\Enums\EventStatus;
 use He4rt\Events\Event\Models\Event;
 use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Event as EventFacade;
 
@@ -26,6 +27,9 @@ afterEach(function (): void {
     Date::setTestNow();
 });
 
+/**
+ * @return array<string, Enrollment|Collection<int, Enrollment>|Collection<int, CheckInCode>|CheckInCode|Event|Collection<int, Event>|User|Collection<int, User>>
+ */
 function createScenarioWithCode(array $codeOverrides = []): array
 {
     $tenant = Tenant::factory()->create();

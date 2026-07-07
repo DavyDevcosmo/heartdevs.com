@@ -46,8 +46,8 @@ test('event page renders apply button for application event', function (): void 
 
 test('event detail shows canApply true and canConfirmPresence false for application event', function (): void {
     livewire(EventDetail::class, ['eventId' => $this->event->id])
-        ->assertSet('canApply', true)
-        ->assertSet('canConfirmPresence', false);
+        ->assertSet('canApply', value: true)
+        ->assertSet('canConfirmPresence', value: false);
 });
 
 test('when user submits application, then enrollment is created as pending', function (): void {
@@ -74,7 +74,7 @@ test('after submitting application, event detail shows pending status with answe
         ->call('apply');
 
     livewire(EventDetail::class, ['eventId' => $this->event->id])
-        ->assertSet('canApply', false)
+        ->assertSet('canApply', value: false)
         ->assertSee(EnrollmentStatus::Pending->getLabel())
         ->assertSee(__('events::pages.application_pending_hint'))
         ->assertSee('I love Laravel!');
@@ -91,7 +91,7 @@ test('when application is rejected, then rejection reason is shown', function ()
     ]);
 
     livewire(EventDetail::class, ['eventId' => $this->event->id])
-        ->assertSet('canApply', false)
+        ->assertSet('canApply', value: false)
         ->assertSee(EnrollmentStatus::Rejected->getLabel())
         ->assertSee(__('events::pages.application_rejected_hint'))
         ->assertSee('Not enough experience.');
@@ -107,7 +107,7 @@ test('when user has already applied, then apply button is not shown', function (
     ]);
 
     livewire(EventDetail::class, ['eventId' => $this->event->id])
-        ->assertSet('canApply', false)
+        ->assertSet('canApply', value: false)
         ->assertDontSee(__('events::pages.apply_submit'));
 });
 

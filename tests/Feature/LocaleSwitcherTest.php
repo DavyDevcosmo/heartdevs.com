@@ -28,7 +28,7 @@ it('applies locale from session via middleware', function (): void {
     $middleware = new SetApplicationLocale;
     $request = Request::create('/');
 
-    $middleware->handle($request, function (): ResponseFactory|Response {
+    $middleware->handle($request, static function (): ResponseFactory|Response {
         expect(app()->getLocale())->toBe(ApplicationLocale::PT_BR)
             ->and(Date::getLocale())->toBe('pt_BR');
 

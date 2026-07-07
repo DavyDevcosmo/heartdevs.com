@@ -13,13 +13,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('events_enrollment_policies', function (Blueprint $table): void {
+        Schema::create('events_enrollment_policies', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('event_id')->unique()->constrained('events')->cascadeOnDelete();
             $table->string('enrollment_method', 20)->comment(EnrollmentMethod::stringifyCases());
             $table->string('check_in_method', 20)->comment(CheckInMethod::stringifyCases());
             $table->unsignedInteger('capacity')->nullable();
-            $table->boolean('has_waitlist')->default(false);
+            $table->boolean('has_waitlist')->default(value: false);
             $table->string('attendance_requirement', 20)
                 ->comment(AttendanceRequirement::stringifyCases())
                 ->default(AttendanceRequirement::AllDays);

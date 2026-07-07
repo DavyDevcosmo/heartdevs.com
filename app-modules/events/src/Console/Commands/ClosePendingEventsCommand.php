@@ -22,11 +22,11 @@ final class ClosePendingEventsCommand extends Command
 
         Event::query()
             ->where('ends_at', '<', now())
-            ->whereHas('enrollments', function (Builder $query): void {
+            ->whereHas('enrollments', static function (Builder $query): void {
                 $query->whereIn('status', [EnrollmentStatus::Confirmed, EnrollmentStatus::CheckedIn]);
             })
             ->select('id')
-            ->each(function (Event $event) use (&$count): void {
+            ->each(static function (Event $event) use (&$count): void {
                 dispatch(new ProcessEventClosureJob($event->id));
                 $count++;
             });

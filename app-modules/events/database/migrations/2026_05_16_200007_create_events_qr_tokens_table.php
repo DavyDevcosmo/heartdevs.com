@@ -10,7 +10,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('events_qr_tokens', function (Blueprint $table): void {
+        Schema::create('events_qr_tokens', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('enrollment_id')->unique()->constrained('events_enrollments')->cascadeOnDelete();
             $table->string('token', 64);
