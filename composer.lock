@@ -3799,7 +3799,7 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/squads",
-                "reference": "6d710964545ed1c8635e42b11780e181211075e7"
+                "reference": "9f403fc7ce21863d32cead1e6e8718adea29bdf8"
             },
             "type": "library",
             "extra": {
