@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Geo\Models;
 
+use App\Geo\Support\GeoSearch;
 use App\Geo\Support\GeoSushiStore;
 use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
 use Illuminate\Database\Eloquent\Builder;
@@ -55,7 +56,7 @@ final class GeoCountry extends Model
      */
     protected function scopeMatching(Builder $query, string $term): void
     {
-        $operator = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+        $operator = GeoSearch::likeOperator($query);
 
         $query->where(static function (Builder $query) use ($operator, $term): void {
             $query->where('name', $operator, sprintf('%%%s%%', $term))

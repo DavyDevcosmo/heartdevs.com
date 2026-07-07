@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Geo\Models;
 
+use App\Geo\Support\GeoSearch;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
@@ -43,7 +44,7 @@ final class GeoCity extends Model
      */
     protected function scopeMatching(Builder $query, string $term): void
     {
-        $operator = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+        $operator = GeoSearch::likeOperator($query);
 
         $query->where('name', $operator, sprintf('%%%s%%', $term));
     }

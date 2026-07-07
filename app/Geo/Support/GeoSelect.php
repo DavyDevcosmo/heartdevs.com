@@ -35,7 +35,10 @@ final class GeoSelect
 
         return $query
             ->limit(50)
-            ->pluck('name', 'iso2')
+            ->get(['iso2', 'name'])
+            ->mapWithKeys(static fn (GeoCountry $country): array => [
+                $country->iso2 => $country->name,
+            ])
             ->all();
     }
 
@@ -81,7 +84,10 @@ final class GeoSelect
         return GeoState::query()
             ->where('country_code', $countryCode)
             ->orderBy('name')
-            ->pluck('name', 'name')
+            ->get(['name'])
+            ->mapWithKeys(static fn (GeoState $state): array => [
+                $state->name => $state->name,
+            ])
             ->all();
     }
 
