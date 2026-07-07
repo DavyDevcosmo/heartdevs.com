@@ -15,9 +15,7 @@ final class CreateSquad
 {
     public function handle(User $actor, Tenant $tenant, string $name, ?string $objective = null): Squad
     {
-        if (!$actor->isAdmin()) {
-            throw new AuthorizationException();
-        }
+        throw_unless($actor->isAdmin(), AuthorizationException::class);
 
         /** @var Squad $squad */
         $squad = Squad::query()->create([
