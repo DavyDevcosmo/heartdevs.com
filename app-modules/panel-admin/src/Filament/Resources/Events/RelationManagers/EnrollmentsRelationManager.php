@@ -22,7 +22,10 @@ use He4rt\Events\CheckIn\Models\CheckIn;
 use He4rt\Events\Enrollment\Enums\EnrollmentStatus;
 use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Event\Models\Event;
+use He4rt\PanelAdmin\Filament\Resources\Events\RelationManagers\Actions\ApproveApplicationAction;
 use He4rt\PanelAdmin\Filament\Resources\Events\RelationManagers\Actions\OverrideEnrollmentStatusAction;
+use He4rt\PanelAdmin\Filament\Resources\Events\RelationManagers\Actions\RejectApplicationAction;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -40,7 +43,7 @@ final class EnrollmentsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('id')
+            ->recordTitle(fn (Enrollment $record): string => $record->user?->name ?? $record->id)
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['checkIns', 'user']))
             ->columns([
                 TextColumn::make('user.name')
@@ -90,6 +93,9 @@ final class EnrollmentsRelationManager extends RelationManager
                     ->options(EnrollmentStatus::class),
             ])
             ->recordActions([
+                $this->viewApplicationAction(),
+                ApproveApplicationAction::make(),
+                RejectApplicationAction::make(),
                 $this->checkInAction(),
                 OverrideEnrollmentStatusAction::make(),
                 DeleteAction::make(),
@@ -100,6 +106,33 @@ final class EnrollmentsRelationManager extends RelationManager
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    private function viewApplicationAction(): Action
+    {
+        return Action::make('viewApplication')
+            ->label('View Application')
+            ->icon(Heroicon::OutlinedDocumentText)
+            ->color('gray')
+            ->visible(fn (Enrollment $record): bool => $record->application_data !== null)
+            ->modalContent(function (Enrollment $record): View {
+                $schema = $record->event?->enrollmentPolicy?->application_schema ?? [];
+                $data = $record->application_data ?? [];
+
+                $answers = collect($schema)
+                    ->map(fn (array $field, int $index): array => [
+                        'label' => $field['label'] ?? 'Question '.$index,
+                        'value' => $data[$index] ?? '—',
+                    ])
+                    ->values()
+                    ->all();
+
+                return view('panel-admin::enrollments.application-data', [
+                    'answers' => $answers,
+                    'record' => $record,
+                ]);
+            })
+            ->modalSubmitAction(false);
     }
 
     private function checkInAction(): Action
