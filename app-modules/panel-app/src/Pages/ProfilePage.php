@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\PanelApp\Pages;
 
+use App\Geo\Support\GeoSelect;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Repeater;
@@ -18,6 +19,7 @@ use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use He4rt\Gamification\Character\Models\Character;
@@ -126,54 +128,59 @@ class ProfilePage extends Page
                             Grid::make(3)->schema([
                                 Select::make('country')
                                     ->label(__('panel-app::profile.fields.country'))
-                                    ->options([
-                                        'BRA' => '🇧🇷 Brasil',
-                                        'USA' => '🇺🇸 United States',
-                                        'PRT' => '🇵🇹 Portugal',
-                                        'ARG' => '🇦🇷 Argentina',
-                                        'DEU' => '🇩🇪 Deutschland',
-                                        'CAN' => '🇨🇦 Canada',
-                                        'GBR' => '🇬🇧 United Kingdom',
-                                        'FRA' => '🇫🇷 France',
-                                        'ESP' => '🇪🇸 España',
-                                        'ITA' => '🇮🇹 Italia',
-                                        'JPN' => '🇯🇵 Japan',
-                                        'AUS' => '🇦🇺 Australia',
-                                        'MEX' => '🇲🇽 México',
-                                        'COL' => '🇨🇴 Colombia',
-                                        'CHL' => '🇨🇱 Chile',
-                                        'URY' => '🇺🇾 Uruguay',
-                                        'IRL' => '🇮🇪 Ireland',
-                                        'NLD' => '🇳🇱 Nederland',
-                                    ])
-                                    ->default('BRA')
                                     ->searchable()
+                                    ->preload()
                                     ->live()
+                                    ->options(static fn (): array => GeoSelect::searchCountries(''))
+                                    ->afterStateUpdated(static function (Set $set): void {
+                                        $set('state', null);
+                                        $set('city', null);
+                                    })
+                                    ->getSearchResultsUsing(
+                                        static fn (string $search): array => GeoSelect::searchCountries($search),
+                                    )
+                                    ->getOptionLabelUsing(
+                                        static fn (?string $value): ?string => GeoSelect::countryLabel($value),
+                                    )
                                     ->columnSpan(1),
 
                                 Select::make('state')
                                     ->label(__('panel-app::profile.fields.state'))
-                                    ->options(fn (Get $get): array => ($get('country') ?? 'BRA') === 'BRA' ? [
-                                        'AC' => 'Acre', 'AL' => 'Alagoas', 'AP' => 'Amapá', 'AM' => 'Amazonas',
-                                        'BA' => 'Bahia', 'CE' => 'Ceará', 'DF' => 'Distrito Federal',
-                                        'ES' => 'Espírito Santo', 'GO' => 'Goiás', 'MA' => 'Maranhão',
-                                        'MT' => 'Mato Grosso', 'MS' => 'Mato Grosso do Sul', 'MG' => 'Minas Gerais',
-                                        'PA' => 'Pará', 'PB' => 'Paraíba', 'PR' => 'Paraná', 'PE' => 'Pernambuco',
-                                        'PI' => 'Piauí', 'RJ' => 'Rio de Janeiro', 'RN' => 'Rio Grande do Norte',
-                                        'RS' => 'Rio Grande do Sul', 'RO' => 'Rondônia', 'RR' => 'Roraima',
-                                        'SC' => 'Santa Catarina', 'SP' => 'São Paulo', 'SE' => 'Sergipe',
-                                        'TO' => 'Tocantins',
-                                    ] : [])
                                     ->searchable()
-                                    ->allowHtml(condition: false)
                                     ->live()
+                                    ->visible(fn (Get $get): bool => filled($get('country')))
+                                    ->afterStateUpdated(static function (Set $set): void {
+                                        $set('city', null);
+                                    })
+                                    ->options(
+                                        static fn (Get $get): array => GeoSelect::statesForCountry($get('country')),
+                                    )
                                     ->columnSpan(1),
 
-                                TextInput::make('city')
+                                Select::make('city')
                                     ->label(__('panel-app::profile.fields.city'))
-                                    ->placeholder('São Paulo')
-                                    ->maxLength(100)
-                                    ->live(onBlur: true)
+                                    ->searchable()
+                                    ->preload()
+                                    ->searchPrompt(__('panel-app::profile.placeholders.city_search'))
+                                    ->hintIcon(
+                                        'heroicon-o-information-circle',
+                                        __('panel-app::profile.hints.city'),
+                                    )
+                                    ->visible(fn (Get $get): bool => filled($get('state')))
+                                    ->options(
+                                        static fn (Get $get): array => GeoSelect::cachedCities(
+                                            $get('country'),
+                                            $get('state'),
+                                        ),
+                                    )
+                                    ->getSearchResultsUsing(
+                                        static fn (string $search, Get $get): array => GeoSelect::searchCities(
+                                            $get('country'),
+                                            $get('state'),
+                                            $search,
+                                        ),
+                                    )
+                                    ->getOptionLabelUsing(static fn (?string $value): ?string => $value)
                                     ->columnSpan(1),
                             ]),
                         ]),

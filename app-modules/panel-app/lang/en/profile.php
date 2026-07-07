@@ -22,8 +22,8 @@ return [
         'about' => 'About',
         'platform' => 'Platform',
         'handle' => 'Handle / URL',
-        'country' => 'Country (ISO)',
-        'state' => 'State (UF)',
+        'country' => 'Country',
+        'state' => 'State',
         'city' => 'City',
         'avatar' => 'Photo',
         'cover' => 'Cover',
@@ -36,11 +36,13 @@ return [
         'headline' => 'Your job title or role',
         'about' => 'Tell us about yourself...',
         'handle' => '@username or https://...',
+        'city_search' => 'Search city...',
     ],
 
     'hints' => [
         'headline' => 'e.g. Frontend Developer, Product Designer',
         'available_for_proposals' => 'When active, recruiters will see a green badge on your profile',
+        'city' => 'If your city is not listed, search for it.',
     ],
 
     'actions' => [

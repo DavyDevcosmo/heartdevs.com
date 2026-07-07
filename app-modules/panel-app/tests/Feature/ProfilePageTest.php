@@ -9,10 +9,18 @@ use He4rt\PanelApp\Pages\ProfilePage;
 use He4rt\Profile\Enums\SeniorityLevel;
 use He4rt\Profile\Enums\StartAvailability;
 use He4rt\Profile\Models\Profile;
+use Illuminate\Support\Facades\Http;
 
 use function Pest\Livewire\livewire;
 
 beforeEach(function (): void {
+    Http::fake([
+        'https://world.bmbc.cloud/api/*' => Http::response([
+            'success' => true,
+            'data' => [],
+        ]),
+    ]);
+
     $this->user = User::factory()->create();
     $this->tenant = Tenant::factory()->create(['slug' => 'test-tenant']);
     $this->tenant->members()->attach($this->user);
