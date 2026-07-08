@@ -20,9 +20,7 @@ final class UpsertProfile
 
         $attributes = [];
 
-        if ($dto->nickname !== null) {
-            $attributes['nickname'] = $dto->nickname;
-        }
+        $attributes['nickname'] = $dto->nickname;
 
         if ($dto->birthdate instanceof CarbonInterface) {
             $attributes['birthdate'] = $dto->birthdate;
@@ -60,9 +58,7 @@ final class UpsertProfile
             $attributes['preferences'] = $dto->preferences;
         }
 
-        if ($attributes !== []) {
-            $profile->update($attributes);
-        }
+        $profile->update($attributes);
 
         return $profile->refresh();
     }
@@ -79,8 +75,14 @@ final class UpsertProfile
             $errors['headline'] = [__('validation.max.string', ['attribute' => 'headline', 'max' => 100])];
         }
 
-        if ($dto->nickname !== null && mb_strlen($dto->nickname) > 100) {
-            $errors['nickname'] = [__('validation.max.string', ['attribute' => 'nickname', 'max' => 100])];
+        if ($dto->nickname !== null) {
+            if (mb_strlen($dto->nickname) > 100) {
+                $errors['nickname'] = ['O apelido deve ter no máximo 100 caracteres.'];
+            } elseif (!preg_match("/^[\p{L}\p{M}\p{N}\s\-']+$/u", $dto->nickname)) {
+                $errors['nickname'] = ['Apenas letras, números, espaços, hífens e apóstrofos são permitidos.'];
+            } elseif (!preg_match('/[\p{L}]{2,}/u', $dto->nickname)) {
+                $errors['nickname'] = ['O apelido deve conter pelo menos 2 letras juntas.'];
+            }
         }
 
         if ($dto->yearsExperience !== null && ($dto->yearsExperience < 0 || $dto->yearsExperience > 50)) {

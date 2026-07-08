@@ -38,6 +38,7 @@ use He4rt\Profile\Enums\StartAvailability;
 use He4rt\Profile\Models\Profile;
 use He4rt\Profile\Models\Skill;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -60,6 +61,8 @@ class ProfilePage extends Page
     /** @var TemporaryUploadedFile|null */
     #[Validate(rule: 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096')]
     public $coverUpload;
+
+    public ?string $nicknameInput = null;
 
     protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-user-circle';
 
@@ -98,6 +101,8 @@ class ProfilePage extends Page
                 $profile->preferences->employmentTypes,
             ),
         ]);
+
+        $this->nicknameInput = $profile->nickname;
     }
 
     public function form(Schema $schema): Schema
@@ -377,13 +382,15 @@ class ProfilePage extends Page
 
     public function save(): void
     {
+        $this->resetErrorBag('nickname');
+
         $formData = $this->form->getState();
         $profile = $this->getRecord();
 
         $socialLinks = $this->repeaterToSocialLinks($formData['social_links'] ?? []);
 
         $dto = UpsertProfileDTO::fromArray([
-            'nickname' => $this->data['nickname'] ?? null,
+            'nickname' => mb_trim($this->nicknameInput ?? '') ?: null,
             'birthdate' => $this->data['birthdate'] ?? null,
             'about' => $formData['about'] ?? null,
             'headline' => $formData['headline'] ?? null,
@@ -400,7 +407,16 @@ class ProfilePage extends Page
             ],
         ]);
 
-        resolve(UpsertProfile::class)->handle($profile, $dto);
+        try {
+            resolve(UpsertProfile::class)->handle($profile, $dto);
+        } catch (ValidationException $validationException) {
+            $this->addError('nickname', $validationException->validator->errors()->first('nickname'));
+            $this->dispatch('scroll-to-nickname');
+
+            return;
+        }
+
+        $this->data['nickname'] = mb_trim($this->nicknameInput ?? '') ?: null;
 
         $available = (bool) ($formData['available_for_proposals'] ?? false);
         $rawStartAvailability = $formData['start_availability'] ?? null;
