@@ -13,6 +13,7 @@ return [
         'availability' => 'Disponibilidade',
         'preferences' => 'Preferências',
         'connections' => 'Conexões',
+        'work_experiences' => 'Experiência profissional',
     ],
 
     'fields' => [
@@ -34,6 +35,12 @@ return [
         'cover' => 'Capa',
         'available_for_proposals' => 'Disponível para propostas',
         'start_availability' => 'Disponibilidade para início',
+        'company_name' => 'Empresa',
+        'position' => 'Cargo',
+        'experience_description' => 'Descrição',
+        'start_date' => 'Data de início',
+        'end_date' => 'Data de término',
+        'is_currently_working_here' => 'Trabalho aqui atualmente',
         'expected_salary_min' => 'Pretensão salarial (mín.)',
         'expected_salary_max' => 'Pretensão salarial (máx.)',
         'is_open_to_remote' => 'Aberto a trabalho remoto',
@@ -60,6 +67,7 @@ return [
     'actions' => [
         'save' => 'Salvar perfil',
         'add_social_link' => 'Adicionar link social',
+        'add_work_experience' => 'Adicionar experiência',
         'add_skill' => 'Adicionar skill',
     ],
 

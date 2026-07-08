@@ -96,6 +96,16 @@ final class Profile extends Model
     }
 
     /**
+     * @return HasMany<WorkExperience, $this>
+     */
+    public function workExperiences(): HasMany
+    {
+        return $this->hasMany(WorkExperience::class)
+            ->orderByDesc('is_currently_working_here')
+            ->latest('start_date');
+    }
+
+    /**
      * @return HasMany<ProfileSkill, $this>
      */
     public function profileSkills(): HasMany

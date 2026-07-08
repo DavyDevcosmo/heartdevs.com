@@ -13,6 +13,7 @@ return [
         'availability' => 'Availability',
         'preferences' => 'Preferences',
         'connections' => 'Connections',
+        'work_experiences' => 'Work experience',
     ],
 
     'fields' => [
@@ -34,6 +35,12 @@ return [
         'cover' => 'Cover',
         'available_for_proposals' => 'Available for proposals',
         'start_availability' => 'Start availability',
+        'company_name' => 'Company',
+        'position' => 'Position',
+        'experience_description' => 'Description',
+        'start_date' => 'Start date',
+        'end_date' => 'End date',
+        'is_currently_working_here' => 'I currently work here',
         'expected_salary_min' => 'Expected salary (min)',
         'expected_salary_max' => 'Expected salary (max)',
         'is_open_to_remote' => 'Open to remote work',
@@ -60,6 +67,7 @@ return [
     'actions' => [
         'save' => 'Save profile',
         'add_social_link' => 'Add social link',
+        'add_work_experience' => 'Add experience',
         'add_skill' => 'Add skill',
     ],
 
