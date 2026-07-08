@@ -7,10 +7,10 @@
     'coverPreviewUrl' => null
 ])
 
-@php
-    $name = $user?->name ?? '';
+@php 
     $username = $user?->username ?? '';
     $nickname = $data['nickname'] ?? null;
+    $name = $nickname ?? $user?->name ?? '';
     $headline = $data['headline'] ?? null;
     $about = $data['about'] ?? null;
     $yearsExperience = $data['years_experience'] ?? null;
