@@ -37,7 +37,7 @@
     );
 
     $address = $data['address'] ?? [];
-    $location = \App\Geo\Support\GeoSelect::formatLocation(
+    $location = \App\Geo\Support\GeoLocation::formatLocation(
         $address['city'] ?? null,
         $address['state'] ?? null,
         $address['country'] ?? null,

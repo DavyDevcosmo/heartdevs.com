@@ -15,52 +15,22 @@ final readonly class WorldApiClient
     /**
      * @return list<array<string, mixed>>
      */
-    public function countryByIso2(string $iso2): array
+    public function countries(): array
     {
         return $this->get('/countries', [
             'fields' => 'iso2,iso3',
-            'filters' => ['iso2' => mb_strtoupper($iso2)],
         ]);
     }
 
     /**
-     * @param  list<string>  $fields
      * @return list<array<string, mixed>>
      */
-    public function countries(?string $search = null, array $fields = ['iso2', 'iso3']): array
+    public function states(string $iso2): array
     {
-        return $this->get('/countries', array_filter([
-            'search' => $search,
-            'fields' => implode(',', $fields),
-        ]));
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    public function states(string $countryCode, ?string $search = null): array
-    {
-        return $this->get('/states', array_filter([
-            'filters' => ['country_code' => $countryCode],
-            'search' => $search,
-        ]));
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    public function cities(string $countryCode, ?int $stateId = null, ?string $search = null): array
-    {
-        $filters = ['country_code' => $countryCode];
-
-        if ($stateId !== null) {
-            $filters['state_id'] = $stateId;
-        }
-
-        return $this->get('/cities', array_filter([
-            'filters' => $filters,
-            'search' => $search,
-        ]));
+        return $this->get('/states', [
+            'filters' => ['country_code' => $iso2],
+            'fields' => 'cities',
+        ]);
     }
 
     /**

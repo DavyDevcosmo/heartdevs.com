@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\PanelApp\Pages;
 
-use App\Geo\Support\GeoSelect;
+use App\Geo\Support\GeoLocation;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Repeater;
@@ -128,59 +128,38 @@ class ProfilePage extends Page
                             Grid::make(3)->schema([
                                 Select::make('country')
                                     ->label(__('panel-app::profile.fields.country'))
+                                    ->options(static fn (): array => GeoLocation::countries())
+                                    ->default('BRA')
                                     ->searchable()
                                     ->preload()
                                     ->live()
-                                    ->options(static fn (): array => GeoSelect::searchCountries(''))
                                     ->afterStateUpdated(static function (Set $set): void {
                                         $set('state', null);
                                         $set('city', null);
                                     })
-                                    ->getSearchResultsUsing(
-                                        static fn (string $search): array => GeoSelect::searchCountries($search),
-                                    )
-                                    ->getOptionLabelUsing(
-                                        static fn (?string $value): ?string => GeoSelect::countryLabel($value),
-                                    )
                                     ->columnSpan(1),
 
                                 Select::make('state')
                                     ->label(__('panel-app::profile.fields.state'))
+                                    ->options(static fn (Get $get): array => GeoLocation::statesFor($get('country')))
                                     ->searchable()
                                     ->live()
-                                    ->visible(fn (Get $get): bool => filled($get('country')))
+                                    ->visible(static fn (Get $get): bool => filled($get('country')))
                                     ->afterStateUpdated(static function (Set $set): void {
                                         $set('city', null);
                                     })
-                                    ->options(
-                                        static fn (Get $get): array => GeoSelect::statesForCountry($get('country')),
-                                    )
                                     ->columnSpan(1),
 
                                 Select::make('city')
                                     ->label(__('panel-app::profile.fields.city'))
+                                    ->options(static fn (Get $get): array => GeoLocation::citiesFor($get('country'), $get('state')))
+                                    ->getSearchResultsUsing(static fn (string $search, Get $get): array => GeoLocation::citiesFor($get('country'), $get('state'), $search))
+                                    ->getOptionLabelUsing(static fn (?string $value): ?string => $value)
                                     ->searchable()
                                     ->preload()
                                     ->searchPrompt(__('panel-app::profile.placeholders.city_search'))
-                                    ->hintIcon(
-                                        'heroicon-o-information-circle',
-                                        __('panel-app::profile.hints.city'),
-                                    )
-                                    ->visible(fn (Get $get): bool => filled($get('state')))
-                                    ->options(
-                                        static fn (Get $get): array => GeoSelect::cachedCities(
-                                            $get('country'),
-                                            $get('state'),
-                                        ),
-                                    )
-                                    ->getSearchResultsUsing(
-                                        static fn (string $search, Get $get): array => GeoSelect::searchCities(
-                                            $get('country'),
-                                            $get('state'),
-                                            $search,
-                                        ),
-                                    )
-                                    ->getOptionLabelUsing(static fn (?string $value): ?string => $value)
+                                    ->hintIcon('heroicon-o-information-circle', __('panel-app::profile.hints.city'))
+                                    ->visible(static fn (Get $get): bool => filled($get('state')))
                                     ->columnSpan(1),
                             ]),
                         ]),

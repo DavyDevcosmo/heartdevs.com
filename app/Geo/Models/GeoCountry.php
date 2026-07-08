@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace App\Geo\Models;
 
-use App\Geo\Support\GeoSearch;
-use App\Geo\Support\GeoSushiStore;
+use App\Geo\WorldApiClient;
 use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 use Sushi\Sushi;
 
 /**
@@ -40,27 +38,10 @@ final class GeoCountry extends Model
      */
     public function getRows(): array
     {
-        return GeoSushiStore::countries();
-    }
-
-    /**
-     * @return HasMany<GeoState, $this>
-     */
-    public function states(): HasMany
-    {
-        return $this->hasMany(GeoState::class, 'country_id');
-    }
-
-    /**
-     * @param  Builder<self>  $query
-     */
-    protected function scopeMatching(Builder $query, string $term): void
-    {
-        $operator = GeoSearch::likeOperator($query);
-
-        $query->where(static function (Builder $query) use ($operator, $term): void {
-            $query->where('name', $operator, sprintf('%%%s%%', $term))
-                ->orWhere('iso2', $operator, $term.'%');
-        });
+        return Cache::remember(
+            'geo.countries',
+            60 * 60 * 24 * 30,
+            static fn (): array => resolve(WorldApiClient::class)->countries(),
+        );
     }
 }
