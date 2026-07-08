@@ -10,7 +10,7 @@
 @php 
     $username = $user?->username ?? '';
     $nickname = $data['nickname'] ?? null;
-    $name = $nickname ?? $user?->name ?? '';
+    $name = $nickname ?? $user?->name ?? $username;
     $headline = $data['headline'] ?? null;
     $about = $data['about'] ?? null;
     $yearsExperience = $data['years_experience'] ?? null;
