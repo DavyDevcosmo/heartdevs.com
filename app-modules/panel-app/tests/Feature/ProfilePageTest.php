@@ -71,7 +71,7 @@ test('profile page loads existing profile data', function (): void {
 
 test('profile page saves all fields', function (): void {
     livewire(ProfilePage::class)
-        ->set('data.nickname', 'Dan')
+        ->set('nicknameInput', 'Dan')
         ->fillForm([
             'headline' => 'Backend Developer',
             'seniority_level' => 'mid',

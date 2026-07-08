@@ -390,7 +390,7 @@ class ProfilePage extends Page
         $socialLinks = $this->repeaterToSocialLinks($formData['social_links'] ?? []);
 
         $dto = UpsertProfileDTO::fromArray([
-            'nickname' => mb_trim($this->nicknameInput ?? '') ?: null,
+            'nickname' => mb_trim($this->nicknameInput ?? ''),
             'birthdate' => $this->data['birthdate'] ?? null,
             'about' => $formData['about'] ?? null,
             'headline' => $formData['headline'] ?? null,
