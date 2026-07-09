@@ -152,7 +152,7 @@ final readonly class EnrollUserAction
     }
 
     /**
-     * @param  array<int, mixed>|null  $applicationData
+     * @param  array<string, mixed>|null  $applicationData
      */
     private function validate(Event $event, ?EnrollmentPolicy $policy, string $userId, ?array $applicationData): void
     {
@@ -196,13 +196,19 @@ final readonly class EnrollUserAction
     }
 
     /**
-     * @param  array<int, mixed>  $data
+     * @param  array<string, mixed>  $data
      * @param  array<int, array<string, mixed>>  $schema
      */
     private function validateApplicationData(array $data, array $schema): void
     {
-        foreach ($schema as $index => $field) {
-            $value = $data[$index] ?? null;
+        foreach ($schema as $field) {
+            $key = $field['key'] ?? null;
+
+            if ($key === null) {
+                continue;
+            }
+
+            $value = $data[$key] ?? null;
             $type = $field['type'] ?? '';
 
             if ($type === 'checkbox') {
