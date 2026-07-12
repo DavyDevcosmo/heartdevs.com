@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use He4rt\PanelApp\Pages\ProfilePage;
 use He4rt\Profile\Enums\EmploymentType;
@@ -41,17 +40,13 @@ beforeEach(function (): void {
     ]);
 
     $this->user = User::factory()->create();
-    $this->tenant = Tenant::factory()->create(['slug' => 'test-tenant']);
-    $this->tenant->members()->attach($this->user);
 
     $this->actingAs($this->user);
 
     Filament::setCurrentPanel(Filament::getPanel('app'));
-    Filament::setTenant($this->tenant);
 
     $this->profile = Profile::query()
         ->where('user_id', $this->user->id)
-        ->where('tenant_id', $this->tenant->id)
         ->first();
 });
 

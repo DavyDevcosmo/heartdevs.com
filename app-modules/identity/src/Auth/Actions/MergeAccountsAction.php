@@ -25,10 +25,6 @@ final class MergeAccountsAction
                 ->where('connected_by', $currentUser->id)
                 ->update(['connected_by' => $oldUser->id]);
 
-            $oldUser->tenants()->syncWithoutDetaching(
-                $currentUser->tenants()->pluck('tenants.id')
-            );
-
             event(new AccountsMerged($oldUser->id, $currentUser->id));
 
             $currentUser->delete();
