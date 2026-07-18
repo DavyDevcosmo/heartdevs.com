@@ -76,5 +76,6 @@ return [
     'notifications' => [
         'saved' => 'Profile saved successfully!',
         'no_profile' => 'Profile not found for this tenant.',
+        'validation_error' => 'We could not save your profile.',
     ],
 ];

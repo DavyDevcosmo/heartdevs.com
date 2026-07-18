@@ -382,13 +382,12 @@ class ProfilePage extends Page
 
     public function save(): void
     {
-        $this->resetErrorBag('nickname');
+        $this->resetErrorBag();
 
         $formData = $this->form->getState();
         $profile = $this->getRecord();
 
         $socialLinks = $this->repeaterToSocialLinks($formData['social_links'] ?? []);
-
         $dto = UpsertProfileDTO::fromArray([
             'nickname' => mb_trim($this->nicknameInput ?? ''),
             'birthdate' => $this->data['birthdate'] ?? null,
@@ -409,30 +408,29 @@ class ProfilePage extends Page
 
         try {
             resolve(UpsertProfile::class)->handle($profile, $dto);
+
+            $available = (bool) ($formData['available_for_proposals'] ?? false);
+            $rawStartAvailability = $formData['start_availability'] ?? null;
+            $startAvailability = match (true) {
+                $rawStartAvailability instanceof StartAvailability => $rawStartAvailability,
+                is_string($rawStartAvailability) => StartAvailability::from($rawStartAvailability),
+                $available => StartAvailability::Negotiable,
+                default => null,
+            };
+
+            resolve(ToggleAvailability::class)->handle($profile, $available, $startAvailability);
+
+            resolve(SyncProfileSkills::class)->handle($profile, $this->repeaterToSkills($formData['skills'] ?? []));
+
+            $this->saveMedia();
+            $this->form->saveRelationships();
         } catch (ValidationException $validationException) {
-            $this->addError('nickname', $validationException->validator->errors()->first('nickname'));
-            $this->dispatch('scroll-to-nickname');
+            $this->surfaceValidationErrors($validationException);
 
             return;
         }
 
         $this->data['nickname'] = mb_trim($this->nicknameInput ?? '') ?: null;
-
-        $available = (bool) ($formData['available_for_proposals'] ?? false);
-        $rawStartAvailability = $formData['start_availability'] ?? null;
-        $startAvailability = match (true) {
-            $rawStartAvailability instanceof StartAvailability => $rawStartAvailability,
-            is_string($rawStartAvailability) => StartAvailability::from($rawStartAvailability),
-            $available => StartAvailability::Negotiable,
-            default => null,
-        };
-
-        resolve(ToggleAvailability::class)->handle($profile, $available, $startAvailability);
-
-        resolve(SyncProfileSkills::class)->handle($profile, $this->repeaterToSkills($formData['skills'] ?? []));
-
-        $this->saveMedia();
-        $this->form->saveRelationships();
 
         Notification::make()
             ->success()
@@ -507,6 +505,53 @@ class ProfilePage extends Page
     {
         $this->coverUpload = null;
         auth()->user()->clearMediaCollection('cover');
+    }
+
+    /**
+     * Routes each domain validation error to its input: nickname has a dedicated
+     * field outside the Filament form, Filament fields get an inline error, and
+     * keys with no rendered input (e.g. birthdate) fall back to a danger toast.
+     */
+    private function surfaceValidationErrors(ValidationException $exception): void
+    {
+        $toastMessages = [];
+
+        foreach ($exception->errors() as $field => $messages) {
+            $fieldMessages = array_map(static fn (mixed $message): string => (string) $message, (array) $messages);
+
+            if ($field === 'nickname') {
+                foreach ($fieldMessages as $message) {
+                    $this->addError('nickname', $message);
+                }
+
+                $this->dispatch('scroll-to-nickname');
+
+                continue;
+            }
+
+            $statePath = 'data.'.$field;
+            $hasField = $this->form->getComponentByStatePath($statePath, withAbsoluteStatePath: true) !== null;
+
+            if ($hasField) {
+                foreach ($fieldMessages as $message) {
+                    $this->addError($statePath, $message);
+                }
+
+                continue;
+            }
+
+            $toastMessages = [...$toastMessages, ...$fieldMessages];
+        }
+
+        if ($toastMessages === []) {
+            return;
+        }
+
+        Notification::make()
+            ->danger()
+            ->title(__('panel-app::profile.notifications.validation_error'))
+            ->body(implode(' ', $toastMessages))
+            ->send();
     }
 
     private function saveMedia(): void
