@@ -6,8 +6,8 @@ namespace He4rt\Onboarding\Enums;
 
 use App\Enums\Concerns\StringifyEnum;
 use He4rt\Onboarding\Contracts\OnboardingFlow;
+use He4rt\Onboarding\Flows\SquadsOnboardingFlow;
 use He4rt\Onboarding\Flows\WelcomeOnboardingFlow;
-use LogicException;
 
 enum OnboardingType: string
 {
@@ -20,7 +20,7 @@ enum OnboardingType: string
     {
         return match ($this) {
             self::Welcome => resolve(WelcomeOnboardingFlow::class),
-            default => throw new LogicException(sprintf("OnboardingFlow para o tipo '%s' ainda não foi implementado.", $this->value)),
+            self::Squads => resolve(SquadsOnboardingFlow::class),
         };
     }
 }
