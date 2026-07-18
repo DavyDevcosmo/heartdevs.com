@@ -9,7 +9,7 @@ use Filament\Notifications\Notification;
 use Filament\Support\Enums\Width;
 use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
-use He4rt\Identity\Tenant\Models\Tenant;
+use He4rt\Identity\User\Models\User;
 use He4rt\IntegrationTwitch\Actions\RegisterTwitchSubscriptionsAction;
 use He4rt\IntegrationTwitch\Enums\TwitchEventSubType;
 use He4rt\IntegrationTwitch\Models\TwitchSubscription;
@@ -28,48 +28,43 @@ class RegisterSubscriptionsAction extends Action
             ->modalHeading(__('panel-admin::twitch.subscriptions.actions.register'))
             ->modalSubmitActionLabel(__('panel-admin::twitch.subscriptions.actions.register_confirm_button'))
             ->modalWidth(Width::ThreeExtraLarge)
-            ->modalContent(function (): View {
-                /** @var Tenant|null $tenant */
-                $tenant = filament()->getTenant();
+            ->modalContent(fn (): View => view('panel-admin::twitch.register-subscriptions-modal', [
+                'broadcaster' => $this->resolveBroadcaster(),
+                'callbackUrl' => $this->resolveCallbackUrl(),
+                'groups' => $this->buildEventTypeGroups(),
+                'secret' => $this->maskSecret(),
+            ]))
+            ->action(function (): void {
+                $broadcaster = $this->resolveBroadcaster();
 
-                return view('panel-admin::twitch.register-subscriptions-modal', [
-                    'broadcaster' => $this->resolveBroadcaster($tenant),
-                    'callbackUrl' => $this->resolveCallbackUrl($tenant),
-                    'groups' => $this->buildEventTypeGroups($tenant),
-                    'secret' => $this->maskSecret(),
-                ]);
-            })
-            ->action(static function (): void {
-                /** @var Tenant|null $tenant */
-                $tenant = filament()->getTenant();
-
-                if (!$tenant instanceof Tenant) {
-                    return;
-                }
-
-                $action = resolve(RegisterTwitchSubscriptionsAction::class);
-                $result = $action($tenant);
-
-                if ($result['errors']['broadcaster'] ?? null) {
+                if ($broadcaster === null) {
                     Notification::make()
                         ->danger()
                         ->title(__('panel-admin::twitch.subscriptions.actions.register_failed'))
-                        ->body($result['errors']['broadcaster'])
+                        ->body(__('panel-admin::twitch.subscriptions.actions.no_broadcaster'))
                         ->send();
 
                     return;
                 }
 
-                Notification::make()
-                    ->success()
-                    ->title(__('panel-admin::twitch.subscriptions.actions.registered'))
+                $result = resolve(RegisterTwitchSubscriptionsAction::class)($broadcaster['id']);
+
+                $hasFailures = $result['failed'] > 0;
+
+                $notification = Notification::make()
+                    ->title(__($hasFailures
+                        ? 'panel-admin::twitch.subscriptions.actions.register_partial'
+                        : 'panel-admin::twitch.subscriptions.actions.registered'))
                     ->body(sprintf(
                         '%d created, %d skipped, %d failed.',
                         $result['created'],
                         $result['skipped'],
                         $result['failed'],
-                    ))
-                    ->send();
+                    ));
+
+                $hasFailures ? $notification->warning() : $notification->success();
+
+                $notification->send();
             });
     }
 
@@ -79,22 +74,27 @@ class RegisterSubscriptionsAction extends Action
     }
 
     /**
+     * The broadcaster is the Twitch account connected to the authenticated
+     * admin — no config/env fallback. The admin connects it via the
+     * "Connect Twitch" action on this page.
+     *
      * @return array{id: string, login: string}|null
      */
-    private function resolveBroadcaster(?Tenant $tenant): ?array
+    private function resolveBroadcaster(): ?array
     {
-        if (!$tenant instanceof Tenant) {
+        $user = filament()->auth()->user();
+
+        if (!$user instanceof User) {
             return null;
         }
 
-        $identity = ExternalIdentity::query()
-            ->where('tenant_id', $tenant->getKey())
+        $identity = $user->providers()
             ->where('provider', IdentityProvider::Twitch)
             ->whereNotNull('connected_at')
             ->whereNull('disconnected_at')
             ->first();
 
-        if (!$identity) {
+        if (!$identity instanceof ExternalIdentity) {
             return null;
         }
 
@@ -104,16 +104,28 @@ class RegisterSubscriptionsAction extends Action
         ];
     }
 
-    private function resolveCallbackUrl(?Tenant $tenant): string
+    private function resolveCallbackUrl(): string
     {
-        $slug = $tenant instanceof Tenant ? $tenant->slug : 'default';
+        // Cast instead of config()->string(): the key may be present-but-null when
+        // TWITCH_EVENTSUB_CALLBACK is unset, and config()->string() throws on null.
+        $configured = (string) config('services.twitch.eventsub_callback', '');
 
-        return mb_rtrim(config('app.url'), '/').'/api/webhooks/twitch/eventsub/'.$slug;
+        if ($configured !== '') {
+            return $configured;
+        }
+
+        return mb_rtrim(config()->string('app.url'), '/').'/api/webhooks/twitch/eventsub';
     }
 
     private function maskSecret(): string
     {
-        $secret = config()->string('services.twitch.eventsub_secret');
+        // Read defensively: TWITCH_EVENTSUB_SECRET has no config default (it must
+        // fail loud on the security paths), so the display must tolerate it being unset.
+        $secret = config('services.twitch.eventsub_secret');
+
+        if (!is_string($secret) || $secret === '') {
+            return '—';
+        }
 
         return mb_substr($secret, 0, 4).str_repeat('*', max(mb_strlen($secret) - 4, 0));
     }
@@ -121,17 +133,12 @@ class RegisterSubscriptionsAction extends Action
     /**
      * @return array<string, array{label: string, types: array<int, array{value: string, name: string, version: string, exists: bool}>}>
      */
-    private function buildEventTypeGroups(?Tenant $tenant): array
+    private function buildEventTypeGroups(): array
     {
-        $existingTypes = [];
-
-        if ($tenant instanceof Tenant) {
-            $existingTypes = TwitchSubscription::query()
-                ->where('tenant_id', $tenant->getKey())
-                ->where('status', 'enabled')
-                ->pluck('type')
-                ->all();
-        }
+        $existingTypes = TwitchSubscription::query()
+            ->where('status', 'enabled')
+            ->pluck('type')
+            ->all();
 
         $groups = [
             'stream' => ['label' => 'Stream', 'types' => []],

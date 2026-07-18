@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace He4rt\IntegrationTwitch\Actions;
 
-use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
-use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\IntegrationTwitch\Enums\TwitchEventSubType;
 use He4rt\IntegrationTwitch\Models\TwitchSubscription;
 use He4rt\IntegrationTwitch\Transport\Requests\EventSub\CreateSubscription;
@@ -23,29 +20,17 @@ final readonly class RegisterTwitchSubscriptionsAction
      * @param  array<int, TwitchEventSubType>  $types
      * @return array{created: int, skipped: int, failed: int, errors: array<string, string>}
      */
-    public function __invoke(Tenant $tenant, array $types = []): array
+    public function __invoke(string $broadcasterId, array $types = []): array
     {
-        $broadcasterId = $this->resolveBroadcasterId($tenant);
-
-        if ($broadcasterId === null) {
-            return [
-                'created' => 0,
-                'skipped' => 0,
-                'failed' => 0,
-                'errors' => ['broadcaster' => 'No Twitch channel linked to this tenant.'],
-            ];
-        }
-
         if ($types === []) {
             $types = TwitchEventSubType::cases();
         }
 
-        $callbackUrl = mb_rtrim(config('app.url'), '/').'/api/webhooks/twitch/eventsub/'.$tenant->slug;
+        $callbackUrl = $this->resolveCallbackUrl();
 
         $secret = config()->string('services.twitch.eventsub_secret');
 
         $existingTypes = TwitchSubscription::query()
-            ->where('tenant_id', $tenant->getKey())
             ->where('broadcaster_user_id', $broadcasterId)
             ->where('status', 'enabled')
             ->pluck('type')
@@ -99,7 +84,6 @@ final readonly class RegisterTwitchSubscriptionsAction
                         'callback_url' => $data['transport']['callback'] ?? $callbackUrl,
                         'cost' => $data['cost'] ?? 0,
                         'version' => $data['version'] ?? $type->getVersion(),
-                        'tenant_id' => $tenant->getKey(),
                     ]
                 );
 
@@ -118,13 +102,14 @@ final readonly class RegisterTwitchSubscriptionsAction
         return ['created' => $created, 'skipped' => $skipped, 'failed' => $failed, 'errors' => $errors];
     }
 
-    private function resolveBroadcasterId(Tenant $tenant): ?string
+    private function resolveCallbackUrl(): string
     {
-        return ExternalIdentity::query()
-            ->where('tenant_id', $tenant->getKey())
-            ->where('provider', IdentityProvider::Twitch)
-            ->whereNotNull('connected_at')
-            ->whereNull('disconnected_at')
-            ->value('external_account_id');
+        $configured = config()->string('services.twitch.eventsub_callback', '');
+
+        if ($configured !== '') {
+            return $configured;
+        }
+
+        return mb_rtrim(config()->string('app.url'), '/').'/api/webhooks/twitch/eventsub';
     }
 }
