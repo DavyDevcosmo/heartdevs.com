@@ -61,9 +61,22 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
     use Notifiable;
     use SoftDeletes;
 
+    /**
+     * @return list<string>
+     */
+    public static function configuredAdminUsernames(): array
+    {
+        $usernames = array_map(
+            mb_trim(...),
+            explode(',', config()->string('he4rt.admins')),
+        );
+
+        return array_values(array_filter($usernames, static fn (string $username): bool => $username !== ''));
+    }
+
     public function isAdmin(): bool
     {
-        return in_array($this->username, str(config('he4rt.admins'))->explode(',')->toArray(), strict: true);
+        return in_array($this->username, self::configuredAdminUsernames(), strict: true);
     }
 
     public function isStaff(): bool

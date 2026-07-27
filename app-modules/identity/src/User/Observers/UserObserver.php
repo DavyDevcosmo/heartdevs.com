@@ -43,6 +43,6 @@ class UserObserver
 
     private function isConfiguredAdmin(string $username): bool
     {
-        return in_array($username, str(config('he4rt.admins'))->explode(',')->toArray(), strict: true);
+        return in_array($username, User::configuredAdminUsernames(), strict: true);
     }
 }

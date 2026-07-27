@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use He4rt\Identity\User\Enums\Role;
+use He4rt\Identity\User\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
@@ -15,7 +16,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $usernames = str(config('he4rt.admins'))->explode(',')->filter()->values()->toArray();
+        $usernames = User::configuredAdminUsernames();
 
         if ($usernames === []) {
             return;
