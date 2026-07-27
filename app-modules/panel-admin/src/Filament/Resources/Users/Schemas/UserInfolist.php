@@ -46,7 +46,7 @@ class UserInfolist
 
                         Tab::make('Moderação')
                             ->schema(self::moderationSchema())
-                            ->hidden(static fn (): bool => !(auth()->user()?->role->isStaff() ?? false)),
+                            ->hidden(static fn (): bool => !(auth()->user()?->can('update', User::class) ?? false)),
                     ])
                     ->columnSpanFull(),
             ]);

@@ -44,12 +44,16 @@ test('update and delete allow staff and compliance', function (): void {
         ->and($this->policy->delete($compliance))->toBeTrue();
 });
 
-test('update and delete deny non-staff roles', function (): void {
-    $member = User::factory()->create();
+test('update and delete deny non-staff roles', function (string $factoryState): void {
+    $user = User::factory()->{$factoryState}()->create();
 
-    expect($this->policy->update($member))->toBeFalse()
-        ->and($this->policy->delete($member))->toBeFalse();
-});
+    expect($this->policy->update($user))->toBeFalse()
+        ->and($this->policy->delete($user))->toBeFalse();
+})->with([
+    'member' => 'member',
+    'recruiter' => 'recruiter',
+    'squad captain' => 'squadCaptain',
+]);
 
 test('restore and forceDelete require compliance', function (): void {
     $compliance = User::factory()->compliance()->create();

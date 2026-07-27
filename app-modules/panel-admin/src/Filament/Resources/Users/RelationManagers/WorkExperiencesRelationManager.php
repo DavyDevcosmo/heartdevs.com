@@ -14,6 +14,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -45,10 +46,13 @@ class WorkExperiencesRelationManager extends RelationManager
 
                 DatePicker::make('start_date')
                     ->label('Start Date')
-                    ->required(),
+                    ->required()
+                    ->maxDate(today()),
 
                 DatePicker::make('end_date')
-                    ->label('End Date'),
+                    ->label('End Date')
+                    ->afterOrEqual('start_date')
+                    ->hidden(fn (Get $get): bool => (bool) $get('is_currently_working_here')),
 
                 Checkbox::make('is_currently_working_here')
                     ->label('Currently Working Here')
@@ -102,7 +106,7 @@ class WorkExperiencesRelationManager extends RelationManager
 
     private function isEditableByCurrentUser(): bool
     {
-        return auth()->user()?->role->isStaff() ?? false;
+        return auth()->user()?->can('update', User::class) ?? false;
     }
 
     /**

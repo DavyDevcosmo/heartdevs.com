@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace He4rt\Identity\User\Models;
 
 use App\Concerns\HasAddress;
+use App\Enums\FilamentPanel;
 use Carbon\CarbonInterface;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
@@ -63,6 +64,11 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
     public function isAdmin(): bool
     {
         return in_array($this->username, str(config('he4rt.admins'))->explode(',')->toArray(), strict: true);
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->hasRole(Role::Staff);
     }
 
     public function hasRole(Role $role): bool
@@ -143,7 +149,7 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
     public function canAccessPanel(Panel $panel): bool
     {
         return match ($panel->getId()) {
-            'admin' => app()->isProduction() ? $this->isAdmin() : true,
+            FilamentPanel::Admin->value => $this->isAdmin() || $this->role->canViewUsers(),
             default => true
         };
     }

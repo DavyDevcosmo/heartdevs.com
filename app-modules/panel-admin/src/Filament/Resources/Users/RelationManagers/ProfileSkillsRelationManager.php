@@ -19,6 +19,7 @@ use He4rt\Identity\User\Models\User;
 use He4rt\Profile\Enums\SkillProficiency;
 use He4rt\Profile\Models\Profile;
 use He4rt\Profile\Models\ProfileSkill;
+use Illuminate\Validation\Rules\Unique;
 
 class ProfileSkillsRelationManager extends RelationManager
 {
@@ -33,7 +34,13 @@ class ProfileSkillsRelationManager extends RelationManager
                     ->relationship('skill', 'name')
                     ->searchable()
                     ->preload()
-                    ->required(),
+                    ->required()
+                    ->unique(
+                        table: 'profile_skills',
+                        column: 'skill_id',
+                        ignoreRecord: true,
+                        modifyRuleUsing: fn (Unique $rule): Unique => $rule->where('profile_id', $this->ownerProfileId()),
+                    ),
 
                 Select::make('proficiency')
                     ->label('Proficiency')
@@ -83,7 +90,7 @@ class ProfileSkillsRelationManager extends RelationManager
 
     private function isEditableByCurrentUser(): bool
     {
-        return auth()->user()?->role->isStaff() ?? false;
+        return auth()->user()?->can('update', User::class) ?? false;
     }
 
     /**
@@ -99,5 +106,13 @@ class ProfileSkillsRelationManager extends RelationManager
         $data['profile_id'] = $profile->id;
 
         return ProfileSkill::query()->create($data);
+    }
+
+    private function ownerProfileId(): ?string
+    {
+        /** @var User $owner */
+        $owner = $this->getOwnerRecord();
+
+        return Profile::query()->where('user_id', $owner->id)->value('id');
     }
 }

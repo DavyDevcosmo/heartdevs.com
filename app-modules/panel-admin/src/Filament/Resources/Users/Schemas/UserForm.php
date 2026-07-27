@@ -57,8 +57,7 @@ class UserForm
 
             TextInput::make('name')
                 ->label('Name')
-                ->required()
-                ->unique(ignoreRecord: true),
+                ->required(),
 
             TextInput::make('email')
                 ->label('Email')
@@ -79,8 +78,9 @@ class UserForm
         return Section::make('Perfil')
             ->relationship('profile')
             ->mutateRelationshipDataBeforeFillUsing(function (array $data): array {
-                /** @var WorkPreferences $preferences */
-                $preferences = $data['preferences'] ?? new WorkPreferences();
+                $preferences = $data['preferences'] instanceof WorkPreferences
+                    ? $data['preferences']
+                    : new WorkPreferences();
 
                 return [
                     ...Arr::except($data, ['preferences']),

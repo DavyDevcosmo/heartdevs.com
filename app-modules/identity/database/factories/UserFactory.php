@@ -29,6 +29,11 @@ final class UserFactory extends Factory
         ];
     }
 
+    public function member(): static
+    {
+        return $this->state(['role' => Role::Member]);
+    }
+
     public function staff(): static
     {
         return $this->state(['role' => Role::Staff]);

@@ -238,6 +238,29 @@ test('cria uma profile skill preenchendo o profile_id automaticamente', function
     expect($profileSkill->profile->user_id)->toBe($target->id);
 });
 
+test('não permite duplicar a mesma skill no profile', function (): void {
+    $staff = User::factory()->staff()->create();
+    $target = User::factory()->create();
+    $profile = Profile::ensureExists($target->id);
+    $skill = Skill::factory()->create();
+    ProfileSkill::factory()->for($profile)->for($skill)->create();
+
+    $this->actingAs($staff);
+
+    livewire(ProfileSkillsRelationManager::class, [
+        'ownerRecord' => $target,
+        'pageClass' => EditUser::class,
+    ])
+        ->callAction(TestAction::make('create')->table(), data: [
+            'skill_id' => $skill->id,
+            'proficiency' => SkillProficiency::Advanced->value,
+            'years_experience' => 3,
+        ])
+        ->assertHasTableActionErrors(['skill_id' => 'unique']);
+
+    expect(ProfileSkill::query()->where('skill_id', $skill->id)->count())->toBe(1);
+});
+
 test('staff edita a proficiência de uma profile skill existente', function (): void {
     $staff = User::factory()->staff()->create();
     $target = User::factory()->create();
