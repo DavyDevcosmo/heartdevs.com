@@ -29,6 +29,28 @@ return new class extends Migration
         DB::statement('ALTER TABLE users DROP CONSTRAINT IF EXISTS users_username_unique');
         DB::statement('DROP INDEX IF EXISTS users_username_unique');
 
+        // up() only enforced uniqueness among active rows, so a soft-deleted
+        // row may share a username with an active row (or another trashed
+        // row). Rename those duplicates before restoring the global unique
+        // constraint below, keeping the active row (or the oldest one, if
+        // all are trashed) untouched. The suffix is intentionally neutral
+        // (not "_deleted_"): the renamed row isn't necessarily trashed.
+        DB::statement(<<<'SQL'
+            UPDATE users
+            SET username = username || '_dup_' || substr(id::text, 1, 8)
+            WHERE id IN (
+                SELECT id
+                FROM (
+                    SELECT id, row_number() OVER (
+                        PARTITION BY username
+                        ORDER BY deleted_at IS NULL DESC, created_at ASC
+                    ) AS row_number
+                    FROM users
+                ) ranked
+                WHERE row_number > 1
+            )
+        SQL);
+
         Schema::table('users', static function (Blueprint $table): void {
             $table->unique('username');
             $table->dropColumn(['role', 'deleted_at']);

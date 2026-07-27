@@ -26,7 +26,7 @@ class UserObserver
         $this->ensureProfileExists($user);
     }
 
-    public function deleted(User $user): void
+    public function forceDeleted(User $user): void
     {
         $user->address()->delete();
     }
