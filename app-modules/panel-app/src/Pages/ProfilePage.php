@@ -8,6 +8,7 @@ use App\Geo\Support\GeoLocation;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -21,6 +22,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\JsContent;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use He4rt\Gamification\Character\Models\Character;
@@ -40,7 +42,6 @@ use He4rt\Profile\Models\Skill;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Validate;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
@@ -53,14 +54,6 @@ class ProfilePage extends Page
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
-
-    /** @var TemporaryUploadedFile|null */
-    #[Validate(rule: 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048')]
-    public $avatarUpload;
-
-    /** @var TemporaryUploadedFile|null */
-    #[Validate(rule: 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096')]
-    public $coverUpload;
 
     public ?string $nicknameInput = null;
 
@@ -136,6 +129,7 @@ class ProfilePage extends Page
                                 Textarea::make('about')
                                     ->label(__('panel-app::profile.fields.about'))
                                     ->placeholder(__('panel-app::profile.placeholders.about'))
+                                    ->hint(JsContent::make('`${Array.from($state ?? "").length}/500`'))
                                     ->maxLength(500)
                                     ->rows(4)
                                     ->live(onBlur: true)
@@ -160,13 +154,21 @@ class ProfilePage extends Page
                                             ->getOptionLabelUsing(fn (?string $value): ?string => $value === null ? null : (Skill::labelsById()[$value] ?? null))
                                             ->optionsLimit(50)
                                             ->distinct()
-                                            ->required()
+                                            ->required(fn (Get $get): bool => filled($get('proficiency')))
                                             ->columnSpan(1),
 
                                         Select::make('proficiency')
                                             ->label(__('panel-app::profile.fields.proficiency'))
                                             ->options(SkillProficiency::class)
-                                            ->required()
+                                            ->required(fn (Get $get): bool => filled($get('skill_id')))
+                                            ->live()
+                                            ->afterStateUpdated(function (Get $get, Select $component): void {
+                                                if (blank($get('skill_id')) || blank($get('proficiency'))) {
+                                                    return;
+                                                }
+
+                                                $this->appendEmptyRepeaterItemIfLastRow($component);
+                                            })
                                             ->columnSpan(1),
 
                                         TextInput::make('years_experience')
@@ -234,13 +236,21 @@ class ProfilePage extends Page
                                         Select::make('platform')
                                             ->label(__('panel-app::profile.fields.platform'))
                                             ->options(SocialPlatform::class)
-                                            ->required()
+                                            ->required(fn (Get $get): bool => filled($get('handle')))
                                             ->columnSpan(1),
 
                                         TextInput::make('handle')
                                             ->label(__('panel-app::profile.fields.handle'))
                                             ->placeholder(__('panel-app::profile.placeholders.handle'))
-                                            ->required()
+                                            ->required(fn (Get $get): bool => filled($get('platform')))
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(function (Get $get, TextInput $component): void {
+                                                if (blank($get('platform')) || blank($get('handle'))) {
+                                                    return;
+                                                }
+
+                                                $this->appendEmptyRepeaterItemIfLastRow($component);
+                                            })
                                             ->columnSpan(1),
                                     ]),
                                 ])
@@ -314,18 +324,18 @@ class ProfilePage extends Page
                                     Grid::make(2)->schema([
                                         TextInput::make('company_name')
                                             ->label(__('panel-app::profile.fields.company_name'))
-                                            ->required()
+                                            ->required(fn (Get $get): bool => filled($get('position')) || filled($get('description')) || filled($get('start_date')))
                                             ->maxLength(255)
                                             ->columnSpan(1),
                                         TextInput::make('position')
                                             ->label(__('panel-app::profile.fields.position'))
-                                            ->required()
+                                            ->required(fn (Get $get): bool => filled($get('company_name')) || filled($get('description')) || filled($get('start_date')))
                                             ->maxLength(255)
                                             ->columnSpan(1),
                                     ]),
                                     Textarea::make('description')
                                         ->label(__('panel-app::profile.fields.experience_description'))
-                                        ->required()
+                                        ->required(fn (Get $get): bool => filled($get('company_name')) || filled($get('position')) || filled($get('start_date')))
                                         ->rows(3)
                                         ->maxLength(2_000)
                                         ->columnSpanFull(),
@@ -336,7 +346,7 @@ class ProfilePage extends Page
                                             ->displayFormat('M Y')
                                             ->format('Y-m-d')
                                             ->maxDate(now())
-                                            ->required()
+                                            ->required(fn (Get $get): bool => filled($get('company_name')) || filled($get('position')) || filled($get('description')))
                                             ->columnSpan(1),
                                         DatePicker::make('end_date')
                                             ->label(__('panel-app::profile.fields.end_date'))
@@ -345,7 +355,7 @@ class ProfilePage extends Page
                                             ->format('Y-m-d')
                                             ->maxDate(now())
                                             ->afterOrEqual('start_date')
-                                            ->required(fn (Get $get): bool => !$get('is_currently_working_here'))
+                                            ->required(fn (Get $get): bool => !$get('is_currently_working_here') && (filled($get('company_name')) || filled($get('position')) || filled($get('description')) || filled($get('start_date'))))
                                             ->hidden(fn (Get $get): bool => (bool) $get('is_currently_working_here'))
                                             ->columnSpan(1),
                                     ]),
@@ -422,7 +432,6 @@ class ProfilePage extends Page
 
             resolve(SyncProfileSkills::class)->handle($profile, $this->repeaterToSkills($formData['skills'] ?? []));
 
-            $this->saveMedia();
             $this->form->saveRelationships();
         } catch (ValidationException $validationException) {
             $this->surfaceValidationErrors($validationException);
@@ -436,6 +445,87 @@ class ProfilePage extends Page
             ->success()
             ->title(__('panel-app::profile.notifications.saved'))
             ->send();
+    }
+
+    public function editAvatarAction(): Action
+    {
+        return Action::make('editAvatar')
+            ->label(__('panel-app::profile.actions.change_avatar'))
+            ->modalHeading(__('panel-app::profile.actions.change_avatar'))
+            ->modalSubmitActionLabel(__('panel-app::profile.actions.save_avatar'))
+            ->modalSubmitAction(fn (Action $action) => $action->color('primary'))
+            ->schema([
+                FileUpload::make('avatar')
+                    ->label(__('panel-app::profile.fields.avatar'))
+                    ->avatar()
+                    ->imageEditor()
+                    ->circleCropper()
+                    ->imageEditorAspectRatioOptions(['1:1'])
+                    ->storeFiles(condition: false)
+                    ->required()
+                    ->maxSize(2_048),
+            ])
+            ->action(function (array $data): void {
+                $avatar = $data['avatar'] ?? null;
+
+                if (is_string($avatar)) {
+                    $avatar = TemporaryUploadedFile::createFromLivewire($avatar);
+                }
+
+                if (!$avatar instanceof TemporaryUploadedFile) {
+                    return;
+                }
+
+                $this->replaceMedia('avatar', $avatar);
+
+                Notification::make()
+                    ->success()
+                    ->title(__('panel-app::profile.notifications.avatar_updated'))
+                    ->send();
+            });
+    }
+
+    public function editCoverAction(): Action
+    {
+        return Action::make('editCover')
+            ->label(__('panel-app::profile.actions.change_cover'))
+            ->modalHeading(__('panel-app::profile.actions.change_cover'))
+            ->modalSubmitActionLabel(__('panel-app::profile.actions.save_cover'))
+            ->modalSubmitAction(fn (Action $action) => $action->color('primary'))
+            ->schema([
+                FileUpload::make('cover')
+                    ->label(__('panel-app::profile.fields.cover'))
+                    ->image()
+                    ->panelAspectRatio('3:1')
+                    ->imageEditor()
+                    ->imageAspectRatio('3:1')
+                    ->imageEditorAspectRatioOptions(['3:1'])
+                    ->automaticallyCropImagesToAspectRatio()
+                    ->automaticallyResizeImagesMode('cover')
+                    ->automaticallyResizeImagesToWidth('1800')
+                    ->automaticallyResizeImagesToHeight('600')
+                    ->storeFiles(condition: false)
+                    ->required()
+                    ->maxSize(4_096),
+            ])
+            ->action(function (array $data): void {
+                $cover = $data['cover'] ?? null;
+
+                if (is_string($cover)) {
+                    $cover = TemporaryUploadedFile::createFromLivewire($cover);
+                }
+
+                if (!$cover instanceof TemporaryUploadedFile) {
+                    return;
+                }
+
+                $this->replaceMedia('cover', $cover);
+
+                Notification::make()
+                    ->success()
+                    ->title(__('panel-app::profile.notifications.cover_updated'))
+                    ->send();
+            });
     }
 
     public function getRecord(): Profile
@@ -470,13 +560,8 @@ class ProfilePage extends Page
     #[Computed]
     public function avatarPreviewUrl(): ?string
     {
-        if ($this->avatarUpload instanceof TemporaryUploadedFile) {
-            /** @var string */
-            return $this->avatarUpload->temporaryUrl();
-        }
-
         /** @var User $user */
-        $user = auth()->user();
+        $user = auth()->user()->fresh();
 
         return $user->getFirstMediaUrl('avatar') ?: null;
     }
@@ -484,26 +569,19 @@ class ProfilePage extends Page
     #[Computed]
     public function coverPreviewUrl(): ?string
     {
-        if ($this->coverUpload instanceof TemporaryUploadedFile) {
-            /** @var string */
-            return $this->coverUpload->temporaryUrl();
-        }
-
         /** @var User $user */
-        $user = auth()->user();
+        $user = auth()->user()->fresh();
 
         return $user->getFirstMediaUrl('cover') ?: null;
     }
 
     public function removeAvatar(): void
     {
-        $this->avatarUpload = null;
         auth()->user()->clearMediaCollection('avatar');
     }
 
     public function removeCover(): void
     {
-        $this->coverUpload = null;
         auth()->user()->clearMediaCollection('cover');
     }
 
@@ -554,26 +632,15 @@ class ProfilePage extends Page
             ->send();
     }
 
-    private function saveMedia(): void
+    private function replaceMedia(string $collection, TemporaryUploadedFile $file): void
     {
         /** @var User $user */
         $user = auth()->user();
-
-        if ($this->avatarUpload instanceof TemporaryUploadedFile) {
-            $user->clearMediaCollection('avatar');
-            $user->addMedia($this->avatarUpload->getRealPath())
-                ->usingFileName(Str::uuid()->toString().'.'.$this->avatarUpload->getClientOriginalExtension())
-                ->toMediaCollection('avatar');
-            $this->avatarUpload = null;
-        }
-
-        if ($this->coverUpload instanceof TemporaryUploadedFile) {
-            $user->clearMediaCollection('cover');
-            $user->addMedia($this->coverUpload->getRealPath())
-                ->usingFileName(Str::uuid()->toString().'.'.$this->coverUpload->getClientOriginalExtension())
-                ->toMediaCollection('cover');
-            $this->coverUpload = null;
-        }
+        $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'jpg';
+        $user->clearMediaCollection($collection);
+        $user->addMedia($file->getRealPath())
+            ->usingFileName(Str::uuid()->toString().'.'.$extension)
+            ->toMediaCollection($collection);
     }
 
     /**
@@ -618,10 +685,18 @@ class ProfilePage extends Page
 
     /**
      * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
+     * @return array<string, mixed>|null null tells Filament to skip creating/saving this row
      */
-    private function normalizeWorkExperienceData(array $data): array
+    private function normalizeWorkExperienceData(array $data): ?array
     {
+        $keyFields = ['company_name', 'position', 'description', 'start_date'];
+
+        $hasAnyData = collect($keyFields)->contains(fn (string $field): bool => filled($data[$field] ?? null));
+
+        if (!$hasAnyData) {
+            return null;
+        }
+
         if ($data['is_currently_working_here'] ?? false) {
             $data['end_date'] = null;
         }
@@ -647,6 +722,53 @@ class ProfilePage extends Page
         return $skills;
     }
 
+    private function appendEmptyRepeaterItemIfLastRow(Select|TextInput $component): void
+    {
+        $repeater = $component->getParentRepeater();
+
+        if (!$repeater instanceof Repeater) {
+            return;
+        }
+
+        $items = $repeater->getRawState();
+
+        if (!is_array($items) || blank($items)) {
+            return;
+        }
+
+        $repeaterPath = $repeater->getStatePath();
+        $componentPath = $component->getStatePath();
+
+        if ($repeaterPath === null || $componentPath === null) {
+            return;
+        }
+
+        $currentKey = explode('.', mb_substr($componentPath, mb_strlen($repeaterPath) + 1))[0];
+
+        if ($currentKey !== array_key_last($items)) {
+            return;
+        }
+
+        $newUuid = $repeater->generateUuid();
+
+        if ($newUuid) {
+            $items[$newUuid] = [];
+        } else {
+            $items[] = [];
+        }
+
+        $repeater->rawState($items);
+
+        $childSchema = $repeater->getChildSchema($newUuid ?? array_key_last($items));
+
+        if ($childSchema instanceof Schema) {
+            $childSchema->fill();
+        }
+
+        $repeater->collapsed(condition: false, shouldMakeComponentCollapsible: false);
+        $repeater->callAfterStateUpdated();
+    }
+
     /**
      * Skill ids already chosen in the other rows of the skills repeater, so the
      * search can omit them and each skill is only pickable once.
@@ -656,12 +778,16 @@ class ProfilePage extends Page
     private function skillIdsInSiblingRows(Select $component): array
     {
         $repeater = $component->getParentRepeater();
-        if ($repeater === null) {
+
+        if (!$repeater instanceof Repeater) {
             return [];
         }
 
-        /** @var array<int|string, array<string, mixed>> $rows */
         $rows = $repeater->getRawState();
+
+        if (!is_array($rows)) {
+            return [];
+        }
 
         return array_values(
             collect($rows)
