@@ -1,4 +1,4 @@
-## Summary
+## Contexto
 
 <!--
 Descreva o contexto deste PR respondendo às seguintes perguntas:
@@ -28,7 +28,8 @@ Liste, em formato de checklist, todos os passos executados para validar esta alt
 O objetivo é permitir que qualquer revisor consiga reproduzir a validação realizada.
 -->
 
-- [ ] ...
+- [ ] Executar `make check`
+- [ ] Executar `make test`
 - [ ] ...
 - [ ] ...
 - [ ] ...
@@ -61,6 +62,6 @@ Closes #123
 Fixes #123
 Resolves #123
 Related to #123
--->
 
-Closes #
+Exemplo: Closes #123
+-->
