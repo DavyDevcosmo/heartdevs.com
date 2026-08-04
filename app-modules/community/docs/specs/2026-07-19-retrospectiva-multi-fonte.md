@@ -201,7 +201,7 @@ si só):
 
 - **Formato do contrato** (option A normalizado / B payload por fonte / C híbrido): escolhido C. Ver
   ADR-0001.
-- **Conteúdo do snapshot** (deck final composto vs SourceResults crus + config separada): escolhido crus
-    - config, por segurança editorial (ajustar curadoria não recomputa números). Ver ADR-0002.
+- **Conteúdo do snapshot** (deck final composto vs SourceResults crus + config separada): escolhido
+  crus mais config, por segurança editorial (ajustar curadoria não recomputa números). Ver ADR-0002.
 - **Período** (cadence vs datas livres): escolhido datas livres. Ver ADR-0002.
 - **Descoberta** (tagged services vs config central vs auto-scan): escolhido tagged services.
