@@ -14,6 +14,7 @@ use He4rt\Identity\User\Models\User;
 use He4rt\IntegrationGithub\Models\GithubContribution;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Pages\BuildDeck;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\RetrospectiveResource;
+use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode;
 use Illuminate\Support\Facades\Bus;
 use Tests\Support\Retrospective\PlainRetrospectiveSource;
 
@@ -361,4 +362,16 @@ test('o builder ocupa a largura inteira da viewport', function (): void {
     $page = livewire(BuildDeck::class, ['record' => $retrospective->id])->instance();
 
     expect($page->getMaxContentWidth())->toBe(Width::Full);
+});
+
+test('o inspector não repete um cabeçalho genérico acima da seção do formulário', function (): void {
+    // A Section do formulário já nomeia o alvo ("Bloco: Discord") e explica o efeito;
+    // um cabeçalho com o label do modo em cima dizia a mesma coisa, mais vago.
+    $retrospective = retrospectiveWithOrder();
+
+    livewire(BuildDeck::class, ['record' => $retrospective->id])
+        ->call('select', 'source:discord')
+        ->assertSee('Bloco: Discord')
+        ->assertDontSee(InspectorMode::Source->getLabel())
+        ->assertDontSee(InspectorMode::Source->getDescription());
 });

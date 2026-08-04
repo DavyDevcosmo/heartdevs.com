@@ -254,6 +254,7 @@ class BuildDeck extends Page
     {
         return [
             Section::make('Capa')
+                ->icon(InspectorMode::Cover->getIcon())
                 ->description('Só texto editorial e recorte; números, avatares e período exibido são computados à parte.')
                 ->schema([
                     TextInput::make('title')
@@ -295,6 +296,7 @@ class BuildDeck extends Page
     {
         return [
             Section::make('Fecho')
+                ->icon(InspectorMode::Closing->getIcon())
                 ->description('A última palavra do deck.')
                 ->schema([
                     Textarea::make('closing_text')
@@ -315,6 +317,7 @@ class BuildDeck extends Page
     {
         $sections = [
             Section::make('Bloco: '.$this->sourceLabel($key))
+                ->icon(InspectorMode::Source->getIcon())
                 ->description('Desligar re-deriva do snapshot na composição, sem republicar.')
                 ->schema([
                     Toggle::make('visible')
@@ -331,6 +334,7 @@ class BuildDeck extends Page
         $picker = $this->picker($source);
 
         $sections[] = Section::make('Exclusions')
+            ->icon(Heroicon::OutlinedEyeSlash)
             ->description('Esconde um item ou pessoa desta fonte. Mexe no DADO: sai dos slides e também dos números, então exige republicar para valer.')
             ->schema([
                 CheckboxList::make('exclusion_items')
@@ -366,6 +370,7 @@ class BuildDeck extends Page
             // O kind pode não estar em catálogo nenhum (token velho vindo da wire);
             // nesse caso o próprio kind serve de rótulo.
             Section::make('Slide: '.($entry->label ?? $kind))
+                ->icon(InspectorMode::Slide->getIcon())
                 ->description($entry->hint ?? InspectorMode::Slide->getDescription())
                 ->schema([
                     Toggle::make('visible')

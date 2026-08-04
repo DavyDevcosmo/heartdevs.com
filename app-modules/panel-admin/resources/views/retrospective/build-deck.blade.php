@@ -180,16 +180,13 @@
             </x-filament::section>
         </div>
 
-        {{-- Coluna 3: inspector. Contextual, quatro modos, escreve onde a Fase 2 escrevia. --}}
+        {{--
+            Coluna 3: inspector. Contextual, quatro modos, escreve onde a Fase 2
+            escrevia. Sem cabeçalho próprio: a Section de cada modo já nomeia o alvo
+            ("Bloco: Discord") e carrega o ícone do modo — um título genérico em cima
+            só repetia isso de forma mais vaga.
+        --}}
         <div class="min-w-0">
-            <div class="mb-3 flex items-start gap-2">
-                <x-filament::icon :icon="$mode->getIcon()" class="mt-0.5 h-5 w-5 shrink-0 text-gray-400" />
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-950 dark:text-white">{{ $mode->getLabel() }}</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $mode->getDescription() }}</p>
-                </div>
-            </div>
-
             {{ $this->form }}
         </div>
     </div>
