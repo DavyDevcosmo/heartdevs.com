@@ -30,9 +30,17 @@
         @endif
     </div>
 
-    <div class="grid grid-cols-1 gap-4 xl:grid-cols-12">
+    {{--
+        Laterais com largura FIXA e preview em 1fr: a estrutura é uma lista e o
+        inspector é um formulário — o que ambos precisam não cresce com a tela. O
+        preview é um deck inteiro, então fica com todo o espaço restante e absorve
+        cada pixel extra de monitor. Proporção fixa (3/6/3) daria ao preview sempre
+        a mesma fatia, por maior que fosse a viewport.
+    --}}
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-[16rem_minmax(0,1fr)_18rem]">
         {{-- Coluna 1: estrutura. Só seleciona e reordena; nada aqui salva texto. --}}
-        <div class="xl:col-span-3">
+        <div class="min-w-0">
+
             <x-filament::section>
                 <x-slot name="heading">Estrutura</x-slot>
                 <x-slot name="description">Clique para inspecionar. Use as setas para reordenar os blocos.</x-slot>
@@ -143,7 +151,7 @@
             mesmo ComposeDeck da página publicada — a única garantia de que o preview
             não mente é ser literalmente a mesma coisa (ADR-0002).
         --}}
-        <div class="xl:col-span-6">
+        <div class="min-w-0">
             <x-filament::section>
                 <x-slot name="heading">Preview</x-slot>
                 <x-slot name="description">Prévia ao vivo pelo mesmo render path do deck publicado.</x-slot>
@@ -173,7 +181,7 @@
         </div>
 
         {{-- Coluna 3: inspector. Contextual, quatro modos, escreve onde a Fase 2 escrevia. --}}
-        <div class="xl:col-span-3">
+        <div class="min-w-0">
             <div class="mb-3 flex items-start gap-2">
                 <x-filament::icon :icon="$mode->getIcon()" class="mt-0.5 h-5 w-5 shrink-0 text-gray-400" />
                 <div>
