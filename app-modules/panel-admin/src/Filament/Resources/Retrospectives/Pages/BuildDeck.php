@@ -18,6 +18,7 @@ use Filament\Schemas\Components\Actions as SchemaActions;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use He4rt\Community\Retrospective\Contracts\CuratableSource;
 use He4rt\Community\Retrospective\Enums\ExclusionKind;
@@ -68,6 +69,13 @@ class BuildDeck extends Page
     protected static string $resource = RetrospectiveResource::class;
 
     protected string $view = 'panel-admin::retrospective.build-deck';
+
+    /**
+     * Largura cheia: as três colunas do ADR-0002 (estrutura, iframe do deck,
+     * inspector) não caem bem no 7xl padrão do painel — o preview do meio é um deck
+     * inteiro, não um card. Só esta página; o resto do painel segue no default.
+     */
+    protected Width|string|null $maxContentWidth = Width::Full;
 
     public function mount(int|string $record): void
     {

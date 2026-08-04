@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Filament\Facades\Filament;
+use Filament\Support\Enums\Width;
 use He4rt\Community\Retrospective\DTOs\DeckConfig;
 use He4rt\Community\Retrospective\DTOs\RetrospectiveSnapshot;
 use He4rt\Community\Retrospective\DTOs\SourceFilters;
@@ -351,4 +352,13 @@ test('o builder acompanha a transição de publicando para publicada', function 
         ->call('refreshStatus')
         ->assertSee(RetrospectiveStatus::Published->getLabel())
         ->assertDontSee(RetrospectiveStatus::Publishing->getLabel());
+});
+
+test('o builder ocupa a largura inteira da viewport', function (): void {
+    // Três colunas com iframe de deck no meio não cabem no 7xl padrão do painel.
+    $retrospective = Retrospective::factory()->create();
+
+    $page = livewire(BuildDeck::class, ['record' => $retrospective->id])->instance();
+
+    expect($page->getMaxContentWidth())->toBe(Width::Full);
 });
