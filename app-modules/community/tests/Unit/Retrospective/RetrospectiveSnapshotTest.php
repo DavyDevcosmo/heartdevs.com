@@ -5,6 +5,7 @@ declare(strict_types=1);
 use He4rt\Community\Retrospective\DTOs\HeadlineMetrics;
 use He4rt\Community\Retrospective\DTOs\Metric;
 use He4rt\Community\Retrospective\DTOs\RetrospectiveSnapshot;
+use He4rt\Community\Retrospective\DTOs\SourceFilters;
 use He4rt\Community\Retrospective\DTOs\SourceResult;
 use He4rt\Community\Retrospective\Slides\FrozenSlide;
 
@@ -55,4 +56,24 @@ it('ignora fontes e métricas malformadas ao reidratar', function (): void {
         ->and($restored->sources[0]->headline->metrics)->toHaveCount(1)
         ->and($restored->sources[0]->slides)->toHaveCount(1)
         ->and($restored->sources[0]->slides[0]->kind())->toBe('discord.messages');
+});
+
+it('lembra os filtros com que foi compilado, para o painel detectar drift', function (): void {
+    $filters = new SourceFilters(hideBots: false, exclusions: ['pr:1', 'actor:maria']);
+
+    $snapshot = new RetrospectiveSnapshot(sources: [], filters: $filters);
+
+    $restored = RetrospectiveSnapshot::makeFromPayload($snapshot->toArray());
+
+    expect($restored->filters->hideBots)->toBeFalse()
+        ->and($restored->filters->exclusions)->toBe(['pr:1', 'actor:maria']);
+});
+
+it('assume os filtros padrão em snapshot antigo, sem a chave', function (): void {
+    // Snapshots congelados antes desta mudança não têm `filters` no jsonb; reidratar
+    // não pode explodir nem inventar drift.
+    $restored = RetrospectiveSnapshot::makeFromPayload(['sources' => []]);
+
+    expect($restored->filters->hideBots)->toBeTrue()
+        ->and($restored->filters->exclusions)->toBeEmpty();
 });

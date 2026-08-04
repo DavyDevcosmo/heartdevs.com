@@ -1,11 +1,35 @@
 @php
+    use He4rt\Community\Retrospective\Enums\RetrospectiveStatus;
     use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode;
 
     $selection = $this->selection();
     $mode = $selection->mode;
+    $record = $this->getRetrospective();
+    $status = $record->status;
 @endphp
 
 <x-filament-panels::page>
+    {{--
+        Status da edição + aviso de drift. Enquanto o job congela o snapshot o poll
+        relê o registro, para "Publicando" virar "Publicada" sem recarregar na mão.
+    --}}
+    <div
+        class="flex flex-wrap items-center gap-2"
+        @if ($status === RetrospectiveStatus::Publishing) wire:poll.3s="refreshStatus" @endif
+    >
+        <x-filament::badge :color="$status->getColor()" :icon="$status->getIcon()">
+            {{ $status->getLabel() }}
+        </x-filament::badge>
+
+        <span class="text-xs text-gray-500 dark:text-gray-400">{{ $status->getDescription() }}</span>
+
+        @if ($record->needsRepublish())
+            <x-filament::badge color="warning" icon="heroicon-m-exclamation-triangle">
+                Republique: exclusion mudou depois de publicar
+            </x-filament::badge>
+        @endif
+    </div>
+
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-12">
         {{-- Coluna 1: estrutura. Só seleciona e reordena; nada aqui salva texto. --}}
         <div class="xl:col-span-3">
@@ -122,7 +146,7 @@
         <div class="xl:col-span-6">
             <x-filament::section>
                 <x-slot name="heading">Preview</x-slot>
-                <x-slot name="description">Rascunho ao vivo pelo render path do deck publicado.</x-slot>
+                <x-slot name="description">Prévia ao vivo pelo mesmo render path do deck publicado.</x-slot>
 
                 <div
                     wire:key="preview-{{ $this->previewVersion }}"

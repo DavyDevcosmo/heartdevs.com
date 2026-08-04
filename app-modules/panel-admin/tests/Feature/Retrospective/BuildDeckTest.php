@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Filament\Facades\Filament;
 use He4rt\Community\Retrospective\DTOs\DeckConfig;
+use He4rt\Community\Retrospective\DTOs\RetrospectiveSnapshot;
+use He4rt\Community\Retrospective\DTOs\SourceFilters;
 use He4rt\Community\Retrospective\Enums\RetrospectiveStatus;
 use He4rt\Community\Retrospective\Jobs\CompileRetrospectiveSnapshot;
 use He4rt\Community\Retrospective\Models\Retrospective;
@@ -295,4 +297,58 @@ test('o preview fura cache com a versão do registro', function (): void {
     expect($component->instance()->previewUrl())
         ->toContain('v=')
         ->not->toBe($before);
+});
+
+test('o builder mostra o status da edição', function (): void {
+    $retrospective = Retrospective::factory()->create();
+
+    livewire(BuildDeck::class, ['record' => $retrospective->id])
+        ->assertSee(RetrospectiveStatus::Draft->getLabel());
+});
+
+test('o builder avisa quando a edição publicada está com exclusion alterada depois', function (): void {
+    $retrospective = Retrospective::factory()
+        ->published(new RetrospectiveSnapshot(
+            sources: [],
+            filters: new SourceFilters(hideBots: true, exclusions: ['pr:1']),
+        ))
+        ->create([
+            'hide_bots' => true,
+            'deck_config' => new DeckConfig(exclusions: ['github' => ['pr:1', 'pr:2']]),
+        ]);
+
+    livewire(BuildDeck::class, ['record' => $retrospective->id])
+        ->assertSee('Republique');
+});
+
+test('o builder não avisa drift quando só ordem e on/off mudaram', function (): void {
+    $retrospective = Retrospective::factory()
+        ->published(new RetrospectiveSnapshot(sources: [], filters: new SourceFilters(hideBots: true)))
+        ->create([
+            'hide_bots' => true,
+            'deck_config' => new DeckConfig(order: ['discord', 'github'], hiddenSources: ['discord']),
+        ]);
+
+    livewire(BuildDeck::class, ['record' => $retrospective->id])
+        ->assertDontSee('Republique');
+});
+
+test('o builder acompanha a transição de publicando para publicada', function (): void {
+    $retrospective = Retrospective::factory()->create(['status' => RetrospectiveStatus::Publishing]);
+
+    $component = livewire(BuildDeck::class, ['record' => $retrospective->id])
+        ->assertSee(RetrospectiveStatus::Publishing->getLabel());
+
+    // O job termina em segundo plano; sem poll o operador ficaria olhando
+    // "Publicando" até recarregar na mão.
+    $retrospective->update([
+        'status' => RetrospectiveStatus::Published,
+        'published_at' => now(),
+        'snapshot' => new RetrospectiveSnapshot(),
+    ]);
+
+    $component
+        ->call('refreshStatus')
+        ->assertSee(RetrospectiveStatus::Published->getLabel())
+        ->assertDontSee(RetrospectiveStatus::Publishing->getLabel());
 });

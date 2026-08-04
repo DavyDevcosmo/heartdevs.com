@@ -87,6 +87,15 @@ class BuildDeck extends Page
     }
 
     /**
+     * Relê o registro para a UI acompanhar o job de publicação. Chamado pelo poll da
+     * view: sem isso o operador fica olhando "Publicando" até recarregar na mão.
+     */
+    public function refreshStatus(): void
+    {
+        $this->getRetrospective()->refresh();
+    }
+
+    /**
      * Seleciona um alvo na coluna de estrutura e recarrega o inspector no modo
      * correspondente.
      */

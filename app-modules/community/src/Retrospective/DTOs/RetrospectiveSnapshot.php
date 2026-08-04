@@ -18,9 +18,11 @@ final readonly class RetrospectiveSnapshot
 {
     /**
      * @param  list<SourceResult>  $sources
+     * @param  SourceFilters  $filters  os filtros que PRODUZIRAM estes números
      */
     public function __construct(
         public array $sources = [],
+        public SourceFilters $filters = new SourceFilters(),
     ) {}
 
     /**
@@ -43,7 +45,7 @@ final readonly class RetrospectiveSnapshot
             );
         }
 
-        return new self($sources);
+        return new self($sources, self::filters($payload['filters'] ?? null));
     }
 
     /**
@@ -52,6 +54,13 @@ final readonly class RetrospectiveSnapshot
     public function toArray(): array
     {
         return [
+            // Guardar os filtros junto dos números é o que deixa o painel dizer com
+            // honestidade "republique": sem isso só daria para comparar updated_at,
+            // que também muda em ordem e on/off — justo o que NÃO exige republicar.
+            'filters' => [
+                'hide_bots' => $this->filters->hideBots,
+                'exclusions' => $this->filters->exclusions,
+            ],
             'sources' => array_map(
                 fn (SourceResult $source): array => [
                     'key' => $source->key,
@@ -75,6 +84,30 @@ final readonly class RetrospectiveSnapshot
     public function isEmpty(): bool
     {
         return $this->sources === [];
+    }
+
+    /**
+     * Snapshots congelados antes desta chave existir reidratam com os filtros padrão
+     * — não podem explodir nem inventar drift.
+     */
+    private static function filters(mixed $raw): SourceFilters
+    {
+        if (!is_array($raw)) {
+            return new SourceFilters();
+        }
+
+        $exclusions = [];
+
+        foreach ((array) ($raw['exclusions'] ?? []) as $ref) {
+            if (is_string($ref)) {
+                $exclusions[] = $ref;
+            }
+        }
+
+        return new SourceFilters(
+            hideBots: (bool) ($raw['hide_bots'] ?? true),
+            exclusions: $exclusions,
+        );
     }
 
     private static function headline(mixed $raw): HeadlineMetrics

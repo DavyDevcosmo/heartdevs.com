@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use Filament\Facades\Filament;
+use Filament\Tables\Table as FilamentTable;
 use He4rt\Community\Retrospective\Enums\RetrospectiveStatus;
 use He4rt\Community\Retrospective\Models\Retrospective;
 use He4rt\Identity\User\Models\User;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Pages\CreateRetrospective;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Pages\ListRetrospectives;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\RetrospectiveResource;
+use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Tables\RetrospectivesTable;
 
 use function Pest\Livewire\livewire;
 
@@ -60,4 +62,23 @@ test('a ação de editar da tabela leva ao Deck Builder', function (): void {
     $retrospective = Retrospective::factory()->create();
 
     expect(RetrospectiveResource::getUrl('edit', ['record' => $retrospective]))->toEndWith('/deck');
+});
+
+test('a lista acompanha a publicação em segundo plano sem recarregar', function (): void {
+    $retrospective = Retrospective::factory()->create(['status' => RetrospectiveStatus::Publishing]);
+
+    $component = livewire(ListRetrospectives::class)
+        ->loadTable()
+        ->assertSee(RetrospectiveStatus::Publishing->getLabel());
+
+    $retrospective->update(['status' => RetrospectiveStatus::Published, 'published_at' => now()]);
+
+    // O poll da tabela é o que faz "Publicando" virar "Publicada" quando o job termina.
+    $component
+        ->call('$refresh')
+        ->assertSee(RetrospectiveStatus::Published->getLabel());
+
+    expect(RetrospectivesTable::configure(
+        FilamentTable::make($component->instance())
+    )->getPollingInterval())->not->toBeNull();
 });
