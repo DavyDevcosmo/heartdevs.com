@@ -12,6 +12,7 @@ use He4rt\Activity\Voice\Models\Voice;
 use He4rt\Community\Retrospective\DTOs\Period;
 use He4rt\Community\Retrospective\DTOs\SourceFilters;
 use He4rt\Community\Retrospective\DTOs\SourceResult;
+use He4rt\Community\Retrospective\Enums\ExclusionKind;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 
 beforeEach(function (): void {
@@ -184,4 +185,70 @@ it('expõe os chips do cover só para o que teve dado', function (): void {
 
     expect($result->label)->toBe('Discord')
         ->and($labels)->toBe(['Mensagens']);
+});
+
+/**
+ * Curadoria (Fase 3): a fonte se descreve para o Deck Builder e honra as
+ * exclusions no collect — o que é excluído sai dos slides E dos números.
+ */
+it('descreve o catálogo de slides sem tocar o dado', function (): void {
+    $catalog = new DiscordSource()->slideCatalog();
+
+    expect(collect($catalog)->pluck('kind')->all())
+        ->toBe(['discord.voice_board', 'discord.messages', 'discord.new_members', 'discord.reactions', 'discord.top_message'])
+        ->and($catalog[0]->label)->toBe('Voz');
+});
+
+it('oferece mensagens reagidas e pessoas do recorte como candidatos a exclusion', function (): void {
+    $alice = dcIdentity('Alice');
+
+    $top = Message::factory()->create(['external_identity_id' => $alice->id, 'sent_at' => '2026-06-02', 'reactions_total' => 9, 'content' => 'compre seguidores']);
+    Message::factory()->create(['external_identity_id' => $alice->id, 'sent_at' => '2026-06-03', 'reactions_total' => 0]);
+    Message::factory()->create(['external_identity_id' => $alice->id, 'sent_at' => '2026-05-01', 'reactions_total' => 99]);
+
+    $candidates = new DiscordSource()->exclusionCandidates(Period::of($this->since, $this->until));
+
+    $items = collect($candidates)->filter(fn ($candidate): bool => $candidate->kind === ExclusionKind::Item);
+    $people = collect($candidates)->filter(fn ($candidate): bool => $candidate->kind === ExclusionKind::Person);
+
+    // Só o que o deck exibe com conteúdo (reagidas) e dentro do recorte.
+    expect($items->pluck('ref')->all())->toBe(['message:'.$top->id])
+        ->and($items->first()->label)->toBe('compre seguidores')
+        ->and($people->pluck('ref')->all())->toBe(['member:'.$alice->id])
+        ->and($people->first()->label)->toBe('Alice');
+});
+
+it('exclusion de mensagem some do destaque e dos números', function (): void {
+    $alice = dcIdentity('Alice');
+
+    $spam = Message::factory()->create(['external_identity_id' => $alice->id, 'sent_at' => '2026-06-02', 'reactions_total' => 30, 'content' => 'scam']);
+    Message::factory()->create(['external_identity_id' => $alice->id, 'sent_at' => '2026-06-03', 'reactions_total' => 4, 'content' => 'mensagem boa']);
+
+    $result = new DiscordSource()->collect(
+        Period::of($this->since, $this->until),
+        new SourceFilters(exclusions: ['message:'.$spam->id]),
+    );
+
+    expect(dcSlide($result, 'discord.messages')['total'])->toBe(1)
+        ->and(dcSlide($result, 'discord.top_message')['messages'][0]['content'])->toBe('mensagem boa');
+});
+
+it('exclusion de pessoa some das mensagens e do board de voz', function (): void {
+    $alice = dcIdentity('Alice');
+    $spammer = dcIdentity('Spammer');
+
+    Message::factory()->create(['external_identity_id' => $alice->id, 'sent_at' => '2026-06-02']);
+    Message::factory()->create(['external_identity_id' => $spammer->id, 'sent_at' => '2026-06-02']);
+    Voice::factory()->create(['external_identity_id' => $alice->id, 'channel_name' => 'geral', 'obtained_experience' => 10, 'occurred_at' => '2026-06-02']);
+    Voice::factory()->create(['external_identity_id' => $spammer->id, 'channel_name' => 'geral', 'obtained_experience' => 90, 'occurred_at' => '2026-06-02']);
+
+    $result = new DiscordSource()->collect(
+        Period::of($this->since, $this->until),
+        new SourceFilters(exclusions: ['member:'.$spammer->id]),
+    );
+
+    expect(dcSlide($result, 'discord.messages')['total'])->toBe(1)
+        ->and(dcSlide($result, 'discord.messages')['chatters'])->toHaveCount(1)
+        ->and(dcSlide($result, 'discord.voice_board')['participants'])->toBe(1)
+        ->and(dcSlide($result, 'discord.voice_board')['xp'])->toBe(10);
 });
