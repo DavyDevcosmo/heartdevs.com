@@ -58,9 +58,16 @@ interface RetrospectiveSource {
 SourceResult = HeadlineMetrics (Metric[] chips, por fonte) + Slide[] (DTO tipado por kind)
 interface Slide { kind(): string }        // classes concretas no modulo que emite
 
-// Fase 3, adicionado por ISP sem mexer no contrato acima:
-interface CuratableSource { slideCatalog(); exclusionCandidates(Period) }
+// Fase 3 (IMPLEMENTADO), adicionado por ISP sem mexer no contrato acima:
+interface CuratableSource {
+    slideCatalog(): SlideDescriptor[]              // estatico, sem tocar o banco
+    exclusionCandidates(Period): ExclusionCandidate[]  // varre dado: escopado + LIMIT + cache
+}
 ```
+
+`GithubSource` e `DiscordSource` implementam as duas interfaces. Uma fonte que **não** implementa
+`CuratableSource` continua entrando no deck e no Deck Builder com ordem e on/off, só sem catálogo de
+slides nem picker de exclusions — o painel checa `instanceof`.
 
 Cada fonte emite **dado, nunca markup**. O `portal` mapeia `kind` (ex.: `github.repos`,
 `discord.voice_board`) para um componente Blade. As fontes são descobertas por **tagged services**
@@ -80,16 +87,21 @@ Duas camadas de curadoria: filtro que **mexe no dado** (`hideBots`, exclusions) 
 para o headline sair consistente; curadoria de **apresentação** (ordem, on/off, título, max itens) fica
 na orquestração, nunca na fonte.
 
+Daí a regra editorial que a UI diz em voz alta: **exclusion exige republicar** (recompila o snapshot),
+ordem e on/off não (re-derivam na composição). Os refs são namespaced por prefixo (`pr:`, `issue:`,
+`actor:`, `message:`, `member:`) porque `DeckConfig::allExclusions()` achata tudo numa lista só — cada
+fonte reconhece apenas o que emite.
+
 ### Mapa de módulos
 
-| Módulo | Papel | Depende de |
-|---|---|---|
-| `community` (domínio) | contrato, entidade `Retrospective`, VOs `Period`/`SourceFilters`, interface `Slide` | nada novo |
-| `integration-github` | `GithubSource` | community (Integration -> Domain) |
-| `activity` (domínio) | `DiscordSource` | community (Domain -> Domain, sem ciclo) |
-| `integration-whatsapp` | `WhatsAppSource` (posterior) | community (Integration -> Domain) |
-| `portal` (apresentação) | orquestrador + blades | community + fontes |
-| `panel-admin` (apresentação) | CRUD (F2) + Deck Builder (F3) | community |
+| Módulo                       | Papel                                                                               | Depende de                              |
+| ---------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------- |
+| `community` (domínio)        | contrato, entidade `Retrospective`, VOs `Period`/`SourceFilters`, interface `Slide` | nada novo                               |
+| `integration-github`         | `GithubSource`                                                                      | community (Integration -> Domain)       |
+| `activity` (domínio)         | `DiscordSource`                                                                     | community (Domain -> Domain, sem ciclo) |
+| `integration-whatsapp`       | `WhatsAppSource` (posterior)                                                        | community (Integration -> Domain)       |
+| `portal` (apresentação)      | orquestrador + blades                                                               | community + fontes                      |
+| `panel-admin` (apresentação) | List/Create + Deck Builder (F3 substituiu o CRUD da F2)                             | community                               |
 
 `DiscordSource` fica no `activity` (e não no `integration-discord`) porque o dado da retrospectiva
 (`Voice`, `Message`, `Reaction`, `MembershipEvent`) é modelado no `activity`. A regra é "a fonte mora no
@@ -179,7 +191,10 @@ si só):
 - **PR-B (Fase 2):** entidade `Retrospective` + datas/textos + snapshot ao publicar + view pública lê
   snapshot + **CRUD Filament completo em capacidade** (feio, mas cura tudo).
 - **PR-C (Fase 3):** Deck Builder 3 colunas + exclusions com UI. Puro upgrade de UX, zero capacidade
-  nova (se nunca vier, a feature funciona 100%).
+  nova (se nunca vier, a feature funciona 100%). O builder **substitui** a página de edição (ocupa a chave
+  `edit` com rota `/{record}/deck`), e a curadoria entra por `CuratableSource`. Única exceção ao "zero
+  capacidade nova": exclusion, que era campo morto desde a Fase 1, passou a valer de verdade dentro do
+  `collect()` — completar a Fase 1, não inventar. Ver ADR-0002 do `panel-admin`.
 - **PR aditivo (após PR-A):** `WhatsAppSource` (parsing do lake + regra de privacidade: sem telefone).
 
 ## Trade-offs / Alternativas consideradas
@@ -187,6 +202,6 @@ si só):
 - **Formato do contrato** (option A normalizado / B payload por fonte / C híbrido): escolhido C. Ver
   ADR-0001.
 - **Conteúdo do snapshot** (deck final composto vs SourceResults crus + config separada): escolhido crus
-  + config, por segurança editorial (ajustar curadoria não recomputa números). Ver ADR-0002.
+    - config, por segurança editorial (ajustar curadoria não recomputa números). Ver ADR-0002.
 - **Período** (cadence vs datas livres): escolhido datas livres. Ver ADR-0002.
 - **Descoberta** (tagged services vs config central vs auto-scan): escolhido tagged services.

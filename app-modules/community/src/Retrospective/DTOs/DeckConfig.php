@@ -90,6 +90,72 @@ final readonly class DeckConfig
     }
 
     /**
+     * Liga/desliga uma fonte no deck. Curadoria de apresentação: re-deriva do
+     * snapshot na composição, sem republicar.
+     */
+    public function withSourceVisible(string $key, bool $visible): self
+    {
+        return new self(
+            order: $this->order,
+            hiddenSources: $this->toggled($this->hiddenSources, $key, hidden: !$visible),
+            hiddenSlides: $this->hiddenSlides,
+            exclusions: $this->exclusions,
+        );
+    }
+
+    /**
+     * Liga/desliga um KIND de slide (não uma instância): "github.repos" esconde o
+     * bloco de repositórios inteiro (ADR-0002 do panel-admin).
+     */
+    public function withSlideVisible(string $kind, bool $visible): self
+    {
+        return new self(
+            order: $this->order,
+            hiddenSources: $this->hiddenSources,
+            hiddenSlides: $this->toggled($this->hiddenSlides, $kind, hidden: !$visible),
+            exclusions: $this->exclusions,
+        );
+    }
+
+    /**
+     * @param  list<string>  $order
+     */
+    public function withOrder(array $order): self
+    {
+        return new self(
+            order: $order,
+            hiddenSources: $this->hiddenSources,
+            hiddenSlides: $this->hiddenSlides,
+            exclusions: $this->exclusions,
+        );
+    }
+
+    /**
+     * Substitui a lista de refs de UMA fonte; as demais ficam intactas. Exclusion
+     * mexe no dado, então quem chama isto precisa avisar que exige republicar.
+     *
+     * @param  list<string>  $refs
+     */
+    public function withExclusionsFor(string $key, array $refs): self
+    {
+        $exclusions = $this->exclusions;
+        $normalized = $this->normalizedRefs($refs);
+
+        if ($normalized === []) {
+            unset($exclusions[$key]);
+        } else {
+            $exclusions[$key] = $normalized;
+        }
+
+        return new self(
+            order: $this->order,
+            hiddenSources: $this->hiddenSources,
+            hiddenSlides: $this->hiddenSlides,
+            exclusions: $exclusions,
+        );
+    }
+
+    /**
      * Todos os refs excluídos, achatados, para montar o SourceFilters do collect.
      *
      * @return list<string>
@@ -121,6 +187,39 @@ final readonly class DeckConfig
         foreach ($value as $item) {
             if (is_string($item)) {
                 $out[] = $item;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  list<string>  $list
+     * @return list<string>
+     */
+    private function toggled(array $list, string $value, bool $hidden): array
+    {
+        $without = array_values(array_filter(
+            $list,
+            static fn (string $item): bool => $item !== $value,
+        ));
+
+        return $hidden ? [...$without, $value] : $without;
+    }
+
+    /**
+     * @param  list<string>  $refs
+     * @return list<string>
+     */
+    private function normalizedRefs(array $refs): array
+    {
+        $out = [];
+
+        foreach ($refs as $ref) {
+            $trimmed = mb_trim($ref);
+
+            if ($trimmed !== '' && !in_array($trimmed, $out, strict: true)) {
+                $out[] = $trimmed;
             }
         }
 

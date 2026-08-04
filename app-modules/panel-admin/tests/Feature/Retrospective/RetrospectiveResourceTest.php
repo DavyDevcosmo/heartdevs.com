@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 use Filament\Facades\Filament;
 use He4rt\Community\Retrospective\Enums\RetrospectiveStatus;
-use He4rt\Community\Retrospective\Jobs\CompileRetrospectiveSnapshot;
 use He4rt\Community\Retrospective\Models\Retrospective;
 use He4rt\Identity\User\Models\User;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Pages\CreateRetrospective;
-use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Pages\EditRetrospective;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Pages\ListRetrospectives;
-use Illuminate\Support\Facades\Bus;
+use He4rt\PanelAdmin\Filament\Resources\Retrospectives\RetrospectiveResource;
 
 use function Pest\Livewire\livewire;
 
@@ -24,7 +22,7 @@ beforeEach(function (): void {
     Filament::setCurrentPanel(Filament::getPanel('admin'));
 });
 
-test('admin cria uma retrospectiva como rascunho com deck_config montado', function (): void {
+test('admin cria uma retrospectiva como rascunho com a ordem das fontes semeada', function (): void {
     livewire(CreateRetrospective::class)
         ->fillForm([
             'title' => 'Retro de Junho',
@@ -41,6 +39,15 @@ test('admin cria uma retrospectiva como rascunho com deck_config montado', funct
         ->and($retrospective->deck_config->order)->toEqualCanonicalizing(['github', 'discord']);
 });
 
+test('criar exige título e período, e não pede curadoria', function (): void {
+    livewire(CreateRetrospective::class)
+        ->fillForm(['title' => ''])
+        ->call('create')
+        ->assertHasFormErrors(['title' => 'required', 'since' => 'required', 'until' => 'required'])
+        ->assertFormFieldDoesNotExist('deck_sources')
+        ->assertFormFieldDoesNotExist('deck_exclusions');
+});
+
 test('lista as retrospectivas cadastradas', function (): void {
     $retrospective = Retrospective::factory()->create(['title' => 'Retro X']);
 
@@ -49,27 +56,8 @@ test('lista as retrospectivas cadastradas', function (): void {
         ->assertCanSeeTableRecords([$retrospective]);
 });
 
-test('edita textos e curadoria de uma retrospectiva', function (): void {
+test('a ação de editar da tabela leva ao Deck Builder', function (): void {
     $retrospective = Retrospective::factory()->create();
 
-    livewire(EditRetrospective::class, ['record' => $retrospective->id])
-        ->fillForm(['cover_title' => 'Nova capa'])
-        ->call('save')
-        ->assertHasNoFormErrors();
-
-    expect($retrospective->fresh()->cover_title)->toBe('Nova capa');
-});
-
-test('publicar pelo painel marca publicando e enfileira o job', function (): void {
-    Bus::fake();
-
-    $retrospective = Retrospective::factory()->create();
-
-    livewire(EditRetrospective::class, ['record' => $retrospective->id])
-        ->callAction('publish')
-        ->assertNotified();
-
-    expect($retrospective->fresh()->status)->toBe(RetrospectiveStatus::Publishing);
-
-    Bus::assertDispatched(fn (CompileRetrospectiveSnapshot $job): bool => $job->retrospective->is($retrospective));
+    expect(RetrospectiveResource::getUrl('edit', ['record' => $retrospective]))->toEndWith('/deck');
 });
