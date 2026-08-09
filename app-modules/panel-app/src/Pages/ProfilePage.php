@@ -425,6 +425,8 @@ class ProfilePage extends Page
 
         resolve(SyncProfileSkills::class)->handle($profile, $this->repeaterToSkills($formData['skills'] ?? []));
 
+        $this->dispatch('scroll-to-top');
+
         $this->form->saveRelationships();
 
         Notification::make()
