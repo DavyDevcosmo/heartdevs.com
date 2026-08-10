@@ -46,6 +46,7 @@ use Livewire\WithFileUploads;
 
 /**
  * @property-read Schema $form
+ * @property-read Schema $birthdateForm
  */
 class ProfilePage extends Page
 {
@@ -53,6 +54,9 @@ class ProfilePage extends Page
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
+
+    /** @var array<string, mixed>|null */
+    public ?array $birthdateData = [];
 
     protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-user-circle';
 
@@ -72,7 +76,6 @@ class ProfilePage extends Page
 
         $this->form->fill([
             'nickname' => $profile->nickname,
-            'birthdate' => $profile->birthdate?->format('Y-m-d'),
             'headline' => $profile->headline,
             'seniority_level' => $profile->seniority_level,
             'years_experience' => $profile->years_experience,
@@ -91,6 +94,27 @@ class ProfilePage extends Page
                 $profile->preferences->employmentTypes,
             ),
         ]);
+
+        $this->birthdateForm->fill([
+            'birthdate' => $profile->birthdate?->format('Y-m-d'),
+        ]);
+    }
+
+    public function birthdateForm(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                DatePicker::make('birthdate')
+                    ->label(__('panel-app::profile.fields.birthdate'))
+                    ->native(condition: false)
+                    ->displayFormat('d/m/Y')
+                    ->format('Y-m-d')
+                    ->minDate(now()->subYears(120))
+                    ->maxDate(now()),
+            ])
+            // Own state path: fill() replaces the whole path, so sharing `data` with
+            // the main form wiped headline/seniority/etc. on mount.
+            ->statePath('birthdateData');
     }
 
     public function form(Schema $schema): Schema
@@ -387,6 +411,7 @@ class ProfilePage extends Page
 
     public function save(): void
     {
+        $birthdateData = $this->birthdateForm->getState();
         $formData = $this->form->getState();
         $profile = $this->getRecord();
 
@@ -394,7 +419,7 @@ class ProfilePage extends Page
 
         $dto = UpsertProfileDTO::fromArray([
             'nickname' => $this->data['nickname'] ?? null,
-            'birthdate' => $this->data['birthdate'] ?? null,
+            'birthdate' => $birthdateData['birthdate'] ?? null,
             'about' => $formData['about'] ?? null,
             'headline' => $formData['headline'] ?? null,
             'seniority_level' => $formData['seniority_level'] ?? null,

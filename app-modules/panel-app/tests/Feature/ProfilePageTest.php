@@ -95,6 +95,20 @@ test('profile page saves all fields', function (): void {
         ->and($this->profile->about)->toBe('Dev PHP apaixonado por Laravel');
 });
 
+test('profile page saves birthdate from date picker', function (): void {
+    livewire(ProfilePage::class)
+        ->fillForm([
+            'birthdate' => '1996-02-15',
+        ], 'birthdateForm')
+        ->call('save')
+        ->assertHasNoFormErrors([], 'birthdateForm')
+        ->assertNotified();
+
+    $this->profile->refresh();
+
+    expect($this->profile->birthdate?->format('Y-m-d'))->toBe('1996-02-15');
+});
+
 test('profile page saves social links from repeater', function (): void {
     livewire(ProfilePage::class)
         ->fillForm([

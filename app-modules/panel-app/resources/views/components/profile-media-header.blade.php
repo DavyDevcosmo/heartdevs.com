@@ -2,7 +2,8 @@
     'avatarPreviewUrl' => null,
     'coverPreviewUrl' => null,
     'initials' => '',
-    'name' => ''
+    'name' => '',
+    'birthdateForm' => null,
 ])
 
 <div class="relative rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900">
@@ -100,7 +101,7 @@
         </div>
 
         {{-- Nickname + Birthdate --}}
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
             <div>
                 <label for="nickname" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     {{ __('panel-app::profile.fields.nickname') }}
@@ -115,15 +116,7 @@
                 />
             </div>
             <div>
-                <label for="birthdate" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ __('panel-app::profile.fields.birthdate') }}
-                </label>
-                <input
-                    id="birthdate"
-                    type="date"
-                    wire:model.blur="data.birthdate"
-                    class="fi-input block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:border-purple-500 focus:ring-1 focus:ring-purple-500 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-purple-500"
-                />
+                {{ $birthdateForm }}
             </div>
         </div>
     </div>
