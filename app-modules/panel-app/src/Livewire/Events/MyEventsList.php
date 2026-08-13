@@ -7,7 +7,6 @@ namespace He4rt\PanelApp\Livewire\Events;
 use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Event\Models\Event;
 use He4rt\PanelApp\Pages\EventPage;
-use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
@@ -20,7 +19,6 @@ final class MyEventsList extends Component
         return Enrollment::query()
             ->with(['event'])
             ->where('user_id', auth()->id())
-            ->whereHas('event', fn (Builder $query) => $query->where('tenant_id', filament()->getTenant()->getKey()))
             ->latest('enrolled_at')
             ->get();
     }

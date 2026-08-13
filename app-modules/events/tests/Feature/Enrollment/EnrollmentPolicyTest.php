@@ -10,16 +10,13 @@ use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Enrollment\Models\EnrollmentPolicy;
 use He4rt\Events\Event\Enums\EventStatus;
 use He4rt\Events\Event\Models\Event;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 
 function createEventWithPolicy(array $eventAttributes = [], array $policyAttributes = []): Event
 {
-    $tenant = Tenant::factory()->create();
     $startsAt = now()->setTime(9, 0);
 
     return Event::factory()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->state(array_merge([
             'attendance_requirement' => AttendanceRequirement::AllDays,
             'minimum_days' => null,

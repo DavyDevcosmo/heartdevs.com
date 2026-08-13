@@ -23,7 +23,6 @@ use He4rt\Events\Event\Enums\EventType;
 use He4rt\Events\Event\Models\Event;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Unique;
 
 final class EventForm
 {
@@ -46,25 +45,12 @@ final class EventForm
                         table: Event::class,
                         column: 'slug',
                         ignoreRecord: true,
-                        modifyRuleUsing: static function (Unique $rule, Get $get): Unique {
-                            $tenantId = $get('tenant_id');
-
-                            return filled($tenantId)
-                                ? $rule->where('tenant_id', $tenantId)
-                                : $rule->whereNull('tenant_id');
-                        },
                     ),
 
                 Select::make('event_type')
                     ->label(__('panel-admin::events.columns.type'))
                     ->options(EventType::class)
                     ->required(),
-
-                Select::make('tenant_id')
-                    ->label(__('panel-admin::events.columns.tenant'))
-                    ->relationship('tenant', 'name')
-                    ->searchable()
-                    ->nullable(),
 
                 TextInput::make('location')
                     ->label(__('panel-admin::events.columns.location'))

@@ -2,12 +2,29 @@
 
 declare(strict_types=1);
 
-use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
-use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
-use He4rt\Identity\Tenant\Models\Tenant;
+use He4rt\IntegrationTwitch\OAuth\TwitchAppTokenService;
 use He4rt\IntegrationTwitch\Transport\TwitchHelixConnector;
+use He4rt\IntegrationTwitch\Transport\TwitchOAuthConnector;
+use Illuminate\Support\Facades\Cache;
 use Saloon\Http\Faking\MockClient;
 use Saloon\Http\Faking\MockResponse;
+
+function fakeTwitchHelixConnector(MockClient $mock): TwitchHelixConnector
+{
+    // The app token is resolved lazily by the connector; seed the cache so
+    // getToken() short-circuits without hitting the real Twitch OAuth endpoint.
+    Cache::put('twitch_app_access_token', 'fake-token', 3_600);
+
+    return tap(
+        new TwitchHelixConnector(
+            tokenService: new TwitchAppTokenService(
+                new TwitchOAuthConnector(clientId: 'fake-client-id', clientSecret: 'fake-secret'),
+            ),
+            clientId: 'fake-client-id',
+        ),
+        fn (TwitchHelixConnector $connector) => $connector->withMockClient($mock),
+    );
+}
 
 function mockHelixUsersResponse(string $id = '12345', string $login = 'danielhe4rt', string $displayName = 'danielhe4rt'): MockClient
 {
@@ -23,45 +40,18 @@ function mockHelixUsersResponse(string $id = '12345', string $login = 'danielhe4
         ]),
     ]);
 
-    app()->instance(TwitchHelixConnector::class, tap(
-        new TwitchHelixConnector(appToken: 'fake-token', clientId: 'fake-client-id'),
-        fn (TwitchHelixConnector $connector) => $connector->withMockClient($mock),
-    ));
+    app()->instance(TwitchHelixConnector::class, fakeTwitchHelixConnector($mock));
 
     return $mock;
 }
 
-test('links a twitch channel to a tenant', function (): void {
+test('resolves a twitch channel broadcaster id and prints the env config', function (): void {
     mockHelixUsersResponse();
-    $tenant = Tenant::factory()->create(['slug' => 'he4rt-developers']);
 
-    $this->artisan('twitch:link-channel', ['login' => 'danielhe4rt', '--tenant' => 'he4rt-developers'])
+    $this->artisan('twitch:link-channel', ['login' => 'danielhe4rt'])
+        ->expectsOutputToContain('Broadcaster ID: 12345')
+        ->expectsOutputToContain('php artisan twitch:subscribe 12345 --all')
         ->assertSuccessful();
-
-    $identity = ExternalIdentity::query()
-        ->where('provider', IdentityProvider::Twitch)
-        ->where('external_account_id', '12345')
-        ->first();
-
-    expect($identity)->not->toBeNull()
-        ->and($identity->tenant_id)->toBe($tenant->id)
-        ->and($identity->metadata)->toMatchArray([
-            'login' => 'danielhe4rt',
-            'display_name' => 'danielhe4rt',
-        ]);
-});
-
-test('warns when channel is already linked', function (): void {
-    mockHelixUsersResponse();
-    $tenant = Tenant::factory()->create(['slug' => 'he4rt-developers']);
-
-    $this->artisan('twitch:link-channel', ['login' => 'danielhe4rt', '--tenant' => 'he4rt-developers'])
-        ->assertSuccessful();
-
-    $this->artisan('twitch:link-channel', ['login' => 'danielhe4rt', '--tenant' => 'he4rt-developers'])
-        ->assertSuccessful();
-
-    expect(ExternalIdentity::query()->where('provider', IdentityProvider::Twitch)->count())->toBe(1);
 });
 
 test('fails when twitch user is not found', function (): void {
@@ -69,20 +59,18 @@ test('fails when twitch user is not found', function (): void {
         '*' => MockResponse::make(['data' => []]),
     ]);
 
-    app()->instance(TwitchHelixConnector::class, tap(
-        new TwitchHelixConnector(appToken: 'fake-token', clientId: 'fake-client-id'),
-        fn (TwitchHelixConnector $connector) => $connector->withMockClient($mock),
-    ));
+    app()->instance(TwitchHelixConnector::class, fakeTwitchHelixConnector($mock));
 
-    Tenant::factory()->create(['slug' => 'he4rt-developers']);
-
-    $this->artisan('twitch:link-channel', ['login' => 'nonexistent', '--tenant' => 'he4rt-developers'])
+    $this->artisan('twitch:link-channel', ['login' => 'nonexistent'])
         ->assertFailed();
 });
 
-test('fails when tenant is not found', function (): void {
+test('fails when no login is provided and no broadcaster login is configured', function (): void {
+    // Bind a connector instance so resolving the command does not build the real
+    // one from (absent) Twitch credentials; the command fails before it ever sends.
     mockHelixUsersResponse();
+    config()->set('services.twitch.broadcaster_login', '');
 
-    $this->artisan('twitch:link-channel', ['login' => 'danielhe4rt', '--tenant' => 'nonexistent'])
+    $this->artisan('twitch:link-channel')
         ->assertFailed();
 });

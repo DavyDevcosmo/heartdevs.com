@@ -13,7 +13,6 @@ use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Enrollment\Models\EnrollmentPolicy;
 use He4rt\Events\Enrollment\Models\EnrollmentTransition;
 use He4rt\Events\Event\Models\Event;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use Illuminate\Support\Facades\Event as EventFacade;
 
@@ -30,12 +29,11 @@ function createPendingApplicationEnrollment(Event $event, ?User $user = null): E
     ]);
 }
 
-function createApplicationEvent(Tenant $tenant, array $policyAttributes = []): Event
+function createApplicationEvent(array $policyAttributes = []): Event
 {
     return Event::factory()
         ->published()
         ->upcoming()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->application()->state($policyAttributes), 'enrollmentPolicy')
         ->create();
 }
@@ -44,8 +42,7 @@ test('when an application is approved, then enrollment transitions to confirmed 
     EventFacade::fake([EnrollmentConfirmed::class]);
 
     $organizer = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    $event = createApplicationEvent($tenant, ['xp_on_confirmed' => 100]);
+    $event = createApplicationEvent(['xp_on_confirmed' => 100]);
     $enrollment = createPendingApplicationEnrollment($event);
 
     $result = resolve(ApproveApplicationAction::class)->handle(
@@ -73,8 +70,7 @@ test('when event is at capacity and has waitlist, then approval results in waitl
     EventFacade::fake([EnrollmentConfirmed::class, EnrollmentWaitlisted::class]);
 
     $organizer = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    $event = createApplicationEvent($tenant, ['capacity' => 1, 'has_waitlist' => true]);
+    $event = createApplicationEvent(['capacity' => 1, 'has_waitlist' => true]);
 
     $existingUser = User::factory()->create();
     Enrollment::factory()->create([
@@ -101,8 +97,7 @@ test('when event is at capacity and has waitlist, then approval results in waitl
 
 test('when event is at capacity without waitlist, then approval throws event full exception', function (): void {
     $organizer = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    $event = createApplicationEvent($tenant, ['capacity' => 1, 'has_waitlist' => false]);
+    $event = createApplicationEvent(['capacity' => 1, 'has_waitlist' => false]);
 
     $existingUser = User::factory()->create();
     Enrollment::factory()->create([
@@ -122,8 +117,7 @@ test('when event is at capacity without waitlist, then approval throws event ful
 
 test('when approving a non-pending enrollment, then exception is thrown', function (): void {
     $organizer = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    $event = createApplicationEvent($tenant);
+    $event = createApplicationEvent();
 
     $enrollment = Enrollment::factory()->create([
         'event_id' => $event->id,
@@ -142,8 +136,7 @@ test('when event has no capacity limit, then approval always confirms', function
     EventFacade::fake([EnrollmentConfirmed::class]);
 
     $organizer = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    $event = createApplicationEvent($tenant, ['capacity' => null]);
+    $event = createApplicationEvent(['capacity' => null]);
 
     $enrollments = collect(range(1, 3))->map(
         fn (): Enrollment => createPendingApplicationEnrollment($event),

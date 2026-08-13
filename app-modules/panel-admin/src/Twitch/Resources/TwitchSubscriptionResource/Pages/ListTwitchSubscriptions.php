@@ -10,6 +10,7 @@ use Filament\Resources\Pages\ListRecords;
 use He4rt\IntegrationTwitch\Models\TwitchSubscription;
 use He4rt\IntegrationTwitch\Transport\Requests\EventSub\ListSubscriptions;
 use He4rt\IntegrationTwitch\Transport\TwitchHelixConnector;
+use He4rt\PanelAdmin\Twitch\Actions\ConnectTwitchAction;
 use He4rt\PanelAdmin\Twitch\Actions\RegisterSubscriptionsAction;
 use He4rt\PanelAdmin\Twitch\Resources\TwitchSubscriptionResource;
 use Saloon\Exceptions\Request\RequestException;
@@ -21,6 +22,7 @@ class ListTwitchSubscriptions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            ConnectTwitchAction::make(),
             RegisterSubscriptionsAction::make(),
             Action::make('sync')
                 ->label(__('panel-admin::twitch.subscriptions.actions.sync'))
@@ -40,7 +42,6 @@ class ListTwitchSubscriptions extends ListRecords
             /** @var array<int, array<string, mixed>> $remoteSubscriptions */
             $remoteSubscriptions = $response->json('data', []);
 
-            $tenantId = filament()->getTenant()?->getKey();
             $syncedIds = [];
 
             foreach ($remoteSubscriptions as $sub) {
@@ -57,9 +58,6 @@ class ListTwitchSubscriptions extends ListRecords
                         'callback_url' => $sub['transport']['callback'] ?? null,
                         'cost' => $sub['cost'] ?? 0,
                         'version' => $sub['version'] ?? '1',
-                        'tenant_id' => $tenantId ?? TwitchSubscription::query()
-                            ->where('subscription_id', $sub['id'])
-                            ->value('tenant_id') ?? 0,
                     ]
                 );
 
@@ -67,7 +65,6 @@ class ListTwitchSubscriptions extends ListRecords
             }
 
             TwitchSubscription::query()
-                ->where('tenant_id', $tenantId)
                 ->whereNotIn('subscription_id', $syncedIds)
                 ->delete();
 

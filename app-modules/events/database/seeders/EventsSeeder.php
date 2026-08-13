@@ -15,7 +15,6 @@ use He4rt\Events\Enrollment\Models\EnrollmentPolicy;
 use He4rt\Events\Event\Enums\EventStatus;
 use He4rt\Events\Event\Enums\EventType;
 use He4rt\Events\Event\Models\Event;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
@@ -37,14 +36,12 @@ final class EventsSeeder extends Seeder
 
     public function run(): void
     {
-        $tenant = $this->resolveTenant();
-        $participants = $this->resolveParticipants($tenant);
+        $participants = $this->resolveParticipants();
 
         foreach ($this->matrix() as $spec) {
             $event = Event::query()->firstOrCreate(
                 ['slug' => Str::slug($spec['title'])],
                 [
-                    'tenant_id' => $tenant->id,
                     'title' => $spec['title'],
                     'description' => $spec['description'],
                     'event_type' => $spec['type'],
@@ -449,25 +446,16 @@ final class EventsSeeder extends Seeder
         return $data;
     }
 
-    private function resolveTenant(): Tenant
-    {
-        return Tenant::query()->where('slug', 'he4rt')->first()
-            ?? Tenant::query()->first()
-            ?? Tenant::factory()->create(['name' => 'He4rt Developers', 'slug' => 'he4rt']);
-    }
-
     /**
      * @return Collection<int, User>
      */
-    private function resolveParticipants(Tenant $tenant): Collection
+    private function resolveParticipants(): Collection
     {
-        $existing = $tenant->members()->limit(self::PARTICIPANT_POOL)->get();
+        $existing = User::query()->limit(self::PARTICIPANT_POOL)->get();
         $missing = self::PARTICIPANT_POOL - $existing->count();
 
         if ($missing > 0) {
-            $created = User::factory()->count($missing)->create();
-            $tenant->members()->attach($created->pluck('id'));
-            $existing = $existing->concat($created);
+            return $existing->concat(User::factory()->count($missing)->create());
         }
 
         return $existing;

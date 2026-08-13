@@ -11,16 +11,13 @@ use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Enrollment\Models\EnrollmentPolicy;
 use He4rt\Events\Enrollment\Models\EnrollmentTransition;
 use He4rt\Events\Event\Models\Event;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 
 test('when an application is rejected with a reason, then enrollment transitions to rejected', function (): void {
     $organizer = User::factory()->create();
-    $tenant = Tenant::factory()->create();
     $event = Event::factory()
         ->published()
         ->upcoming()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->application(), 'enrollmentPolicy')
         ->create();
 
@@ -57,11 +54,9 @@ test('when an application is rejected with a reason, then enrollment transitions
 
 test('when rejecting a non-pending enrollment, then exception is thrown', function (): void {
     $organizer = User::factory()->create();
-    $tenant = Tenant::factory()->create();
     $event = Event::factory()
         ->published()
         ->upcoming()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->application(), 'enrollmentPolicy')
         ->create();
 
@@ -84,11 +79,9 @@ test('when rejecting a non-pending enrollment, then exception is thrown', functi
 
 test('when application is rejected, then application_data is preserved', function (): void {
     $organizer = User::factory()->create();
-    $tenant = Tenant::factory()->create();
     $event = Event::factory()
         ->published()
         ->upcoming()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->application(), 'enrollmentPolicy')
         ->create();
 

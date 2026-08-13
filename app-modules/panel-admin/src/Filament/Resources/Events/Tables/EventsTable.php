@@ -30,11 +30,6 @@ final class EventsTable
                     ->badge()
                     ->sortable(),
 
-                TextColumn::make('tenant.name')
-                    ->label(__('panel-admin::events.columns.tenant'))
-                    ->searchable()
-                    ->sortable(),
-
                 TextColumn::make('starts_at')
                     ->label(__('panel-admin::events.columns.starts_at'))
                     ->dateTime()

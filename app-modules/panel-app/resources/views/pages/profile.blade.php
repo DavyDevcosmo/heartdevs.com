@@ -1,6 +1,6 @@
 <x-filament::page>
     <div class="text-sm text-gray-500 dark:text-gray-400">
-        Preencha os campos e veja seu card sendo montado em tempo real
+        {{ __('panel-app::profile.page.subtitle') }}
     </div>
 
     <div class="grid grid-cols-1 items-start gap-8 xl:grid-cols-3">
@@ -11,7 +11,8 @@
                     'avatarPreviewUrl' => $this->avatarPreviewUrl,
                     'coverPreviewUrl' => $this->coverPreviewUrl,
                     'initials' => $this->initials,
-                    'name' => auth()->user()->name
+                    'name' => auth()->user()->name,
+                    'birthdateForm' => $this->birthdateForm,
                 ])
 
             {{ $this->form }}
@@ -37,4 +38,14 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('scroll-to-top', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth',
+                });
+            });
+        });
+    </script>
 </x-filament::page>

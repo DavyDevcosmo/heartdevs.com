@@ -14,7 +14,6 @@ return new class extends Migration
     {
         Schema::create('events', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
-            $table->foreignUuid('tenant_id')->nullable()->constrained('tenants')->nullOnDelete();
             $table->string('slug', 120);
             $table->string('title', 200);
             $table->longText('description')->nullable();
@@ -26,8 +25,8 @@ return new class extends Migration
                 ->comment(EventStatus::stringifyCases())
                 ->default(EventStatus::Draft);
             $table->timestampsTz();
-            $table->unique(['tenant_id', 'slug'], 'idx_events_tenant_slug');
-            $table->index(['tenant_id', 'starts_at'], 'idx_events_tenant_window');
+            $table->unique('slug', 'idx_events_slug');
+            $table->index('starts_at', 'idx_events_window');
             $table->index(['event_type', 'starts_at'], 'idx_events_type_window');
         });
     }

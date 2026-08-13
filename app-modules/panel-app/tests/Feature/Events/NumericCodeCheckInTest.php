@@ -8,7 +8,6 @@ use He4rt\Events\Enrollment\Enums\EnrollmentStatus;
 use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Enrollment\Models\EnrollmentPolicy;
 use He4rt\Events\Event\Models\Event;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use He4rt\PanelApp\Livewire\Events\NumericCodeCheckIn;
 use Illuminate\Support\Facades\RateLimiter;
@@ -17,18 +16,14 @@ use function Pest\Livewire\livewire;
 
 beforeEach(function (): void {
     $this->user = User::factory()->create();
-    $this->tenant = Tenant::factory()->create(['slug' => 'numeric-code-test-tenant']);
-    $this->tenant->members()->attach($this->user);
 
     $this->actingAs($this->user);
 
     Filament::setCurrentPanel(Filament::getPanel('app'));
-    Filament::setTenant($this->tenant);
 
     $this->event = Event::factory()
         ->published()
         ->upcoming()
-        ->for($this->tenant)
         ->has(EnrollmentPolicy::factory()->rsvp()->state([
             'check_in_method' => CheckInMethod::NumericCode,
         ]), 'enrollmentPolicy')

@@ -26,7 +26,6 @@ class EventPage extends Page
     {
         $exists = Event::query()
             ->where('id', $record)
-            ->where('tenant_id', filament()->getTenant()->getKey())
             ->viewableByParticipant()
             ->exists();
 

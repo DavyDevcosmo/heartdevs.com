@@ -13,7 +13,6 @@ use He4rt\Events\Enrollment\Enums\EnrollmentStatus;
 use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Event\Enums\EventStatus;
 use He4rt\Events\Event\Models\Event;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Date;
@@ -32,12 +31,10 @@ afterEach(function (): void {
  */
 function createScenarioWithCode(array $codeOverrides = []): array
 {
-    $tenant = Tenant::factory()->create();
     $participant = User::factory()->create();
     $startsAt = now()->setTime(9, 0);
 
     $event = Event::factory()
-        ->for($tenant)
         ->create([
             'starts_at' => $startsAt,
             'ends_at' => $startsAt->clone()->setTime(18, 0),
@@ -177,11 +174,9 @@ test('when code has reached max uses, then exhausted error is thrown', function 
 });
 
 test('uses_count is atomically incremented on each successful check-in', function (): void {
-    $tenant = Tenant::factory()->create();
     $startsAt = now()->setTime(9, 0);
 
     $event = Event::factory()
-        ->for($tenant)
         ->create([
             'starts_at' => $startsAt,
             'ends_at' => $startsAt->clone()->setTime(18, 0),
@@ -235,12 +230,10 @@ test('uses_count is atomically incremented on each successful check-in', functio
 });
 
 test('when same numeric code exists for multiple event dates, then current date code is used', function (): void {
-    $tenant = Tenant::factory()->create();
     $participant = User::factory()->create();
     $startsAt = now()->setTime(9, 0);
 
     $event = Event::factory()
-        ->for($tenant)
         ->create([
             'starts_at' => $startsAt,
             'ends_at' => $startsAt->clone()->addDay()->setTime(18, 0),

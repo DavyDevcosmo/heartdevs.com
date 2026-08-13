@@ -19,7 +19,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class OAuthController extends Controller
 {
-    public function getRedirect(string $tenant, string $panel, string $provider): RedirectResponse
+    public function getRedirect(string $panel, string $provider): RedirectResponse
     {
         $identityProvider = IdentityProvider::tryFrom($provider);
 
@@ -39,7 +39,6 @@ final class OAuthController extends Controller
             intent: Auth::check() ? OAuthIntent::Link : OAuthIntent::Login,
             provider: $identityProvider,
             panel: $panel,
-            tenant: $tenant,
             returnUrl: Auth::check() ? url()->previous() : null,
         );
 
@@ -77,12 +76,19 @@ final class OAuthController extends Controller
             return redirect()->to($result->redirectUrl);
         }
 
+        $redirectUrl = $result->redirectUrl;
+
         if ($result->intent === OAuthIntent::Login) {
-            Auth::login($result->user);
+            Auth::login($result->user, remember: true);
             filament()->setCurrentPanel(filament()->getPanel($state->panel));
-            filament()->setTenant($result->tenant);
+
+            if ($state->panel === 'app') {
+                $redirectUrl = url()->query($redirectUrl, [
+                    'oauth_provider' => $identityProvider->value,
+                ]);
+            }
         }
 
-        return redirect()->to($result->redirectUrl);
+        return redirect()->to($redirectUrl);
     }
 }

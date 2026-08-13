@@ -27,9 +27,6 @@ final class EventInfolist
                     ->label(__('panel-admin::events.columns.type'))
                     ->badge(),
 
-                TextEntry::make('tenant.name')
-                    ->label(__('panel-admin::events.columns.tenant')),
-
                 TextEntry::make('location')
                     ->label(__('panel-admin::events.columns.location')),
 

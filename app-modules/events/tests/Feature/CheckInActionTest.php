@@ -14,18 +14,15 @@ use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Enrollment\Models\EnrollmentTransition;
 use He4rt\Events\Event\Enums\EventStatus;
 use He4rt\Events\Event\Models\Event;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use Illuminate\Support\Facades\Event as EventFacade;
 
 function createConfirmedEnrollmentForCheckIn(array $eventAttributes = [], array $enrollmentAttributes = []): Enrollment
 {
-    $tenant = Tenant::factory()->create();
     $participant = User::factory()->create();
     $startsAt = now()->setTime(9, 0);
 
     $event = Event::factory()
-        ->for($tenant)
         ->create(array_merge([
             'starts_at' => $startsAt,
             'ends_at' => $startsAt->clone()->setTime(18, 0),
