@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace He4rt\PanelApp;
 
+use Filament\Support\Assets\Js;
+use Filament\Support\Facades\FilamentAsset;
 use He4rt\PanelApp\Livewire\Events\EventDetail;
 use He4rt\PanelApp\Livewire\Events\EventsList;
 use He4rt\PanelApp\Livewire\Events\MyEventsList;
@@ -29,6 +31,10 @@ class PanelAppServiceProvider extends ServiceProvider
         Livewire::component('my-events-list', MyEventsList::class);
         Livewire::component('event-detail', EventDetail::class);
         Livewire::component('numeric-code-check-in', NumericCodeCheckIn::class);
+        FilamentAsset::register([
+            Js::make('last-auth-provider', __DIR__.'/../resources/js/last-auth-provider.js')
+                ->loadedOnRequest(),
+        ], package: 'he4rt/panel-app');
 
         Livewire::component('timeline-composer', Composer::class);
         Livewire::component('timeline-feed', Feed::class);

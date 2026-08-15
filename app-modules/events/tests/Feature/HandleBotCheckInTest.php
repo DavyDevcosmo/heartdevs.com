@@ -14,7 +14,6 @@ use He4rt\Events\Event\Enums\EventStatus;
 use He4rt\Events\Event\Models\Event;
 use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Date;
@@ -29,17 +28,15 @@ afterEach(function (): void {
 });
 
 /**
- * @return array<string, Tenant|Collection<int, Tenant>|User|Collection<int, User>|Event|Collection<int, Event>|Enrollment|Collection<int, Enrollment>|Collection<int, CheckInCode>|CheckInCode|string>
+ * @return array<string, User|Collection<int, User>|Event|Collection<int, Event>|Enrollment|Collection<int, Enrollment>|Collection<int, CheckInCode>|CheckInCode|string>
  */
 function createBotCheckInScenario(array $codeOverrides = []): array
 {
-    $tenant = Tenant::factory()->create();
     $participant = User::factory()->create();
     $externalId = '900900900';
     $startsAt = now()->setTime(9, 0);
 
     $event = Event::factory()
-        ->for($tenant)
         ->create([
             'starts_at' => $startsAt,
             'ends_at' => $startsAt->clone()->setTime(18, 0),
@@ -54,7 +51,6 @@ function createBotCheckInScenario(array $codeOverrides = []): array
     ]);
 
     ExternalIdentity::factory()->create([
-        'tenant_id' => $tenant->id,
         'provider' => IdentityProvider::Discord,
         'external_account_id' => $externalId,
         'model_type' => (new User)->getMorphClass(),
@@ -71,7 +67,7 @@ function createBotCheckInScenario(array $codeOverrides = []): array
         'uses_count' => 0,
     ], $codeOverrides));
 
-    return ['tenant' => $tenant, 'participant' => $participant, 'externalId' => $externalId, 'event' => $event, 'enrollment' => $enrollment, 'code' => $code];
+    return ['participant' => $participant, 'externalId' => $externalId, 'event' => $event, 'enrollment' => $enrollment, 'code' => $code];
 }
 
 test('dispatching CheckInRequested is handled by the registered listener', function (): void {
@@ -81,7 +77,6 @@ test('dispatching CheckInRequested is handled by the registered listener', funct
         provider: IdentityProvider::Discord,
         externalUserId: $scenario['externalId'],
         code: '123456',
-        tenantId: $scenario['tenant']->id,
     ));
 
     expect($scenario['enrollment']->fresh()->status)->toBe(EnrollmentStatus::CheckedIn);
@@ -99,7 +94,6 @@ test('successful bot check-in records the check-in and dispatches a success resp
         provider: IdentityProvider::Discord,
         externalUserId: $scenario['externalId'],
         code: '123456',
-        tenantId: $scenario['tenant']->id,
         channelContext: ['channel_id' => 'C1'],
     ));
 
@@ -126,7 +120,6 @@ test('bot check-in for an unlinked external user dispatches an error and records
         provider: IdentityProvider::Discord,
         externalUserId: 'unlinked-user',
         code: '123456',
-        tenantId: $scenario['tenant']->id,
     ));
 
     expect($scenario['enrollment']->fresh()->status)->toBe(EnrollmentStatus::Confirmed);
@@ -145,7 +138,6 @@ test('bot check-in with an invalid code dispatches an error', function (): void 
         provider: IdentityProvider::Discord,
         externalUserId: $scenario['externalId'],
         code: '000000',
-        tenantId: $scenario['tenant']->id,
     ));
 
     expect($scenario['enrollment']->fresh()->status)->toBe(EnrollmentStatus::Confirmed);
@@ -163,7 +155,6 @@ test('bot check-in for a user with no enrollment dispatches no active enrollment
         provider: IdentityProvider::Discord,
         externalUserId: $scenario['externalId'],
         code: '123456',
-        tenantId: $scenario['tenant']->id,
     ));
 
     EventFacade::assertDispatched(fn (CheckInProcessed $event): bool => $event->status === BotCheckInStatus::Error
@@ -183,7 +174,6 @@ test('bot check-in is rejected when the enrollment event is not happening today'
         provider: IdentityProvider::Discord,
         externalUserId: $scenario['externalId'],
         code: '123456',
-        tenantId: $scenario['tenant']->id,
     ));
 
     EventFacade::assertDispatched(fn (CheckInProcessed $event): bool => $event->status === BotCheckInStatus::Error
@@ -196,7 +186,6 @@ test('bot check-in with multiple events today checks into the one matching the t
 
     $afternoonStart = now()->setTime(14, 0);
     $afternoonEvent = Event::factory()
-        ->for($scenario['tenant'])
         ->create([
             'starts_at' => $afternoonStart,
             'ends_at' => $afternoonStart->clone()->setTime(20, 0),
@@ -223,7 +212,6 @@ test('bot check-in with multiple events today checks into the one matching the t
         provider: IdentityProvider::Discord,
         externalUserId: $scenario['externalId'],
         code: '123456',
-        tenantId: $scenario['tenant']->id,
     ));
 
     expect($scenario['enrollment']->fresh()->status)->toBe(EnrollmentStatus::CheckedIn)
@@ -239,7 +227,6 @@ test('bot check-in with multiple events today and a non-matching code errors as 
 
     $startsAt = now()->setTime(9, 0);
     $secondEvent = Event::factory()
-        ->for($scenario['tenant'])
         ->create([
             'starts_at' => $startsAt,
             'ends_at' => $startsAt->clone()->setTime(18, 0),
@@ -265,7 +252,6 @@ test('bot check-in with multiple events today and a non-matching code errors as 
         provider: IdentityProvider::Discord,
         externalUserId: $scenario['externalId'],
         code: '999999',
-        tenantId: $scenario['tenant']->id,
     ));
 
     expect($scenario['enrollment']->fresh()->status)->toBe(EnrollmentStatus::Confirmed);
@@ -280,7 +266,6 @@ test('bot check-in errors when the same code exists on multiple events today', f
 
     $startsAt = now()->setTime(9, 0);
     $secondEvent = Event::factory()
-        ->for($scenario['tenant'])
         ->create([
             'starts_at' => $startsAt,
             'ends_at' => $startsAt->clone()->setTime(18, 0),
@@ -306,7 +291,6 @@ test('bot check-in errors when the same code exists on multiple events today', f
         provider: IdentityProvider::Discord,
         externalUserId: $scenario['externalId'],
         code: '123456',
-        tenantId: $scenario['tenant']->id,
     ));
 
     EventFacade::assertDispatched(fn (CheckInProcessed $event): bool => $event->status === BotCheckInStatus::Error
@@ -321,7 +305,6 @@ test('bot check-in when already checked in today dispatches an error', function 
         provider: IdentityProvider::Discord,
         externalUserId: $scenario['externalId'],
         code: '123456',
-        tenantId: $scenario['tenant']->id,
     );
 
     resolve(HandleBotCheckIn::class)->handle($request);
@@ -338,7 +321,6 @@ test('bot check-in ignores a waitlisted enrollment and checks in the confirmed o
 
     $startsAt = now()->setTime(9, 0);
     $confirmedEvent = Event::factory()
-        ->for($scenario['tenant'])
         ->create([
             'starts_at' => $startsAt,
             'ends_at' => $startsAt->clone()->setTime(18, 0),
@@ -364,7 +346,6 @@ test('bot check-in ignores a waitlisted enrollment and checks in the confirmed o
         provider: IdentityProvider::Discord,
         externalUserId: $scenario['externalId'],
         code: '123456',
-        tenantId: $scenario['tenant']->id,
     ));
 
     expect($confirmedEnrollment->fresh()->status)->toBe(EnrollmentStatus::CheckedIn)

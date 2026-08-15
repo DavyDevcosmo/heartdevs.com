@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace He4rt\Profile\Models;
 
 use Carbon\CarbonInterface;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use He4rt\Profile\Casts\AsWorkPreferences;
 use He4rt\Profile\Data\WorkPreferences;
@@ -27,7 +26,6 @@ use InvalidArgumentException;
 /**
  * @property string $id
  * @property string $user_id
- * @property string $tenant_id
  * @property string|null $nickname
  * @property CarbonInterface|null $birthdate
  * @property string|null $about
@@ -53,7 +51,6 @@ final class Profile extends Model
 
     protected $fillable = [
         'user_id',
-        'tenant_id',
         'nickname',
         'birthdate',
         'about',
@@ -68,12 +65,11 @@ final class Profile extends Model
         'preferences',
     ];
 
-    public static function ensureExists(string $userId, string $tenantId): self
+    public static function ensureExists(string $userId): self
     {
         /** @var Profile $profile */
         $profile = self::query()->firstOrCreate([
             'user_id' => $userId,
-            'tenant_id' => $tenantId,
         ], [
             'available_for_proposals' => false,
         ]);
@@ -87,14 +83,6 @@ final class Profile extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * @return BelongsTo<Tenant, $this>
-     */
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -123,6 +111,11 @@ final class Profile extends Model
         return $this->belongsToMany(Skill::class, 'profile_skills')
             ->withPivot(['proficiency', 'years_experience'])
             ->withTimestamps();
+    }
+
+    protected static function newFactory(): ProfileFactory
+    {
+        return ProfileFactory::new();
     }
 
     /**

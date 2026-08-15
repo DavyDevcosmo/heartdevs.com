@@ -17,7 +17,6 @@ final class EventsList extends Component
     {
         return Event::query()
             ->with('enrollmentPolicy')
-            ->where('tenant_id', filament()->getTenant()->getKey())
             ->active()
             ->orderBy('starts_at')
             ->get();

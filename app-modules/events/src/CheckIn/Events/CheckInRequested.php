@@ -18,7 +18,6 @@ final readonly class CheckInRequested
         public IdentityProvider $provider,
         public string $externalUserId,
         public string $code,
-        public string $tenantId,
         public ?string $eventId = null,
         public array $channelContext = [],
     ) {}

@@ -10,7 +10,6 @@ return [
         'title' => 'Título',
         'slug' => 'Slug',
         'type' => 'Tipo',
-        'tenant' => 'Tenant',
         'location' => 'Local',
         'description' => 'Descrição',
         'starts_at' => 'Início',

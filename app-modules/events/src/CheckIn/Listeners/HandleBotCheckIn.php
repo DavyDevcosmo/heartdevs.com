@@ -52,7 +52,6 @@ final readonly class HandleBotCheckIn
         return $this->findExternalIdentity->handle(
             provider: $event->provider->value,
             providerId: $event->externalUserId,
-            tenantId: $event->tenantId,
         )->model_id;
     }
 
@@ -63,9 +62,8 @@ final readonly class HandleBotCheckIn
         $enrollments = Enrollment::query()
             ->where('user_id', $userId)
             ->whereIn('status', [EnrollmentStatus::Confirmed, EnrollmentStatus::CheckedIn])
-            ->whereHas('event', static function (Builder $query) use ($event, $today): void {
-                $query->where('tenant_id', $event->tenantId)
-                    ->where('status', EventStatus::Published)
+            ->whereHas('event', static function (Builder $query) use ($today): void {
+                $query->where('status', EventStatus::Published)
                     ->whereDate('starts_at', '<=', $today)
                     ->whereDate('ends_at', '>=', $today);
             })

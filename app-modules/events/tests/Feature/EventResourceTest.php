@@ -15,7 +15,6 @@ use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Enrollment\Models\EnrollmentPolicy;
 use He4rt\Events\Event\Enums\EventType;
 use He4rt\Events\Event\Models\Event;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use He4rt\PanelAdmin\Filament\Resources\Events\EventResource;
 use He4rt\PanelAdmin\Filament\Resources\Events\Pages\CreateEvent;
@@ -28,16 +27,12 @@ use function Pest\Livewire\livewire;
 
 beforeEach(function (): void {
     $admin = User::factory()->create(['username' => 'events-test-admin']);
-    $tenant = Tenant::factory()->create(['slug' => 'he4rt-dev']);
-    $tenant->members()->attach($admin);
 
     config(['he4rt.admins' => 'events-test-admin']);
     $this->actingAs($admin);
 
     Filament::setCurrentPanel(Filament::getPanel('admin'));
-    Filament::setTenant($tenant);
 
-    $this->tenant = $tenant;
 });
 
 test('when visiting the events list page, then it renders successfully', function (): void {
@@ -46,7 +41,7 @@ test('when visiting the events list page, then it renders successfully', functio
 });
 
 test('when an event exists, then it appears in the events list', function (): void {
-    $event = Event::factory()->recycle($this->tenant)->create(['title' => 'He4rt Meetup #42']);
+    $event = Event::factory()->create(['title' => 'He4rt Meetup #42']);
 
     livewire(ListEvents::class)
         ->loadTable()
@@ -129,17 +124,15 @@ test('when creating a multi-day event, then minimum days cannot exceed event day
         );
 });
 
-test('when submitting the create form with a duplicate slug for the same tenant, then validation fails', function (): void {
-    $tenant = Filament::getTenant();
+test('when submitting the create form with a duplicate slug, then validation fails', function (): void {
     $startsAt = now()->addDay();
 
-    Event::factory()->for($tenant)->create(['slug' => 'duplicate-slug']);
+    Event::factory()->create(['slug' => 'duplicate-slug']);
 
     livewire(CreateEvent::class)
         ->fillForm([
             'title' => 'Another Event',
             'slug' => 'duplicate-slug',
-            'tenant_id' => $tenant->getKey(),
             'event_type' => EventType::Meetup,
             'starts_at' => $startsAt,
             'ends_at' => $startsAt->clone()->addHours(3),

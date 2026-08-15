@@ -11,19 +11,16 @@ use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Enrollment\Models\EnrollmentPolicy;
 use He4rt\Events\Event\Enums\EventStatus;
 use He4rt\Events\Event\Enums\EventType;
-use He4rt\Identity\Tenant\Models\Tenant;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property string $id
- * @property string|null $tenant_id
  * @property string $slug
  * @property string $title
  * @property string|null $description
@@ -43,7 +40,6 @@ final class Event extends Model
     use HasUuids;
 
     protected $fillable = [
-        'tenant_id',
         'slug',
         'title',
         'description',
@@ -57,12 +53,6 @@ final class Event extends Model
     protected $attributes = [
         'status' => 'draft',
     ];
-
-    /** @return BelongsTo<Tenant, $this> */
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
 
     /** @return HasOne<EnrollmentPolicy, $this> */
     public function enrollmentPolicy(): HasOne

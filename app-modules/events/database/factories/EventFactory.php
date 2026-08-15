@@ -11,7 +11,6 @@ use He4rt\Events\Enrollment\Models\EnrollmentPolicy;
 use He4rt\Events\Event\Enums\EventStatus;
 use He4rt\Events\Event\Enums\EventType;
 use He4rt\Events\Event\Models\Event;
-use He4rt\Identity\Tenant\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Date;
 
@@ -25,7 +24,6 @@ final class EventFactory extends Factory
         $startsAt = Date::now()->addDays(fake()->numberBetween(1, 30));
 
         return [
-            'tenant_id' => Tenant::factory(),
             'slug' => fake()->unique()->slug(),
             'title' => fake()->sentence(4),
             'description' => fake()->optional()->text(),

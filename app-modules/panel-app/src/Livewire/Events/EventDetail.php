@@ -61,7 +61,6 @@ final class EventDetail extends Component
         return Event::query()
             ->with('enrollmentPolicy')
             ->where('id', $this->eventId)
-            ->where('tenant_id', filament()->getTenant()->getKey())
             ->viewableByParticipant()
             ->firstOrFail();
     }

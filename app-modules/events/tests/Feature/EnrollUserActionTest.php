@@ -15,17 +15,15 @@ use He4rt\Events\Enrollment\Models\EnrollmentPolicy;
 use He4rt\Events\Enrollment\Models\EnrollmentTransition;
 use He4rt\Events\Event\Enums\EventStatus;
 use He4rt\Events\Event\Models\Event;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use Illuminate\Support\Facades\Event as EventFacade;
 use Symfony\Component\HttpFoundation\Response;
 
-function createRsvpEvent(Tenant $tenant, array $eventAttributes = [], array $policyAttributes = []): Event
+function createRsvpEvent(array $eventAttributes = [], array $policyAttributes = []): Event
 {
     return Event::factory()
         ->published()
         ->upcoming()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->rsvp()->state($policyAttributes), 'enrollmentPolicy')
         ->create($eventAttributes);
 }
@@ -34,8 +32,7 @@ test('when a user enrolls in an rsvp event, then enrollment is confirmed with au
     EventFacade::fake([EnrollmentConfirmed::class]);
 
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    $event = createRsvpEvent($tenant, [], ['xp_on_confirmed' => 50]);
+    $event = createRsvpEvent([], ['xp_on_confirmed' => 50]);
 
     $enrollment = resolve(EnrollUserAction::class)->handle(EnrollUserDTO::fromModels($event, $user));
 
@@ -61,8 +58,7 @@ test('when a user enrolls in an rsvp event, then enrollment is confirmed with au
 
 test('when concurrent enrollment hits unique index, then already enrolled exception is thrown', function (): void {
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    $event = createRsvpEvent($tenant);
+    $event = createRsvpEvent();
     $dto = EnrollUserDTO::fromModels($event, $user);
 
     $raced = false;
@@ -95,8 +91,7 @@ test('when concurrent enrollment hits unique index, then already enrolled except
 
 test('when a user enrolls twice in the same event, then duplicate enrollment is rejected', function (): void {
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    $event = createRsvpEvent($tenant);
+    $event = createRsvpEvent();
 
     resolve(EnrollUserAction::class)->handle(EnrollUserDTO::fromModels($event, $user));
 
@@ -105,11 +100,9 @@ test('when a user enrolls twice in the same event, then duplicate enrollment is 
 
 test('when a user enrolls in a past event, then enrollment is rejected', function (): void {
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
     $event = Event::factory()
         ->published()
         ->past()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->rsvp(), 'enrollmentPolicy')
         ->create();
 
@@ -118,10 +111,8 @@ test('when a user enrolls in a past event, then enrollment is rejected', functio
 
 test('when a user enrolls in a draft event, then enrollment is rejected', function (): void {
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
     $event = Event::factory()
         ->upcoming()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->rsvp(), 'enrollmentPolicy')
         ->create(['status' => EventStatus::Draft]);
 
@@ -130,11 +121,9 @@ test('when a user enrolls in a draft event, then enrollment is rejected', functi
 
 test('when an event uses application enrollment method, then rsvp enrollment is rejected', function (): void {
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
     $event = Event::factory()
         ->published()
         ->upcoming()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->state([
             'enrollment_method' => EnrollmentMethod::Application,
         ]), 'enrollmentPolicy')
@@ -147,8 +136,7 @@ test('when event is at capacity with waitlist enabled, then enrollment is waitli
     EventFacade::fake([EnrollmentConfirmed::class, EnrollmentWaitlisted::class]);
 
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    $event = createRsvpEvent($tenant, [], [
+    $event = createRsvpEvent([], [
         'capacity' => 1,
         'has_waitlist' => true,
     ]);
@@ -178,8 +166,7 @@ test('when event is at capacity with waitlist enabled, then enrollment is waitli
 
 test('when event is at capacity without waitlist, then enrollment is rejected with 422', function (): void {
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    $event = createRsvpEvent($tenant, [], [
+    $event = createRsvpEvent([], [
         'capacity' => 1,
         'has_waitlist' => false,
     ]);
@@ -204,8 +191,7 @@ test('when event is at capacity without waitlist, then enrollment is rejected wi
 test('when event has unlimited capacity, then all enrollments are confirmed', function (): void {
     EventFacade::fake([EnrollmentConfirmed::class, EnrollmentWaitlisted::class]);
 
-    $tenant = Tenant::factory()->create();
-    $event = createRsvpEvent($tenant, [], [
+    $event = createRsvpEvent([], [
         'capacity' => null,
         'has_waitlist' => true,
     ]);
@@ -226,8 +212,7 @@ test('when event has unlimited capacity, then all enrollments are confirmed', fu
 test('when multiple users enroll beyond capacity with waitlist, then fifo waitlist positions are assigned', function (): void {
     EventFacade::fake([EnrollmentConfirmed::class, EnrollmentWaitlisted::class]);
 
-    $tenant = Tenant::factory()->create();
-    $event = createRsvpEvent($tenant, [], [
+    $event = createRsvpEvent([], [
         'capacity' => 2,
         'has_waitlist' => true,
     ]);
@@ -251,8 +236,7 @@ test('when multiple users enroll beyond capacity with waitlist, then fifo waitli
 test('when enrollments are processed in rapid succession, then active count never exceeds capacity', function (): void {
     EventFacade::fake([EnrollmentConfirmed::class, EnrollmentWaitlisted::class]);
 
-    $tenant = Tenant::factory()->create();
-    $event = createRsvpEvent($tenant, [], [
+    $event = createRsvpEvent([], [
         'capacity' => 2,
         'has_waitlist' => true,
     ]);
@@ -273,8 +257,7 @@ test('when checked-in enrollment occupies the last seat, then new enrollment is 
     EventFacade::fake([EnrollmentConfirmed::class]);
 
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    $event = createRsvpEvent($tenant, [], [
+    $event = createRsvpEvent([], [
         'capacity' => 1,
         'has_waitlist' => true,
     ]);
@@ -301,8 +284,7 @@ test('when event has available capacity, then enrollment is confirmed', function
     EventFacade::fake([EnrollmentConfirmed::class]);
 
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    $event = createRsvpEvent($tenant, [], [
+    $event = createRsvpEvent([], [
         'capacity' => 2,
         'has_waitlist' => true,
     ]);
@@ -326,8 +308,7 @@ test('when event has available capacity, then enrollment is confirmed', function
 
 test('when duplicate enrollment exists in database, then only one enrollment record is kept', function (): void {
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
-    $event = createRsvpEvent($tenant);
+    $event = createRsvpEvent();
 
     resolve(EnrollUserAction::class)->handle(EnrollUserDTO::fromModels($event, $user));
 
@@ -340,11 +321,9 @@ test('when a user submits an application, then enrollment is pending with applic
     EventFacade::fake([EnrollmentConfirmed::class]);
 
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
     $event = Event::factory()
         ->published()
         ->upcoming()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->application([
             ['key' => 'why_join', 'type' => 'text', 'label' => 'Why do you want to join?', 'required' => true],
         ]), 'enrollmentPolicy')
@@ -376,11 +355,9 @@ test('when a user submits an application, then enrollment is pending with applic
 
 test('when application is submitted without applicationData, then exception is thrown', function (): void {
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
     $event = Event::factory()
         ->published()
         ->upcoming()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->application(), 'enrollmentPolicy')
         ->create();
 
@@ -389,11 +366,9 @@ test('when application is submitted without applicationData, then exception is t
 
 test('when application is missing a required field, then exception is thrown', function (): void {
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
     $event = Event::factory()
         ->published()
         ->upcoming()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->application([
             ['key' => 'why', 'type' => 'text', 'label' => 'Why?', 'required' => true],
         ]), 'enrollmentPolicy')
@@ -410,11 +385,9 @@ test('when application is missing a required field, then exception is thrown', f
 
 test('when application is submitted with no schema defined, then enrollment is pending', function (): void {
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
     $event = Event::factory()
         ->published()
         ->upcoming()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->application(), 'enrollmentPolicy')
         ->create();
 
@@ -431,11 +404,9 @@ test('when application is submitted with no schema defined, then enrollment is p
 
 test('when application event is past, then application enrollment is rejected', function (): void {
     $user = User::factory()->create();
-    $tenant = Tenant::factory()->create();
     $event = Event::factory()
         ->published()
         ->past()
-        ->for($tenant)
         ->has(EnrollmentPolicy::factory()->application(), 'enrollmentPolicy')
         ->create();
 

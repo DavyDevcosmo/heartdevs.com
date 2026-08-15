@@ -13,16 +13,13 @@ use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Enrollment\Models\EnrollmentTransition;
 use He4rt\Events\Event\Enums\EventStatus;
 use He4rt\Events\Event\Models\Event;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 
 function createPastEvent(): Event
 {
-    $tenant = Tenant::factory()->create();
     $startsAt = now()->subDays(2)->setTime(9, 0);
 
     return Event::factory()
-        ->for($tenant)
         ->create([
             'starts_at' => $startsAt,
             'ends_at' => $startsAt->clone()->setTime(18, 0),

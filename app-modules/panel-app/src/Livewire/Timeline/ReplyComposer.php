@@ -13,6 +13,7 @@ use He4rt\Activity\Timeline\Actions\CreateReply;
 use He4rt\Activity\Timeline\DTOs\CreateReplyDTO;
 use He4rt\Identity\User\Models\User;
 use Illuminate\View\View;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -70,12 +71,8 @@ final class ReplyComposer extends Component implements HasSchemas
         /** @var User $user */
         $user = auth()->user();
 
-        /** @var string $tenantId */
-        $tenantId = filament()->getTenant()->getKey();
-
         resolve(CreateReply::class)->handle(new CreateReplyDTO(
             userId: $user->id,
-            tenantId: $tenantId,
             parentTimelineId: $this->timelineId,
             content: $state['content'],
             images: $state['images'] ?? [],
@@ -83,6 +80,15 @@ final class ReplyComposer extends Component implements HasSchemas
 
         $this->form->fill();
         $this->dispatch('timeline.reply-created');
+    }
+
+    #[Computed]
+    public function avatarUrl(): ?string
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        return $user->getFirstMediaUrl('avatar') ?: null;
     }
 
     public function render(): View

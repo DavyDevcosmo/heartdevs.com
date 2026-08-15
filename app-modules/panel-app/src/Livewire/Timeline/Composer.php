@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace He4rt\PanelApp\Livewire\Timeline;
 
-use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
@@ -14,6 +13,7 @@ use He4rt\Activity\Timeline\Actions\CreatePost;
 use He4rt\Activity\Timeline\DTOs\CreatePostDTO;
 use He4rt\Identity\User\Models\User;
 use Illuminate\View\View;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 /**
@@ -37,7 +37,7 @@ final class Composer extends Component implements HasSchemas
             ->components([
                 MarkdownEditor::make('content')
                     ->hiddenLabel()
-                    ->placeholder('O que está acontecendo?')
+                    ->placeholder(__('panel-app::feed.composer.placeholder'))
                     ->toolbarButtons([])
                     ->required()
                     ->maxLength(5_000),
@@ -63,21 +63,26 @@ final class Composer extends Component implements HasSchemas
         /** @var array{content: string, images?: list<string>} $state */
         $state = $this->form->getState();
 
-        /** @var string $tenantId */
-        $tenantId = Filament::getTenant()->getKey();
-
         /** @var User $user */
         $user = auth()->user();
 
         resolve(CreatePost::class)->handle(new CreatePostDTO(
             userId: $user->id,
-            tenantId: $tenantId,
             content: $state['content'],
             images: $state['images'] ?? [],
         ));
 
         $this->form->fill();
         $this->dispatch('timeline.post-created');
+    }
+
+    #[Computed]
+    public function avatarUrl(): ?string
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        return $user->getFirstMediaUrl('avatar') ?: null;
     }
 
     public function render(): View

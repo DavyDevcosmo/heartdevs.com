@@ -10,15 +10,11 @@ route-list: ## List all registered routes
 
 .PHONY: pint
 pint: ## Run Pint code style fixer
-	@export XDEBUG_MODE=off
-	@$(CURDIR)/vendor/bin/pint --parallel
-	@unset XDEBUG_MODE
+	@XDEBUG_MODE=off $(CURDIR)/vendor/bin/pint --parallel
 
 .PHONY: test-pint
 test-pint: ## Run Pint code style fixer in test mode
-	@export XDEBUG_MODE=off
-	@$(CURDIR)/vendor/bin/pint --test --parallel
-	@unset XDEBUG_MODE=off
+	@XDEBUG_MODE=off $(CURDIR)/vendor/bin/pint --test --parallel
 
 .PHONY: rector
 rector: ## Run Rector
@@ -37,7 +33,7 @@ p: phpstan ## Alias for phpstan
 
 .PHONY: test-phpstan
 test-phpstan: ## Run PHPStan in test mode
-	@$(CURDIR)/vendor/bin/phpstan analyse --ansi
+	@$(CURDIR)/vendor/bin/phpstan analyse --ansi --memory-limit=2G
 
 .PHONY: format
 format: rector pint ## Run Pint and Rector and try to fixes the source code
@@ -76,7 +72,7 @@ env-up: ## Start the development environment
 	@docker compose --file docker-compose.yml up --detach
 
 .PHONY: env-down
-env-down: ## Start the development environment
+env-down: ## Stop the development environment (removes images and volumes)
 	@docker compose --file docker-compose.yml down --rmi all --volumes
 
 .PHONY: dev
@@ -94,6 +90,13 @@ import-db: ## Import a PostgreSQL dump file (usage: make import-db file=path/to/
 .PHONY: bot
 bot: ## Run the Discord bot
 	@php artisan bot:boot
+
+# Fixes the boot error "failed to initialize voice class /
+# LibDaveNotFoundException: libdave is required but could not be loaded" — since
+# 2026-03-01 Discord mandates the DAVE E2EE protocol for voice.
+.PHONY: libdave
+libdave: ## Link libdave (DAVE E2EE) into the Discord bot voice probe path
+	@mkdir -p "$(CURDIR)/.cache" && ln -sfn "$${LIBDAVE_HOME:-$$HOME/.local/lib/libdave}" "$(CURDIR)/.cache/libdave"
 
 .PHONY: truncate
 truncate: ## Truncate laravel.log file

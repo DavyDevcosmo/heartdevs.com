@@ -7,7 +7,6 @@ use He4rt\Events\Enrollment\Enums\EnrollmentStatus;
 use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Enrollment\Models\EnrollmentPolicy;
 use He4rt\Events\Event\Models\Event;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use He4rt\PanelApp\Livewire\Events\EventDetail;
 use He4rt\PanelApp\Pages\EventPage;
@@ -16,13 +15,10 @@ use function Pest\Livewire\livewire;
 
 beforeEach(function (): void {
     $this->user = User::factory()->create();
-    $this->tenant = Tenant::factory()->create(['slug' => 'test-tenant']);
-    $this->tenant->members()->attach($this->user);
 
     $this->actingAs($this->user);
 
     Filament::setCurrentPanel(Filament::getPanel('app'));
-    Filament::setTenant($this->tenant);
 
     $this->schema = [
         ['key' => 'why_join', 'type' => 'text', 'label' => 'Why do you want to join?', 'required' => true],
@@ -32,7 +28,6 @@ beforeEach(function (): void {
     $this->event = Event::factory()
         ->published()
         ->upcoming()
-        ->for($this->tenant)
         ->has(EnrollmentPolicy::factory()->application($this->schema), 'enrollmentPolicy')
         ->create(['title' => 'He4rt Conf Application']);
 });

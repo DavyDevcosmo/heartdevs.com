@@ -8,7 +8,6 @@ use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Enrollment\Models\EnrollmentPolicy;
 use He4rt\Events\Event\Enums\EventStatus;
 use He4rt\Events\Event\Models\Event;
-use He4rt\Identity\Tenant\Models\Tenant;
 use He4rt\Identity\User\Models\User;
 use He4rt\PanelApp\Livewire\Events\EventDetail;
 use He4rt\PanelApp\Livewire\Events\MyEventsList;
@@ -20,18 +19,14 @@ use function Pest\Livewire\livewire;
 
 beforeEach(function (): void {
     $this->user = User::factory()->create();
-    $this->tenant = Tenant::factory()->create(['slug' => 'test-tenant']);
-    $this->tenant->members()->attach($this->user);
 
     $this->actingAs($this->user);
 
     Filament::setCurrentPanel(Filament::getPanel('app'));
-    Filament::setTenant($this->tenant);
 
     $this->event = Event::factory()
         ->published()
         ->upcoming()
-        ->for($this->tenant)
         ->has(EnrollmentPolicy::factory()->rsvp(), 'enrollmentPolicy')
         ->create(['title' => 'He4rt Meetup RSVP']);
 });
@@ -79,16 +74,13 @@ test('when user tries to confirm presence twice, then duplicate enrollment is re
     expect(Enrollment::query()->where('event_id', $this->event->id)->count())->toBe(1);
 });
 
-test('event page returns 404 for event from another tenant', function (): void {
-    $otherTenant = Tenant::factory()->create(['slug' => 'other-tenant']);
-    $otherEvent = Event::factory()
-        ->published()
+test('event page returns 404 for an event not viewable by participants', function (): void {
+    $draftEvent = Event::factory()
         ->upcoming()
-        ->for($otherTenant)
         ->has(EnrollmentPolicy::factory()->rsvp(), 'enrollmentPolicy')
-        ->create();
+        ->create(['status' => EventStatus::Draft]);
 
-    $this->get(EventPage::getUrl(['record' => $otherEvent->id]))
+    $this->get(EventPage::getUrl(['record' => $draftEvent->id]))
         ->assertNotFound();
 });
 
@@ -195,7 +187,6 @@ test('past event does not show confirm presence button', function (): void {
     $pastEvent = Event::factory()
         ->published()
         ->past()
-        ->for($this->tenant)
         ->has(EnrollmentPolicy::factory()->rsvp(), 'enrollmentPolicy')
         ->create(['title' => 'Past Meetup']);
 
