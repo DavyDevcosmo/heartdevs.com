@@ -5,7 +5,9 @@ declare(strict_types=1);
 use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use He4rt\Identity\User\Models\User;
+use He4rt\Onboarding\Actions\AdvanceStep;
 use He4rt\Onboarding\Actions\StartOnboarding;
+use He4rt\Onboarding\Contracts\OnboardingCompletionGate;
 use He4rt\Onboarding\Enums\OnboardingStatus;
 use He4rt\Onboarding\Enums\OnboardingStepStatus;
 use He4rt\Onboarding\Enums\OnboardingType;
@@ -108,4 +110,57 @@ test('gate allows git_challenge when github is linked', function (): void {
     $step = $onboarding->steps()->where('step_key', 'git_challenge')->sole();
 
     expect($step->status)->toBe(OnboardingStepStatus::Pending);
+});
+
+test('concluding git_challenge completes the Squads onboarding and opens the APTO gate', function (): void {
+    $user = User::factory()->create();
+    Onboarding::factory()->for($user)->completed()->create();
+
+    ExternalIdentity::factory()->create([
+        'model_type' => $user->getMorphClass(),
+        'model_id' => $user->id,
+        'provider' => IdentityProvider::GitHub,
+        'connected_at' => now(),
+        'disconnected_at' => null,
+    ]);
+
+    $onboarding = resolve(StartOnboarding::class)->handle($user, OnboardingType::Squads);
+
+    resolve(AdvanceStep::class)->handle($onboarding, ['data' => ['terms' => true]]);
+
+    resolve(AdvanceStep::class)->handle($onboarding, []);
+
+    $onboarding->refresh();
+    $step = $onboarding->steps()->where('step_key', 'git_challenge')->sole();
+
+    expect($step->status)->toBe(OnboardingStepStatus::Done)
+        ->and($step->completed_at)->not->toBeNull()
+        ->and($onboarding->status)->toBe(OnboardingStatus::Completed)
+        ->and($onboarding->completed_at)->not->toBeNull()
+        ->and(resolve(OnboardingCompletionGate::class)->isCompleted($user, OnboardingType::Squads))
+        ->toBeTrue();
+});
+
+test('the form step alone does not make the user APTO', function (): void {
+    $user = User::factory()->create();
+    Onboarding::factory()->for($user)->completed()->create();
+
+    ExternalIdentity::factory()->create([
+        'model_type' => $user->getMorphClass(),
+        'model_id' => $user->id,
+        'provider' => IdentityProvider::GitHub,
+        'connected_at' => now(),
+        'disconnected_at' => null,
+    ]);
+
+    $onboarding = resolve(StartOnboarding::class)->handle($user, OnboardingType::Squads);
+
+    resolve(AdvanceStep::class)->handle($onboarding, ['data' => ['terms' => true]]);
+
+    $onboarding->refresh();
+
+    expect($onboarding->status)->toBe(OnboardingStatus::InProgress)
+        ->and($onboarding->completed_at)->toBeNull()
+        ->and(resolve(OnboardingCompletionGate::class)->isCompleted($user, OnboardingType::Squads))
+        ->toBeFalse();
 });
