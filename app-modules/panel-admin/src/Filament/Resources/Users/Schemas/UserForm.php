@@ -64,9 +64,9 @@ class UserForm
                 ->email(),
 
             Select::make('role')
-                ->label('Role')
                 ->options(Role::class)
-                ->required(),
+                ->required()
+                ->disabled(fn (): bool => !auth()->user()->role->isCompliance()),
 
             Toggle::make('is_donator')
                 ->label('Donator'),
