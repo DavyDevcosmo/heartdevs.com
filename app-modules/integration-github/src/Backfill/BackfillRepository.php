@@ -177,6 +177,14 @@ final readonly class BackfillRepository
             function (array $comment) use ($repo, $onProgress): void {
                 $login = $this->actorLogin($comment);
 
+                // A REST list de issue-comments não diz se o item é de PR ou issue; o
+                // html_url revela (.../pull/N vs .../issues/N). Espelha a lógica do webhook
+                // (issue.pull_request) pra que comentário de PR aponte para pr:N — sem isso
+                // o corte pós-merge não enxerga esses comentários.
+                $htmlUrl = $this->stringFrom($comment, 'html_url');
+                $isPr = str_contains($htmlUrl, '/pull/');
+                $kind = $isPr ? ContributionType::Pr : ContributionType::Issue;
+
                 $this->record(new NewContributionDTO(
                     repo: $repo,
                     type: ContributionType::Comment,
@@ -184,10 +192,10 @@ final readonly class BackfillRepository
                     actorLogin: $login,
                     actorId: $this->actorId($comment),
                     occurredAt: $this->stringFrom($comment, 'created_at'),
-                    targetRef: $this->targetRefFromUrl($this->stringFrom($comment, 'issue_url'), ContributionType::Issue),
+                    targetRef: $this->targetRefFromUrl($htmlUrl, $kind),
                     metadata: [
-                        'url' => data_get($comment, 'html_url'),
-                        'kind' => 'issue',
+                        'url' => $htmlUrl,
+                        'kind' => $isPr ? 'pr' : 'issue',
                         'is_bot' => $this->isBot($login),
                     ],
                 ), $onProgress);
@@ -328,9 +336,13 @@ final readonly class BackfillRepository
         return $this->intFrom($payload, 'user.id');
     }
 
+    /**
+     * Extrai o número do alvo de uma URL do GitHub — tanto de API
+     * (.../pulls/304, .../issues/50) quanto de html_url (.../pull/304#issuecomment-1).
+     */
     private function targetRefFromUrl(string $url, ContributionType $kind): ?string
     {
-        $number = Str::match('~/(\d+)$~', $url);
+        $number = Str::match('~/(?:pulls?|issues)/(\d+)~', $url);
 
         return $number === '' ? null : $kind->ref($number);
     }

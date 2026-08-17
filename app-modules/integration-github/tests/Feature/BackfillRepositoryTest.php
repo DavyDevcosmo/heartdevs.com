@@ -276,10 +276,10 @@ it('faz backfill de issues ignorando os PRs retornados pelo endpoint de issues',
         ->toBe(['issue:10']);
 });
 
-it('faz backfill de comentários de issue com target_ref derivado da issue_url', function (): void {
+it('faz backfill de comentários de issue com target_ref derivado do html_url', function (): void {
     mockGithub([
         ListIssueComments::class => MockResponse::make([
-            ['id' => 900, 'created_at' => '2026-06-03T10:00:00Z', 'html_url' => 'u', 'issue_url' => 'https://api.github.com/repos/he4rt/heartdevs.com/issues/10', 'user' => ['login' => 'ana', 'id' => 3]],
+            ['id' => 900, 'created_at' => '2026-06-03T10:00:00Z', 'html_url' => 'https://github.com/he4rt/heartdevs.com/issues/10#issuecomment-900', 'issue_url' => 'https://api.github.com/repos/he4rt/heartdevs.com/issues/10', 'user' => ['login' => 'ana', 'id' => 3]],
         ]),
     ]);
 
@@ -289,7 +289,23 @@ it('faz backfill de comentários de issue com target_ref derivado da issue_url',
 
     expect($comment->external_ref)->toBe('comment:900')
         ->and($comment->target_ref)->toBe('issue:10')
+        ->and($comment->metadata['kind'])->toBe('issue')
         ->and($comment->actor_login)->toBe('ana');
+});
+
+it('aponta comentário de PR para pr:N usando o html_url (/pull/)', function (): void {
+    mockGithub([
+        ListIssueComments::class => MockResponse::make([
+            ['id' => 901, 'created_at' => '2026-06-03T10:05:00Z', 'html_url' => 'https://github.com/he4rt/heartdevs.com/pull/20#issuecomment-901', 'issue_url' => 'https://api.github.com/repos/he4rt/heartdevs.com/issues/20', 'user' => ['login' => 'ana', 'id' => 3]],
+        ]),
+    ]);
+
+    backfill($this->repo);
+
+    $comment = GithubContribution::query()->where('external_ref', 'comment:901')->sole();
+
+    expect($comment->target_ref)->toBe('pr:20')
+        ->and($comment->metadata['kind'])->toBe('pr');
 });
 
 it('faz backfill de comentários de review de PR com target_ref para o PR', function (): void {
