@@ -85,7 +85,23 @@ it('faz backfill de PRs upsertando contributions com tamanho e autor', function 
         ->and($contribution->occurred_at->toIso8601String())->toBe('2026-06-01T12:00:00+00:00')
         ->and($contribution->metadata['additions'])->toBe(10)
         ->and($contribution->metadata['deletions'])->toBe(2)
-        ->and($contribution->metadata['is_bot'])->toBeFalse();
+        ->and($contribution->metadata['is_bot'])->toBeFalse()
+        ->and($contribution->metadata['merged'])->toBeFalse()
+        ->and($contribution->metadata['merged_at'])->toBeNull();
+});
+
+it('persiste merged_at no metadata de PR mesclado', function (): void {
+    mockGithub([
+        ListPullRequests::class => MockResponse::make([prPayload(2, 'maria', 42, '2026-06-02T15:30:00Z')]),
+        GetPullRequest::class => MockResponse::make(['additions' => 1, 'deletions' => 0, 'changed_files' => 1]),
+    ]);
+
+    backfill($this->repo);
+
+    $contribution = GithubContribution::query()->where('external_ref', 'pr:2')->sole();
+
+    expect($contribution->metadata['merged'])->toBeTrue()
+        ->and($contribution->metadata['merged_at'])->toBe('2026-06-02T15:30:00Z');
 });
 
 it('ignora reviews PENDING (sem submitted_at) sem quebrar o backfill', function (): void {

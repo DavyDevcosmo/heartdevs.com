@@ -75,6 +75,7 @@ final readonly class BackfillRepository
                         'title' => data_get($pr, 'title'),
                         'state' => data_get($pr, 'state'),
                         'merged' => data_get($pr, 'merged_at') !== null,
+                        'merged_at' => data_get($pr, 'merged_at'),
                         'url' => data_get($pr, 'html_url'),
                         'additions' => $this->intFrom($prSize, 'additions') ?? 0,
                         'deletions' => $this->intFrom($prSize, 'deletions') ?? 0,
