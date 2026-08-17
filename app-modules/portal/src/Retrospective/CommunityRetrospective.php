@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace He4rt\Portal\Retrospective;
 
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use He4rt\IntegrationGithub\Enums\ContributionType;
 use He4rt\IntegrationGithub\Models\GithubContribution;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -31,6 +34,10 @@ final readonly class CommunityRetrospective
      */
     public function build(): array
     {
+        // Instante do merge por PR (repo + external_ref => merged_at), montado de uma
+        // query própria porque o PR-alvo pode ter mesclado FORA do período do recorte.
+        $mergedAt = $this->mergedAtIndex();
+
         /** @var Collection<int, GithubContribution> $contributions */
         $contributions = GithubContribution::query()
             ->whereBetween('occurred_at', [$this->filters->since, $this->filters->until])
@@ -45,6 +52,7 @@ final readonly class CommunityRetrospective
             )
             ->filter(fn (GithubContribution $contribution): bool => in_array($contribution->type, $this->filters->types, strict: true))
             ->reject(fn (GithubContribution $contribution): bool => $this->filteredOutByOutcome($contribution))
+            ->reject(fn (GithubContribution $contribution): bool => $this->isPostMergeNoise($contribution, $mergedAt))
             ->when(
                 $this->filters->person !== null,
                 fn (Collection $items): Collection => $items->filter(fn (GithubContribution $contribution): bool => $contribution->actor_login === $this->filters->person),
@@ -329,6 +337,74 @@ final readonly class CommunityRetrospective
         $metadata = $contribution->metadata ?? [];
 
         return ($metadata['merged'] ?? false) === true;
+    }
+
+    /**
+     * Índice do instante do merge, indexado por repo e external_ref do PR
+     * (ex.: ['he4rt/heartdevs.com' => ['pr:304' => CarbonInterface]]). Só PRs com
+     * merged_at gravado entram — antes do backfill --full o índice fica vazio e o
+     * corte pós-merge vira no-op (degradação graciosa).
+     *
+     * @return array<string, array<string, CarbonInterface>>
+     */
+    private function mergedAtIndex(): array
+    {
+        $prs = GithubContribution::query()
+            ->where('type', ContributionType::Pr)
+            ->when(
+                filled($this->filters->repos),
+                fn (Builder $query): Builder => $query->whereIn('repo', $this->filters->repos),
+            )
+            ->get();
+
+        $map = [];
+
+        foreach ($prs as $pr) {
+            $mergedAt = $this->prMergedAt($pr);
+
+            if ($mergedAt instanceof CarbonInterface) {
+                $map[$pr->repo][$pr->external_ref] = $mergedAt;
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * Instante do merge de um PR, ou null quando não é PR merged / ainda sem merged_at
+     * gravado. Único ponto que lida com metadata nulo + chave ausente; reusa isMergedPr().
+     */
+    private function prMergedAt(GithubContribution $pr): ?CarbonInterface
+    {
+        if (!$this->isMergedPr($pr)) {
+            return null;
+        }
+
+        $metadata = $pr->metadata ?? [];
+        $mergedAt = $metadata['merged_at'] ?? null;
+
+        return is_string($mergedAt) ? CarbonImmutable::parse($mergedAt) : null;
+    }
+
+    /**
+     * Ruído pós-merge: review/review_comment/comment cujo alvo é um PR merged e que
+     * ocorreu DEPOIS do merge. Revisão antes do merge continua contando; corte estrito.
+     *
+     * @param  array<string, array<string, CarbonInterface>>  $mergedAt
+     */
+    private function isPostMergeNoise(GithubContribution $contribution, array $mergedAt): bool
+    {
+        if (!in_array($contribution->type, [ContributionType::Review, ContributionType::ReviewComment, ContributionType::Comment], strict: true)) {
+            return false;
+        }
+
+        if ($contribution->target_ref === null || !str_starts_with($contribution->target_ref, 'pr:')) {
+            return false;
+        }
+
+        $merged = $mergedAt[$contribution->repo][$contribution->target_ref] ?? null;
+
+        return $merged !== null && $contribution->occurred_at->gt($merged);
     }
 
     private function isUnmergedClosedPr(GithubContribution $contribution): bool

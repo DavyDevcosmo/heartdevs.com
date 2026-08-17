@@ -259,3 +259,41 @@ it('ordena o ranking por linhas quando sort=lines', function (): void {
 
     expect($data['people'][0]['login'])->toBe('muitas');
 });
+
+it('corta ações pós-merge (occurred_at > merged_at) de um PR mesclado', function (): void {
+    // PR mesclado em 2026-06-03 12:00; atividade antes conta, depois é cortada.
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:100', 'occurred_at' => '2026-06-02 09:00:00', 'metadata' => ['state' => 'closed', 'merged' => true, 'merged_at' => '2026-06-03T12:00:00Z']]);
+    contribution(['actor_login' => 'joao', 'type' => ContributionType::Review, 'external_ref' => 'review:1', 'target_ref' => 'pr:100', 'occurred_at' => '2026-06-03 09:00:00', 'metadata' => []]);
+    contribution(['actor_login' => 'joao', 'type' => ContributionType::Review, 'external_ref' => 'review:2', 'target_ref' => 'pr:100', 'occurred_at' => '2026-06-03 15:00:00', 'metadata' => []]);
+    contribution(['actor_login' => 'ana', 'type' => ContributionType::ReviewComment, 'external_ref' => 'review_comment:1', 'target_ref' => 'pr:100', 'occurred_at' => '2026-06-04 10:00:00', 'metadata' => ['kind' => 'pr']]);
+    contribution(['actor_login' => 'ana', 'type' => ContributionType::Comment, 'external_ref' => 'comment:1', 'target_ref' => 'pr:100', 'occurred_at' => '2026-06-04 11:00:00', 'metadata' => ['kind' => 'pr']]);
+
+    $data = ($this->build)();
+
+    // Sobram só o PR e a review de antes do merge.
+    expect($data['meta']['total'])->toBe(2)
+        ->and($data['meta']['reviews'])->toBe(1)
+        ->and($data['meta']['review_comments'])->toBe(0)
+        ->and($data['meta']['comments'])->toBe(0);
+
+    $joao = collect($data['people'])->firstWhere('login', 'joao');
+    expect($joao['total'])->toBe(1);
+
+    // Ana só tinha ação pós-merge → some do ranking.
+    expect(collect($data['people'])->firstWhere('login', 'ana'))->toBeNull();
+});
+
+it('não corta quando o PR não está mesclado ou ainda não tem merged_at', function (): void {
+    // PR aberto: atividade posterior continua contando (sem merge, sem corte).
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:200', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'open', 'merged' => false, 'merged_at' => null]]);
+    contribution(['actor_login' => 'joao', 'type' => ContributionType::Review, 'external_ref' => 'review:10', 'target_ref' => 'pr:200', 'occurred_at' => '2026-06-05', 'metadata' => []]);
+
+    // PR mesclado mas SEM merged_at gravado (estado pré-backfill) → índice vazio, no-op.
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:201', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => true]]);
+    contribution(['actor_login' => 'ana', 'type' => ContributionType::Review, 'external_ref' => 'review:11', 'target_ref' => 'pr:201', 'occurred_at' => '2026-06-05', 'metadata' => []]);
+
+    $data = ($this->build)();
+
+    expect($data['meta']['total'])->toBe(4)
+        ->and($data['meta']['reviews'])->toBe(2);
+});
