@@ -132,6 +132,16 @@ it('ordena os refs de PR do mais recente para o mais antigo (para o "últimos N"
     expect(array_column($maria['pr_refs'], 'num'))->toBe([2, 3, 1]);
 });
 
+it('normaliza state closed+merged para merged nos refs de PR', function (): void {
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:1', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => true, 'title' => 'feat: merged', 'url' => 'u1']]);
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:2', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => false, 'title' => 'feat: closed', 'url' => 'u2']]);
+
+    $data = ($this->build)();
+    $maria = collect($data['people'])->firstWhere('login', 'maria');
+
+    expect(array_column($maria['pr_refs'], 'state'))->toBe(['merged', 'closed']);
+});
+
 it('na view, mostra só os 3 primeiros refs e um chip "mais X…"', function (): void {
     $person = [
         'pr_refs' => array_map(

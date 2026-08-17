@@ -160,13 +160,12 @@ final readonly class CommunityRetrospective
             ->map(function (GithubContribution $contribution): array {
                 $metadata = $contribution->metadata ?? [];
                 $url = $metadata['url'] ?? null;
-                $state = $metadata['state'] ?? null;
 
                 return [
                     'num' => $this->refNumber($contribution->external_ref),
                     'title' => (string) ($metadata['title'] ?? ''),
                     'url' => is_string($url) ? $url : null,
-                    'state' => is_string($state) ? $state : null,
+                    'state' => $this->prState($metadata),
                 ];
             })
             ->values()
@@ -203,6 +202,20 @@ final readonly class CommunityRetrospective
         return (int) ($parts[1] ?? 0);
     }
 
+    /**
+     * @param  array<string, mixed>  $metadata
+     */
+    private function prState(array $metadata): ?string
+    {
+        if (($metadata['merged'] ?? false) === true) {
+            return 'merged';
+        }
+
+        $state = $metadata['state'] ?? null;
+
+        return is_string($state) ? $state : null;
+    }
+
     private function avatar(string $login, ?int $actorId): string
     {
         return $actorId !== null
@@ -234,13 +247,12 @@ final readonly class CommunityRetrospective
     {
         $metadata = $contribution->metadata ?? [];
         $url = $metadata['url'] ?? null;
-        $state = $metadata['state'] ?? null;
 
         return [
             'num' => $this->refNumber($contribution->external_ref),
             'title' => (string) ($metadata['title'] ?? ''),
             'url' => is_string($url) ? $url : null,
-            'state' => is_string($state) ? $state : null,
+            'state' => $this->prState($metadata),
             'author_login' => $contribution->actor_login,
             'additions' => (int) ($metadata['additions'] ?? 0),
             'deletions' => (int) ($metadata['deletions'] ?? 0),
