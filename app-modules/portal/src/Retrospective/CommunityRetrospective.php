@@ -6,6 +6,7 @@ namespace He4rt\Portal\Retrospective;
 
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Carbon\Exceptions\InvalidFormatException;
 use He4rt\IntegrationGithub\Enums\ContributionType;
 use He4rt\IntegrationGithub\Models\GithubContribution;
 use Illuminate\Database\Eloquent\Builder;
@@ -384,7 +385,17 @@ final readonly class CommunityRetrospective
         $metadata = $pr->metadata ?? [];
         $mergedAt = $metadata['merged_at'] ?? null;
 
-        return is_string($mergedAt) ? CarbonImmutable::parse($mergedAt) : null;
+        if (!is_string($mergedAt)) {
+            return null;
+        }
+
+        // metadata é JSON solto: um merged_at corrompido não pode derrubar a página
+        // inteira ao indexar os PRs — trata como "sem merge" (no-op no corte).
+        try {
+            return CarbonImmutable::parse($mergedAt);
+        } catch (InvalidFormatException) {
+            return null;
+        }
     }
 
     /**
@@ -429,8 +440,11 @@ final readonly class CommunityRetrospective
         }
 
         $merged = ($metadata['merged'] ?? false) === true;
+        $changedFiles = $metadata['changed_files'] ?? null;
 
-        return !$merged && (int) $metadata['changed_files'] === 0;
+        // Só zero numérico explícito conta como "vazio"; null/false/''/não-numérico
+        // (metadata inconsistente) NÃO viram 0 por coerção e seguem contando.
+        return !$merged && is_numeric($changedFiles) && (int) $changedFiles === 0;
     }
 
     private function isUnmergedClosedPr(GithubContribution $contribution): bool

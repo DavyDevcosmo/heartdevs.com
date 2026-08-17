@@ -325,3 +325,23 @@ it('mantém PR mesclado com 0 arquivos e PR sem changed_files gravado', function
     expect($data['meta']['prs'])->toBe(2)
         ->and($data['meta']['total'])->toBe(2);
 });
+
+it('não quebra o build quando merged_at está malformado (trata como sem merge)', function (): void {
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:300', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => true, 'merged_at' => 'not-a-date']]);
+    contribution(['actor_login' => 'joao', 'type' => ContributionType::Review, 'external_ref' => 'review:30', 'target_ref' => 'pr:300', 'occurred_at' => '2026-06-05', 'metadata' => []]);
+
+    $data = ($this->build)();
+
+    // merged_at inválido → PR fora do índice → review não é cortada, e o build não lança.
+    expect($data['meta']['total'])->toBe(2)
+        ->and($data['meta']['reviews'])->toBe(1);
+});
+
+it('não corta PR cujo changed_files é null (não coage para zero)', function (): void {
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:301', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'open', 'merged' => false, 'changed_files' => null]]);
+
+    $data = ($this->build)();
+
+    expect($data['meta']['prs'])->toBe(1)
+        ->and($data['meta']['total'])->toBe(1);
+});
