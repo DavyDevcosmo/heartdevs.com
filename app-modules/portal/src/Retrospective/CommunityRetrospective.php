@@ -52,6 +52,7 @@ final readonly class CommunityRetrospective
             )
             ->filter(fn (GithubContribution $contribution): bool => in_array($contribution->type, $this->filters->types, strict: true))
             ->reject(fn (GithubContribution $contribution): bool => $this->filteredOutByOutcome($contribution))
+            ->reject(fn (GithubContribution $contribution): bool => $this->isEmptyTestPr($contribution))
             ->reject(fn (GithubContribution $contribution): bool => $this->isPostMergeNoise($contribution, $mergedAt))
             ->when(
                 $this->filters->person !== null,
@@ -405,6 +406,31 @@ final readonly class CommunityRetrospective
         $merged = $mergedAt[$contribution->repo][$contribution->target_ref] ?? null;
 
         return $merged !== null && $contribution->occurred_at->gt($merged);
+    }
+
+    /**
+     * PR vazio/de teste: changed_files gravado como 0 e não mesclado (ex.: PR aberto só
+     * para validar o fluxo fork -> branch -> PR). Não é participação real — sai de meta,
+     * people, repos e highlights. PR mesclado com 0 arquivos (raro) segue contando; PR
+     * fechado COM arquivos continua contando como participação (decisão #10). Só corta
+     * quando changed_files está presente: metadata antigo sem a chave é mantido
+     * (degradação graciosa, igual ao índice de merged_at).
+     */
+    private function isEmptyTestPr(GithubContribution $contribution): bool
+    {
+        if ($contribution->type !== ContributionType::Pr) {
+            return false;
+        }
+
+        $metadata = $contribution->metadata ?? [];
+
+        if (!array_key_exists('changed_files', $metadata)) {
+            return false;
+        }
+
+        $merged = ($metadata['merged'] ?? false) === true;
+
+        return !$merged && (int) $metadata['changed_files'] === 0;
     }
 
     private function isUnmergedClosedPr(GithubContribution $contribution): bool

@@ -297,3 +297,31 @@ it('não corta quando o PR não está mesclado ou ainda não tem merged_at', fun
     expect($data['meta']['total'])->toBe(4)
         ->and($data['meta']['reviews'])->toBe(2);
 });
+
+it('descarta PR vazio/de teste (changed_files=0 e não mesclado) de toda a retrospectiva', function (): void {
+    // PR vazio de validação de fluxo (ex.: he4rt/4noobs#133) — não é participação real.
+    contribution(['actor_login' => 'leo', 'repo' => 'he4rt/4noobs', 'type' => ContributionType::Pr, 'external_ref' => 'pr:133', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => false, 'additions' => 0, 'deletions' => 0, 'changed_files' => 0]]);
+    // PR real fechado sem merge (com arquivos) segue contando (decisão #10).
+    contribution(['actor_login' => 'maria', 'repo' => 'he4rt/4noobs', 'type' => ContributionType::Pr, 'external_ref' => 'pr:134', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => false, 'additions' => 10, 'deletions' => 2, 'changed_files' => 3]]);
+
+    $data = ($this->build)();
+
+    expect($data['meta']['people'])->toBe(1)
+        ->and($data['meta']['prs'])->toBe(1)
+        ->and($data['meta']['prs_unmerged'])->toBe(1)
+        ->and($data['meta']['total'])->toBe(1)
+        ->and(collect($data['people'])->firstWhere('login', 'leo'))->toBeNull()
+        ->and($data['people'][0]['login'])->toBe('maria');
+});
+
+it('mantém PR mesclado com 0 arquivos e PR sem changed_files gravado', function (): void {
+    // Merge com 0 arquivos (raro, ex.: só merge de branch) segue contando.
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:1', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => true, 'changed_files' => 0]]);
+    // Metadata antigo sem a chave changed_files → mantido (degradação graciosa).
+    contribution(['actor_login' => 'joao', 'type' => ContributionType::Pr, 'external_ref' => 'pr:2', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => false]]);
+
+    $data = ($this->build)();
+
+    expect($data['meta']['prs'])->toBe(2)
+        ->and($data['meta']['total'])->toBe(2);
+});
