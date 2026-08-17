@@ -259,3 +259,89 @@ it('ordena o ranking por linhas quando sort=lines', function (): void {
 
     expect($data['people'][0]['login'])->toBe('muitas');
 });
+
+it('corta ações pós-merge (occurred_at > merged_at) de um PR mesclado', function (): void {
+    // PR mesclado em 2026-06-03 12:00; atividade antes conta, depois é cortada.
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:100', 'occurred_at' => '2026-06-02 09:00:00', 'metadata' => ['state' => 'closed', 'merged' => true, 'merged_at' => '2026-06-03T12:00:00Z']]);
+    contribution(['actor_login' => 'joao', 'type' => ContributionType::Review, 'external_ref' => 'review:1', 'target_ref' => 'pr:100', 'occurred_at' => '2026-06-03 09:00:00', 'metadata' => []]);
+    contribution(['actor_login' => 'joao', 'type' => ContributionType::Review, 'external_ref' => 'review:2', 'target_ref' => 'pr:100', 'occurred_at' => '2026-06-03 15:00:00', 'metadata' => []]);
+    contribution(['actor_login' => 'ana', 'type' => ContributionType::ReviewComment, 'external_ref' => 'review_comment:1', 'target_ref' => 'pr:100', 'occurred_at' => '2026-06-04 10:00:00', 'metadata' => ['kind' => 'pr']]);
+    contribution(['actor_login' => 'ana', 'type' => ContributionType::Comment, 'external_ref' => 'comment:1', 'target_ref' => 'pr:100', 'occurred_at' => '2026-06-04 11:00:00', 'metadata' => ['kind' => 'pr']]);
+
+    $data = ($this->build)();
+
+    // Sobram só o PR e a review de antes do merge.
+    expect($data['meta']['total'])->toBe(2)
+        ->and($data['meta']['reviews'])->toBe(1)
+        ->and($data['meta']['review_comments'])->toBe(0)
+        ->and($data['meta']['comments'])->toBe(0);
+
+    $joao = collect($data['people'])->firstWhere('login', 'joao');
+    expect($joao['total'])->toBe(1);
+
+    // Ana só tinha ação pós-merge → some do ranking.
+    expect(collect($data['people'])->firstWhere('login', 'ana'))->toBeNull();
+});
+
+it('não corta quando o PR não está mesclado ou ainda não tem merged_at', function (): void {
+    // PR aberto: atividade posterior continua contando (sem merge, sem corte).
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:200', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'open', 'merged' => false, 'merged_at' => null]]);
+    contribution(['actor_login' => 'joao', 'type' => ContributionType::Review, 'external_ref' => 'review:10', 'target_ref' => 'pr:200', 'occurred_at' => '2026-06-05', 'metadata' => []]);
+
+    // PR mesclado mas SEM merged_at gravado (estado pré-backfill) → índice vazio, no-op.
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:201', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => true]]);
+    contribution(['actor_login' => 'ana', 'type' => ContributionType::Review, 'external_ref' => 'review:11', 'target_ref' => 'pr:201', 'occurred_at' => '2026-06-05', 'metadata' => []]);
+
+    $data = ($this->build)();
+
+    expect($data['meta']['total'])->toBe(4)
+        ->and($data['meta']['reviews'])->toBe(2);
+});
+
+it('descarta PR vazio/de teste (changed_files=0 e não mesclado) de toda a retrospectiva', function (): void {
+    // PR vazio de validação de fluxo (ex.: he4rt/4noobs#133) — não é participação real.
+    contribution(['actor_login' => 'leo', 'repo' => 'he4rt/4noobs', 'type' => ContributionType::Pr, 'external_ref' => 'pr:133', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => false, 'additions' => 0, 'deletions' => 0, 'changed_files' => 0]]);
+    // PR real fechado sem merge (com arquivos) segue contando (decisão #10).
+    contribution(['actor_login' => 'maria', 'repo' => 'he4rt/4noobs', 'type' => ContributionType::Pr, 'external_ref' => 'pr:134', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => false, 'additions' => 10, 'deletions' => 2, 'changed_files' => 3]]);
+
+    $data = ($this->build)();
+
+    expect($data['meta']['people'])->toBe(1)
+        ->and($data['meta']['prs'])->toBe(1)
+        ->and($data['meta']['prs_unmerged'])->toBe(1)
+        ->and($data['meta']['total'])->toBe(1)
+        ->and(collect($data['people'])->firstWhere('login', 'leo'))->toBeNull()
+        ->and($data['people'][0]['login'])->toBe('maria');
+});
+
+it('mantém PR mesclado com 0 arquivos e PR sem changed_files gravado', function (): void {
+    // Merge com 0 arquivos (raro, ex.: só merge de branch) segue contando.
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:1', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => true, 'changed_files' => 0]]);
+    // Metadata antigo sem a chave changed_files → mantido (degradação graciosa).
+    contribution(['actor_login' => 'joao', 'type' => ContributionType::Pr, 'external_ref' => 'pr:2', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => false]]);
+
+    $data = ($this->build)();
+
+    expect($data['meta']['prs'])->toBe(2)
+        ->and($data['meta']['total'])->toBe(2);
+});
+
+it('não quebra o build quando merged_at está malformado (trata como sem merge)', function (): void {
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:300', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => true, 'merged_at' => 'not-a-date']]);
+    contribution(['actor_login' => 'joao', 'type' => ContributionType::Review, 'external_ref' => 'review:30', 'target_ref' => 'pr:300', 'occurred_at' => '2026-06-05', 'metadata' => []]);
+
+    $data = ($this->build)();
+
+    // merged_at inválido → PR fora do índice → review não é cortada, e o build não lança.
+    expect($data['meta']['total'])->toBe(2)
+        ->and($data['meta']['reviews'])->toBe(1);
+});
+
+it('não corta PR cujo changed_files é null (não coage para zero)', function (): void {
+    contribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:301', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'open', 'merged' => false, 'changed_files' => null]]);
+
+    $data = ($this->build)();
+
+    expect($data['meta']['prs'])->toBe(1)
+        ->and($data['meta']['total'])->toBe(1);
+});
