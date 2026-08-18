@@ -17,5 +17,13 @@ final readonly class PublicProfileData
     public function __construct(
         public string $name,
         public string $username,
+        public string $avatarUrl,
+        public ?string $coverUrl = null,
+        public ?string $nickname = null,
+        public ?string $headline = null,
+        public ?string $currentPosition = null,
+        public ?string $currentCompany = null,
+        public bool $availableForProposals = false,
+        public ?string $location = null,
     ) {}
 }
