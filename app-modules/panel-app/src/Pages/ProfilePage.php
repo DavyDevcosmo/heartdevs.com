@@ -254,13 +254,29 @@ class ProfilePage extends Page
                                     Grid::make(2)->schema([
                                         Select::make('platform')
                                             ->label(__('panel-app::profile.fields.platform'))
-                                            ->options(SocialPlatform::class)
+                                            ->options(fn (): array => collect(SocialPlatform::cases())
+                                                ->mapWithKeys(fn (SocialPlatform $platform): array => [
+                                                    $platform->value => sprintf(
+                                                        '<span class="flex items-center gap-2">%s %s</span>',
+                                                        svg($platform->getBrandIcon(), 'h-4 w-4')->toHtml(),
+                                                        e($platform->getLabel()),
+                                                    ),
+                                                ])
+                                                ->all())
+                                            ->allowHtml()
                                             ->required(fn (Get $get): bool => filled($get('handle')))
+                                            ->live()
+                                            ->afterStateUpdated(static function (Get $get, Set $set): void {
+                                                if (blank($get('platform'))) {
+                                                    $set('handle', null);
+                                                }
+                                            })
                                             ->columnSpan(1),
 
                                         TextInput::make('handle')
                                             ->label(__('panel-app::profile.fields.handle'))
                                             ->placeholder(__('panel-app::profile.placeholders.handle'))
+                                            ->disabled(fn (Get $get): bool => blank($get('platform')))
                                             ->required(fn (Get $get): bool => filled($get('platform')))
                                             ->live(onBlur: true)
                                             ->afterStateUpdated(function (Get $get, TextInput $component): void {
