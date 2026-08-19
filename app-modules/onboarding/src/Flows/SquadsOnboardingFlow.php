@@ -7,6 +7,7 @@ namespace He4rt\Onboarding\Flows;
 use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\Onboarding\Contracts\OnboardingFlow;
 use He4rt\Onboarding\Contracts\OnboardingStepDTO;
+use He4rt\Onboarding\DTOs\GitChallengeDTO;
 use He4rt\Onboarding\DTOs\WelcomeFormDTO;
 use He4rt\Onboarding\Enums\OnboardingStatus;
 use He4rt\Onboarding\Enums\OnboardingStepStatus;
@@ -26,6 +27,7 @@ final class SquadsOnboardingFlow implements OnboardingFlow
     {
         return match ($stepKey) {
             'form' => new WelcomeFormDTO(),
+            'git_challenge' => new GitChallengeDTO(),
             default => throw new InvalidArgumentException('Step não suportado: '.$stepKey),
         };
     }
