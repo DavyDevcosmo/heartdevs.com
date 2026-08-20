@@ -42,6 +42,7 @@ Every issue must be tagged with the module(s) it affects. Labels follow the patt
 | `mod:activity`           | `activity`               | Activity tracking        |
 | `mod:bot-discord`        | `bot-discord`            | Discord bot              |
 | `mod:community`          | `community`              | Community features       |
+| `mod:contents`           | `contents`               | Published content catalogue |
 | `mod:economy`            | `economy`                | Economy/wallet system    |
 | `mod:events`             | `events`                 | Events & participation   |
 | `mod:gamification`       | `gamification`           | XP, levels, ranking      |
