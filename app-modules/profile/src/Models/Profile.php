@@ -119,7 +119,11 @@ final class Profile extends Model
     }
 
     /**
-     * @return Attribute<never, array<string, string>|null>
+     * Validation happens on write; reading goes through the `array` cast, so the
+     * accessor side of the attribute is the decoded map — not `never`, which
+     * would tell static analysis the column can only ever be read as null.
+     *
+     * @return Attribute<array<string, string>|null, array<string, string>|null>
      */
     protected function socialLinks(): Attribute
     {

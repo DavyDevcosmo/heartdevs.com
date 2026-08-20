@@ -106,6 +106,26 @@ enum IdentityProvider: string implements HasColor, HasDescription, HasIcon, HasL
         };
     }
 
+    /**
+     * Public web profile for a linked account, or null when the provider has none.
+     *
+     * Mirrors {@see \He4rt\Profile\Enums\SocialPlatform::getUrl()}: it accepts a
+     * bare handle, an @handle or an already absolute URL. Discord is null on
+     * purpose — it has no public profile page, so the handle is shown unlinked.
+     */
+    public function profileUrl(?string $handle): ?string
+    {
+        if (blank($handle)) {
+            return null;
+        }
+
+        return match ($this) {
+            self::GitHub => self::linkTo('https://github.com/', $handle),
+            self::Twitch => self::linkTo('https://twitch.tv/', $handle),
+            default => null,
+        };
+    }
+
     public function getClient(): ?OAuthClientContract
     {
         return match ($this) {
@@ -261,5 +281,14 @@ enum IdentityProvider: string implements HasColor, HasDescription, HasIcon, HasL
             self::Discord => resolve(DiscordMessageAdapter::class),
             default => null,
         };
+    }
+
+    private static function linkTo(string $base, string $handle): string
+    {
+        if (str_starts_with($handle, 'http://') || str_starts_with($handle, 'https://')) {
+            return $handle;
+        }
+
+        return $base.mb_ltrim(mb_trim($handle), '@');
     }
 }

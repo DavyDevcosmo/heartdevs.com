@@ -14,6 +14,13 @@ namespace He4rt\Profile\DTOs;
  */
 final readonly class PublicProfileData
 {
+    /**
+     * @param  list<string>  $employmentTypes  Already translated labels, not enum values.
+     * @param  list<ProfileLinkData>  $socialLinks
+     * @param  list<ProfileLinkData>  $connectedAccounts
+     * @param  list<ProfileSkillData>  $skills
+     * @param  list<WorkExperienceData>  $experiences
+     */
     public function __construct(
         public string $name,
         public string $username,
@@ -25,5 +32,18 @@ final readonly class PublicProfileData
         public ?string $currentCompany = null,
         public bool $availableForProposals = false,
         public ?string $location = null,
+        public ?string $about = null,
+        public ?string $seniority = null,
+        public ?int $yearsExperience = null,
+        // Derived from birthdate on the way in. The date itself never leaves the model.
+        public ?int $age = null,
+        public ?string $startAvailability = null,
+        public bool $openToRemote = false,
+        public bool $willingToRelocate = false,
+        public array $employmentTypes = [],
+        public array $socialLinks = [],
+        public array $connectedAccounts = [],
+        public array $skills = [],
+        public array $experiences = [],
     ) {}
 }

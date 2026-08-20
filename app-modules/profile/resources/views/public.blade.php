@@ -68,5 +68,150 @@
                 </div>
             </div>
         </header>
+
+        @php
+            $facts = array_filter([
+                'Senioridade' => $profile->seniority,
+                'Experiência' => $profile->yearsExperience ? $profile->yearsExperience . ' anos' : null,
+                'Idade' => $profile->age ? $profile->age . ' anos' : null,
+                'Início' => $profile->startAvailability,
+            ]);
+
+            $workPreferences = array_filter([
+                $profile->openToRemote ? 'Aberto a remoto' : null,
+                $profile->willingToRelocate ? 'Disposto a mudar de cidade' : null,
+                ...$profile->employmentTypes,
+            ]);
+        @endphp
+
+        @if ($profile->about || $facts !== [] || $workPreferences !== [])
+            <section class="mt-10 px-2">
+                <h2 class="text-text-high text-lg font-semibold">Sobre</h2>
+
+                @if ($profile->about)
+                    <p class="text-text-medium mt-3 leading-relaxed whitespace-pre-line">{{ $profile->about }}</p>
+                @endif
+
+                @if ($facts !== [])
+                    <dl class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                        @foreach ($facts as $label => $value)
+                            <div class="bg-elevation-01dp rounded-2xl px-4 py-3">
+                                <dt class="text-text-low text-xs font-medium tracking-wide uppercase">{{ $label }}</dt>
+                                <dd class="text-text-high mt-1 font-semibold">{{ $value }}</dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                @endif
+
+                @if ($workPreferences !== [])
+                    <ul class="mt-4 flex flex-wrap gap-2">
+                        @foreach ($workPreferences as $preference)
+                            <li
+                                class="text-text-medium ring-outline-low rounded-full px-3 py-1 text-sm ring-1 ring-inset"
+                            >
+                                {{ $preference }}
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+            </section>
+        @endif
+
+        @php ($links = [...$profile->socialLinks, ...$profile->connectedAccounts])
+
+        @if ($links !== [])
+            <section class="mt-10 px-2">
+                <h2 class="text-text-high text-lg font-semibold">Links</h2>
+
+                <ul class="mt-4 flex flex-wrap gap-3">
+                    @foreach ($links as $link)
+                        <li>
+                            @if ($link->url)
+                                <a
+                                    href="{{ $link->url }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer me"
+                                    class="text-text-high ring-outline-low hover:bg-elevation-01dp inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm ring-1 ring-inset transition-colors"
+                                >
+                                    <x-filament::icon :icon="$link->icon" class="size-4" />
+                                    <span>{{ $link->handle }}</span>
+                                </a>
+                            @else
+                                {{-- Discord has no public profile page: handle only, no link. --}}
+                                <span
+                                    class="text-text-medium ring-outline-low inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm ring-1 ring-inset"
+                                    title="{{ $link->label }}"
+                                >
+                                    <x-filament::icon :icon="$link->icon" class="size-4" />
+                                    <span>{{ $link->handle }}</span>
+                                </span>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
+        @if ($profile->skills !== [])
+            <section class="mt-10 px-2">
+                <h2 class="text-text-high text-lg font-semibold">Skills</h2>
+
+                <ul class="mt-4 flex flex-wrap gap-2">
+                    @foreach ($profile->skills as $skill)
+                        <li
+                            class="bg-elevation-01dp ring-outline-low flex items-baseline gap-2 rounded-xl px-3 py-2 ring-1 ring-inset"
+                        >
+                            <span class="text-text-high text-sm font-semibold">{{ $skill->name }}</span>
+                            <span class="text-text-medium text-xs">{{ $skill->proficiency }}</span>
+
+                            @if ($skill->yearsExperience)
+                                <span class="text-text-low text-xs">
+                                    {{ $skill->yearsExperience }}{{ $skill->yearsExperience === 1 ? ' ano' : ' anos' }}
+                                </span>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
+        @if ($profile->experiences !== [])
+            <section class="mt-10 px-2">
+                <h2 class="text-text-high text-lg font-semibold">Experiência profissional</h2>
+
+                <ol class="mt-4 space-y-6">
+                    @foreach ($profile->experiences as $experience)
+                        <li class="border-outline-low border-l-2 pl-4">
+                            <div class="flex flex-wrap items-baseline gap-x-2">
+                                <h3 class="text-text-high font-semibold">{{ $experience->position }}</h3>
+                                <span class="text-text-medium">· {{ $experience->company }}</span>
+
+                                @if ($experience->isCurrent)
+                                    <span
+                                        class="bg-helper-success/15 text-helper-success rounded-full px-2 py-0.5 text-xs font-semibold"
+                                    >
+                                        Atual
+                                    </span>
+                                @endif
+                            </div>
+
+                            <p class="text-text-low mt-1 text-sm">
+                                {{ $experience->period }}
+
+                                @if ($experience->duration)
+                                    · {{ $experience->duration }}
+                                @endif
+                            </p>
+
+                            @if ($experience->description)
+                                <p class="text-text-medium mt-2 text-sm leading-relaxed whitespace-pre-line">
+                                    {{ $experience->description }}
+                                </p>
+                            @endif
+                        </li>
+                    @endforeach
+                </ol>
+            </section>
+        @endif
     </main>
 </x-profile::layout.guest>
