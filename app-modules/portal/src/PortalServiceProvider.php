@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\Portal;
 
+use He4rt\Portal\Livewire\ArticlesPage;
 use He4rt\Portal\Livewire\CommunityRetrospectivePage;
 use He4rt\Portal\Livewire\HeroSection;
 use He4rt\Portal\Livewire\Homepage;
@@ -45,6 +46,13 @@ class PortalServiceProvider extends ServiceProvider
             ->withHead(
                 title: 'Nossas redes',
                 description: 'Todos os canais oficiais da He4rt Developers: Discord, GitHub, LinkedIn, Instagram, X e WhatsApp.',
+            );
+
+        Route::get('/artigos', ArticlesPage::class)
+            ->name('articles')
+            ->withHead(
+                title: 'Artigos da comunidade',
+                description: 'Os artigos publicados pela organização He4rt Developers no dev.to, por tema e por quem escreveu.',
             );
 
         Route::get('/comunidade/retrospectiva', CommunityRetrospectivePage::class)
