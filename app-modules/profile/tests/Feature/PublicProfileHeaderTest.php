@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use App\Models\Address;
+use Carbon\CarbonInterface;
+use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
+use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use He4rt\Identity\User\Models\User;
 use He4rt\Profile\Models\Profile;
 use He4rt\Profile\Models\WorkExperience;
@@ -10,6 +13,18 @@ use He4rt\Profile\Models\WorkExperience;
 beforeEach(function (): void {
     $this->withoutVite();
 });
+
+function connectGithub(User $user, string $handle, ?CarbonInterface $disconnectedAt = null): ExternalIdentity
+{
+    return ExternalIdentity::factory()->create([
+        'model_type' => $user->getMorphClass(),
+        'model_id' => $user->getKey(),
+        'provider' => IdentityProvider::GitHub,
+        'metadata' => ['username' => $handle],
+        'connected_at' => now(),
+        'disconnected_at' => $disconnectedAt,
+    ]);
+}
 
 it('renders every header field of a filled profile', function (): void {
     $user = User::factory()->create([
@@ -59,12 +74,34 @@ it('renders an empty profile without leaking nulls or placeholders', function ()
         ->assertDontSee('null');
 });
 
-it('falls back to the github avatar when the user has no uploaded one', function (): void {
-    User::factory()->create(['username' => 'danielhe4rt']);
+it('falls back to the picture of the connected github account', function (): void {
+    $user = User::factory()->create(['username' => 'danielhe4rt']);
+
+    connectGithub($user, 'dani-no-github');
 
     $this->get('/@danielhe4rt')
         ->assertOk()
-        ->assertSee('https://github.com/danielhe4rt.png');
+        ->assertSee('https://github.com/dani-no-github.png');
+});
+
+it('never guesses a github picture out of the he4rt username', function (): void {
+    User::factory()->create(['username' => 'vazio', 'name' => 'Perfil Vazio']);
+
+    $this->get('/@vazio')
+        ->assertOk()
+        ->assertDontSee('github.com/vazio.png')
+        ->assertSee('PV'); // iniciais, no lugar da foto
+});
+
+it('draws initials instead of a picture when the github account is disconnected', function (): void {
+    $user = User::factory()->create(['username' => 'saiu', 'name' => 'Fulano Silva']);
+
+    connectGithub($user, 'fulano-gh', disconnectedAt: now());
+
+    $this->get('/@saiu')
+        ->assertOk()
+        ->assertDontSee('github.com/fulano-gh.png')
+        ->assertSee('FS');
 });
 
 it('never leaks private fields into the public page', function (): void {

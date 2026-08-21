@@ -101,11 +101,25 @@ it('shares the cover image when there is one', function (): void {
 });
 
 it('shares the avatar when there is no cover', function (): void {
+    Storage::fake('public');
+
     $user = User::factory()->create(['username' => 'sem-capa']);
+    $user->addMediaFromString('fake-png')
+        ->usingFileName('avatar.png')
+        ->toMediaCollection('avatar');
 
     $avatarUrl = resolve(BuildPublicProfile::class)->handle($user)->avatarUrl;
 
     $this->get('/@sem-capa')
         ->assertOk()
         ->assertSee('<meta property="og:image" content="'.e($avatarUrl).'" />', escape: false);
+});
+
+it('omits the share image when there is no cover and no picture', function (): void {
+    User::factory()->create(['username' => 'sem-nada']);
+
+    $this->get('/@sem-nada')
+        ->assertOk()
+        ->assertDontSee('<meta property="og:image"', escape: false)
+        ->assertSee('<meta name="twitter:card" content="summary" />', escape: false);
 });

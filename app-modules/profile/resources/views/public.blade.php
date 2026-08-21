@@ -24,6 +24,18 @@
 
     $links = [...$profile->socialLinks, ...$profile->connectedAccounts];
 
+    // Iniciais do avatar sem foto. Só palavras que começam com letra entram, senão
+    // um nome como "Écio Gonçalves 🇧🇷" renderiza a bandeira como se fosse inicial.
+    $initials = Str::of($profile->name)
+        ->squish()
+        ->explode(' ')
+        ->filter(fn (string $word): bool => preg_match('/^\p{L}/u', $word) === 1)
+        ->take(2)
+        ->map(fn (string $word): string => Str::upper(Str::substr($word, 0, 1)))
+        ->implode('');
+
+    $initials = $initials !== '' ? $initials : Str::upper(Str::substr($profile->username, 0, 1));
+
     // Todo cadastro nasce com Profile, então perfil vazio é o estado padrão: sem
     // nada pra contar, a página vira coluna única em vez de duas com metade vazia.
     $hasContent = $profile->about || $profile->skills !== [] || $profile->experiences !== [] || $facts !== [];
@@ -48,13 +60,27 @@
 
         <div @class(['grid gap-10 lg:gap-14', 'lg:grid-cols-[320px_1fr]' => $hasContent])>
             {{-- Rail de identidade: fica visível enquanto o currículo rola ao lado. --}}
-            <aside class="lg:sticky lg:top-8 lg:self-start">
-                <img
-                    src="{{ $profile->avatarUrl }}"
-                    alt="Foto de {{ $profile->name }}"
-                    class="bg-elevation-surface -mt-14 size-28 rounded-full object-cover"
-                    style="box-shadow: 0 0 0 3px var(--elevation-surface), 0 0 0 6px rgb(120 43 241 / 0.45)"
-                />
+            {{-- min-w-0: item de grid nasce com min-width auto e se recusa a encolher
+                 abaixo do próprio conteúdo. Sem isso, um handle ou headline longo estica
+                 a trilha da grid e a página inteira rola de lado no mobile. --}}
+            <aside class="min-w-0 lg:sticky lg:top-8 lg:self-start">
+                @if ($profile->avatarUrl)
+                    <img
+                        src="{{ $profile->avatarUrl }}"
+                        alt="Foto de {{ $profile->name }}"
+                        class="bg-elevation-surface -mt-14 size-28 rounded-full object-cover"
+                        style="box-shadow: 0 0 0 3px var(--elevation-surface), 0 0 0 6px rgb(120 43 241 / 0.45)"
+                    />
+                @else
+                    {{-- Sem foto: as iniciais do nome, que já está logo abaixo — daí o aria-hidden. --}}
+                    <div
+                        aria-hidden="true"
+                        class="bg-elevation-01dp text-text-high -mt-14 flex size-28 items-center justify-center rounded-full text-3xl font-bold"
+                        style="box-shadow: 0 0 0 3px var(--elevation-surface), 0 0 0 6px rgb(120 43 241 / 0.45)"
+                    >
+                        {{ $initials }}
+                    </div>
+                @endif
 
                 <h1 class="text-text-high mt-4 text-2xl font-bold">{{ $profile->name }}</h1>
 

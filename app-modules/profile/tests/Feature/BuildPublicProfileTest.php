@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Address;
+use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
+use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use He4rt\Identity\User\Models\User;
 use He4rt\Profile\Actions\BuildPublicProfile;
 use He4rt\Profile\DTOs\PublicProfileData;
@@ -82,11 +84,26 @@ it('leaves the current role empty when no experience is ongoing', function (): v
         ->and($data->currentCompany)->toBeNull();
 });
 
-it('falls back to the github avatar and leaves the cover empty', function (): void {
+it('falls back to the connected github picture and leaves the cover empty', function (): void {
     $user = User::factory()->create(['username' => 'danielhe4rt']);
+
+    ExternalIdentity::factory()->create([
+        'model_type' => $user->getMorphClass(),
+        'model_id' => $user->getKey(),
+        'provider' => IdentityProvider::GitHub,
+        'metadata' => ['username' => 'dani-no-github'],
+        'connected_at' => now(),
+        'disconnected_at' => null,
+    ]);
 
     $data = buildProfileFor($user);
 
-    expect($data->avatarUrl)->toBe('https://github.com/danielhe4rt.png')
+    expect($data->avatarUrl)->toBe('https://github.com/dani-no-github.png')
         ->and($data->coverUrl)->toBeNull();
+});
+
+it('leaves the avatar empty when nothing was uploaded and no github is connected', function (): void {
+    $user = User::factory()->create(['username' => 'danielhe4rt']);
+
+    expect(buildProfileFor($user)->avatarUrl)->toBeNull();
 });

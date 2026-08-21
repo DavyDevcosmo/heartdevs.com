@@ -6,7 +6,6 @@ namespace He4rt\Profile\Actions;
 
 use App\Models\Address;
 use Carbon\CarbonInterface;
-use Filament\Support\Enums\IconSize;
 use He4rt\Gamification\Badge\Models\Badge;
 use He4rt\Gamification\Character\Models\Character;
 use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
@@ -241,7 +240,7 @@ final class BuildPublicProfile
             $links[] = new ProfileLinkData(
                 label: $platform->getLabel(),
                 handle: $handle,
-                icon: $platform->getIcon()->getIconForSize(IconSize::Medium),
+                icon: $platform->getBrandIcon(),
                 url: $platform->getUrl($handle),
             );
         }
@@ -307,9 +306,44 @@ final class BuildPublicProfile
         );
     }
 
-    private function avatarUrl(User $user): string
+    /**
+     * The uploaded avatar, else the picture of the GitHub account the member
+     * actually connected.
+     *
+     * Deliberately not `getFilamentAvatarUrl()`: that one builds
+     * github.com/{username}.png out of the He4rt username, which assumes the two
+     * handles are the same person. When they are not, the page either shows a
+     * broken image or — worse — a stranger's face, because someone else owns
+     * that GitHub account. Null here means "no picture", and the view draws
+     * initials instead of guessing.
+     */
+    private function avatarUrl(User $user): ?string
     {
-        return $user->getFirstMediaUrl('avatar') ?: $user->getFilamentAvatarUrl();
+        $uploaded = $user->getFirstMediaUrl('avatar');
+
+        if ($uploaded !== '') {
+            return $uploaded;
+        }
+
+        $handle = $this->githubHandle($user);
+
+        return $handle === null ? null : sprintf('https://github.com/%s.png', $handle);
+    }
+
+    private function githubHandle(User $user): ?string
+    {
+        /** @var ExternalIdentity|null $identity */
+        $identity = $user->providers()
+            ->where('provider', IdentityProvider::GitHub)
+            ->first();
+
+        if (!$identity instanceof ExternalIdentity || !$identity->isConnected()) {
+            return null;
+        }
+
+        $handle = $identity->metadata['username'] ?? null;
+
+        return is_string($handle) && filled($handle) ? $handle : null;
     }
 
     /**
