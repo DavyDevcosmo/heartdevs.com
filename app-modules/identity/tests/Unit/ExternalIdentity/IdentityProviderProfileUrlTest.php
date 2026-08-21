@@ -48,6 +48,7 @@ it('gives every supported provider a decided answer', function (): void {
     $decided = [
         IdentityProvider::GitHub->value => 'https://github.com/handle',
         IdentityProvider::Twitch->value => 'https://twitch.tv/handle',
+        IdentityProvider::DevTo->value => 'https://dev.to/handle',
         IdentityProvider::Discord->value => null,
     ];
 

@@ -122,6 +122,7 @@ enum IdentityProvider: string implements HasColor, HasDescription, HasIcon, HasL
         return match ($this) {
             self::GitHub => self::linkTo('https://github.com/', $handle),
             self::Twitch => self::linkTo('https://twitch.tv/', $handle),
+            self::DevTo => self::linkTo('https://dev.to/', $handle),
             default => null,
         };
     }

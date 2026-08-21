@@ -7,10 +7,13 @@ namespace He4rt\Profile\Actions;
 use App\Models\Address;
 use Carbon\CarbonInterface;
 use Filament\Support\Enums\IconSize;
+use He4rt\Gamification\Badge\Models\Badge;
+use He4rt\Gamification\Character\Models\Character;
 use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use He4rt\Identity\User\Models\User;
 use He4rt\Profile\Data\WorkPreferences;
+use He4rt\Profile\DTOs\ProfileBadgeData;
 use He4rt\Profile\DTOs\ProfileLinkData;
 use He4rt\Profile\DTOs\ProfileSkillData;
 use He4rt\Profile\DTOs\PublicProfileData;
@@ -51,6 +54,17 @@ final class BuildPublicProfile
         );
         $preferences = $profile?->preferences;
 
+        // Gamification lives in its own module and its own row: a member who
+        // never touched the bot has no Character at all, and the whole section
+        // disappears rather than showing a level 1 they never played for.
+        //
+        // badges.media, not badges: every badge reaches for its image, and
+        // without the media loaded up front that is one query per badge.
+        $character = Character::query()
+            ->with('badges.media')
+            ->where('user_id', $user->getKey())
+            ->first();
+
         return new PublicProfileData(
             name: $user->name,
             username: $user->username,
@@ -78,7 +92,40 @@ final class BuildPublicProfile
             connectedAccounts: $this->connectedAccounts($user),
             skills: $this->skills($profile),
             experiences: $this->experiences($experiences),
+            level: $character?->level,
+            experience: $character?->experience,
+            levelProgress: $character?->percentage_experience,
+            badges: $this->badges($character),
         );
+    }
+
+    /**
+     * Earned badges, without the redeem code that would let any visitor claim
+     * the same badge.
+     *
+     * @return list<ProfileBadgeData>
+     */
+    private function badges(?Character $character): array
+    {
+        if (!$character instanceof Character) {
+            return [];
+        }
+
+        $badges = [];
+
+        $rows = $character->badges
+            ->sortBy(static fn (Badge $badge): string => $badge->name)
+            ->values();
+
+        foreach ($rows as $badge) {
+            $badges[] = new ProfileBadgeData(
+                name: $badge->name,
+                description: $badge->description,
+                imageUrl: $badge->getFirstMediaUrl('badge') ?: null,
+            );
+        }
+
+        return $badges;
     }
 
     /**

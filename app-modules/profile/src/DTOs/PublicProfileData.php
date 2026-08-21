@@ -20,6 +20,7 @@ final readonly class PublicProfileData
      * @param  list<ProfileLinkData>  $connectedAccounts
      * @param  list<ProfileSkillData>  $skills
      * @param  list<WorkExperienceData>  $experiences
+     * @param  list<ProfileBadgeData>  $badges
      */
     public function __construct(
         public string $name,
@@ -45,5 +46,11 @@ final readonly class PublicProfileData
         public array $connectedAccounts = [],
         public array $skills = [],
         public array $experiences = [],
+        public ?int $level = null,
+        // Total XP and how far into the current level it sits, for the progress
+        // bar. Derived from the Character; there is no private counterpart.
+        public ?int $experience = null,
+        public ?float $levelProgress = null,
+        public array $badges = [],
     ) {}
 }

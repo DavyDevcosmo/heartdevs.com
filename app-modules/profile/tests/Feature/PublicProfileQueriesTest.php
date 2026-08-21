@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Address;
+use He4rt\Gamification\Badge\Models\Badge;
+use He4rt\Gamification\Character\Models\Character;
 use He4rt\Identity\User\Models\User;
 use He4rt\Profile\Models\Profile;
 use He4rt\Profile\Models\ProfileSkill;
@@ -30,6 +32,14 @@ function seedProfilePage(string $username, int $rows): void
             'skill_id' => Skill::factory()->create()->id,
         ]);
     }
+
+    $character = Character::factory()->for($user)->create();
+
+    for ($i = 0; $i < $rows; $i++) {
+        // Each badge reaches for its image: without eager loading the media,
+        // that is one more query per badge.
+        $character->badges()->attach(Badge::factory()->create(), ['claimed_at' => now()]);
+    }
 }
 
 function countQueriesFor(string $username): int
@@ -52,8 +62,8 @@ it('keeps the query count flat as the profile grows', function (): void {
     $small = countQueriesFor('pequeno');
     $large = countQueriesFor('grande');
 
-    // The page is public and will be crawled: skills and experiences must be
-    // eager loaded, so twenty rows cost the same number of queries as one.
+    // The page is public and will be crawled: skills, experiences and badge
+    // images must be eager loaded, so twenty rows cost the same as one.
     expect($large)->toBe($small)
-        ->and($small)->toBeLessThanOrEqual(10);
+        ->and($small)->toBeLessThanOrEqual(12);
 });
