@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6f44d4def11ea383611368b0e7a25da3",
+    "content-hash": "ce56174e92260b35ad7e434dd4014fe2",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -3726,6 +3726,42 @@
             "autoload-dev": {
                 "psr-4": {
                     "He4rt\\IntegrationWhatsapp\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "he4rt/marketing",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/marketing",
+                "reference": "47501f256f12e31f6d008abdd9db3e27d0695a1a"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "He4rt\\Marketing\\MarketingServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "He4rt\\Marketing\\": "src/",
+                    "He4rt\\Marketing\\Database\\Factories\\": "database/factories/",
+                    "He4rt\\Marketing\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "He4rt\\Marketing\\Tests\\": "tests/"
                 }
             },
             "license": [
