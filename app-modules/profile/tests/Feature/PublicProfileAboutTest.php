@@ -52,16 +52,21 @@ it('hides the whole about section when there is nothing to say', function (): vo
         ->assertDontSee('Aberto a remoto');
 });
 
-it('publishes the age but never the birthdate', function (): void {
+it('never exposes the age nor the birthdate', function (): void {
     $user = User::factory()->create(['username' => 'aniversariante']);
 
     Profile::factory()->for($user)->create([
         'birthdate' => now()->subYears(30)->subMonths(2)->toDateString(),
     ]);
 
+    // The DTO is the allowlist: with no age field, there is nowhere for it to live.
+    $data = resolve(BuildPublicProfile::class)->handle($user->refresh());
+    expect($data)->not->toHaveProperty('age');
+
     $this->get('/@aniversariante')
         ->assertOk()
-        ->assertSee('30 anos')
+        ->assertDontSee('30 anos')
+        ->assertDontSee('Idade')
         ->assertDontSee(now()->subYears(30)->subMonths(2)->format('Y-m-d'))
         ->assertDontSee(now()->subYears(30)->subMonths(2)->format('d/m/Y'));
 });
@@ -96,6 +101,5 @@ it('leaves availability off when the profile has no preferences', function (): v
     expect($data->openToRemote)->toBeFalse()
         ->and($data->willingToRelocate)->toBeFalse()
         ->and($data->employmentTypes)->toBeEmpty()
-        ->and($data->age)->toBeNull()
         ->and($data->seniority)->toBeNull();
 });

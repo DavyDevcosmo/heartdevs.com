@@ -121,3 +121,54 @@ it('hides the whole community section when the member never played', function ()
         ->assertDontSee('Comunidade')
         ->assertDontSee('Nível');
 });
+
+it('tells how much XP the next level needs', function (): void {
+    $user = User::factory()->create(['username' => 'subindo']);
+
+    // 2400 XP → level 7 (threshold 2100); level 8 asks 2800, so 400 to go.
+    characterFor($user, experience: 2_400);
+
+    $this->get('/@subindo')
+        ->assertOk()
+        ->assertSee('2.400 XP')
+        ->assertSee('400')
+        ->assertSee('para o próximo nível');
+});
+
+it('shows only the total at the level cap, where there is no next level', function (): void {
+    $user = User::factory()->create(['username' => 'lendario']);
+
+    characterFor($user, experience: 450_000); // past the level-50 threshold
+
+    $this->get('/@lendario')
+        ->assertOk()
+        ->assertSee('Nível 50')
+        ->assertSee('450.000 XP')
+        ->assertDontSee('para o próximo nível');
+});
+
+it('tells how long the person has been a member', function (): void {
+    $user = User::factory()->create([
+        'username' => 'veterano',
+        'created_at' => now()->subMonths(16),
+    ]);
+
+    characterFor($user);
+
+    $this->get('/@veterano')
+        ->assertOk()
+        ->assertSee('Membro há 1 ano e 4 meses');
+});
+
+it('hides the membership line during the first month', function (): void {
+    $user = User::factory()->create([
+        'username' => 'recem-chegado',
+        'created_at' => now()->subDays(10),
+    ]);
+
+    characterFor($user);
+
+    $this->get('/@recem-chegado')
+        ->assertOk()
+        ->assertDontSee('Membro há');
+});

@@ -11,8 +11,9 @@
 
     $facts = array_filter([
         'Senioridade' => $profile->seniority,
-        'Experiência' => $profile->yearsExperience ? $profile->yearsExperience . ' anos' : null,
-        'Idade' => $profile->age ? $profile->age . ' anos' : null,
+        'Experiência' => $profile->yearsExperience
+            ? $profile->yearsExperience . ($profile->yearsExperience === 1 ? ' ano' : ' anos')
+            : null,
         'Início' => $profile->startAvailability,
     ]);
 
@@ -181,12 +182,7 @@
                         <h2 class="text-text-high text-sm font-semibold">Comunidade</h2>
 
                         @if ($profile->level)
-                            <div class="mt-3 flex items-baseline justify-between">
-                                <span class="text-text-high text-sm font-semibold">Nível {{ $profile->level }}</span>
-                                <span class="text-text-low text-xs">
-                                    {{ number_format((float) $profile->experience, 0, ',', '.') }} XP
-                                </span>
-                            </div>
+                            <p class="text-text-high mt-3 text-sm font-semibold">Nível {{ $profile->level }}</p>
 
                             <div class="bg-elevation-02dp mt-2 h-1.5 w-full overflow-hidden rounded-full">
                                 <div
@@ -194,29 +190,54 @@
                                     style="width: {{ $profile->levelProgress }}%"
                                 ></div>
                             </div>
+
+                            <p class="text-text-low mt-2 text-xs">
+                                {{ number_format((float) $profile->experience, 0, ',', '.') }} XP
+                                @if ($profile->experienceToNextLevel)
+                                    · {{ number_format((float) $profile->experienceToNextLevel, 0, ',', '.') }}
+                                    para o próximo nível
+                                @endif
+                            </p>
                         @endif
 
                         @if ($profile->badges !== [])
                             {{-- Name and description only: the redeem code stays out of the DTO. --}}
-                            <ul class="mt-4 flex flex-wrap gap-2">
+                            {{-- Nome e descrição visíveis, não em tooltip: sem eles a seção
+                                 vira uma fileira de bolinhas que parece decoração. --}}
+                            <ul class="mt-4 space-y-2">
                                 @foreach ($profile->badges as $badge)
-                                    <li title="{{ $badge->name }} — {{ $badge->description }}">
+                                    <li
+                                        class="border-outline-low bg-elevation-01dp flex items-center gap-3 rounded-xl border p-3"
+                                    >
                                         @if ($badge->imageUrl)
+                                            {{-- alt vazio: o nome já é o texto ao lado. --}}
                                             <img
                                                 src="{{ $badge->imageUrl }}"
-                                                alt="{{ $badge->name }}"
-                                                class="size-9 rounded-lg object-contain"
+                                                alt=""
+                                                class="size-9 shrink-0 rounded-lg object-contain"
                                             />
                                         @else
                                             <span
-                                                class="bg-elevation-02dp text-text-medium flex size-9 items-center justify-center rounded-lg text-xs font-bold"
+                                                aria-hidden="true"
+                                                class="bg-elevation-02dp text-text-medium flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold"
                                             >
                                                 {{ mb_substr($badge->name, 0, 1) }}
                                             </span>
                                         @endif
+
+                                        <div class="min-w-0">
+                                            <h3 class="text-text-high text-sm font-medium">{{ $badge->name }}</h3>
+                                            <p class="text-text-medium mt-0.5 text-xs">{{ $badge->description }}</p>
+                                        </div>
                                     </li>
                                 @endforeach
                             </ul>
+                        @endif
+
+                        @if ($profile->memberFor)
+                            <p class="border-outline-low text-text-low mt-4 border-t pt-3 text-xs">
+                                Membro há {{ $profile->memberFor }}
+                            </p>
                         @endif
                     </div>
                 @endif

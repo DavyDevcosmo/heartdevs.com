@@ -78,14 +78,9 @@ final class BuildPublicProfile
             about: $profile?->about,
             seniority: $profile?->seniority_level?->getLabel(),
             yearsExperience: $profile?->years_experience,
-            // Only the derived age: the birthdate itself is a personal identifier
-            // and stays behind the login.
-            age: $profile?->birthdate?->age,
             startAvailability: $profile?->start_availability?->getLabel(),
             openToRemote: $preferences instanceof WorkPreferences && $preferences->isOpenToRemote,
             willingToRelocate: $preferences instanceof WorkPreferences && $preferences->willingToRelocate,
-            // hasDisability lives in the same object and is deliberately not read:
-            // health data, LGPD art. 11.
             employmentTypes: $this->employmentTypes($preferences),
             socialLinks: $this->socialLinks($profile),
             connectedAccounts: $this->connectedAccounts($user),
@@ -94,6 +89,14 @@ final class BuildPublicProfile
             level: $character?->level,
             experience: $character?->experience,
             levelProgress: $character?->percentage_experience,
+            experienceToNextLevel: $character instanceof Character && $character->experience_progress > 0
+                ? $character->experience_progress
+                : null,
+            memberFor: $this->humanDuration(
+                $user->created_at instanceof CarbonInterface
+                    ? (int) $user->created_at->diffInMonths(now())
+                    : null,
+            ),
             badges: $this->badges($character),
         );
     }

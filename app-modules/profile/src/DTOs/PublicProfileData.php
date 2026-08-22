@@ -36,8 +36,6 @@ final readonly class PublicProfileData
         public ?string $about = null,
         public ?string $seniority = null,
         public ?int $yearsExperience = null,
-        // Derived from birthdate on the way in. The date itself never leaves the model.
-        public ?int $age = null,
         public ?string $startAvailability = null,
         public bool $openToRemote = false,
         public bool $willingToRelocate = false,
@@ -51,6 +49,10 @@ final readonly class PublicProfileData
         // bar. Derived from the Character; there is no private counterpart.
         public ?int $experience = null,
         public ?float $levelProgress = null,
+        // XP que falta pro próximo nível; null no teto, onde não há próximo.
+        public ?int $experienceToNextLevel = null,
+        // "1 ano e 4 meses" — há quanto tempo a pessoa entrou na comunidade.
+        public ?string $memberFor = null,
         public array $badges = [],
     ) {}
 }
