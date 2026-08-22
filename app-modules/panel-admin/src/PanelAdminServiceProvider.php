@@ -53,6 +53,10 @@ class PanelAdminServiceProvider extends ServiceProvider
                     in: __DIR__.'/Moderation/Pages',
                     for: 'He4rt\\PanelAdmin\\Moderation\\Pages',
                 )
+                ->discoverResources(
+                    in: __DIR__.'/Marketing/Resources',
+                    for: 'He4rt\\PanelAdmin\\Marketing\\Resources',
+                )
                 ->discoverPages(
                     in: __DIR__.'/Marketing/Pages',
                     for: 'He4rt\\PanelAdmin\\Marketing\\Pages',

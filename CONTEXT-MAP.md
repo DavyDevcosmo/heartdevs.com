@@ -22,6 +22,7 @@ This is a modular monorepo (`internachi/modular`). Each bounded context lives un
 | Integration GitHub  | `app-modules/integration-github/`  | GitHub transport (REST via Saloon), OAuth, community contribution ingestion (backfill + webhooks) + event lake             |
 | Onboarding          | `app-modules/onboarding/`          | Universal, mandatory entry layer — polymorphic onboarding state machines by type; owns the per-type completion gate (APTO) |
 | Squads              | `app-modules/squads/`              | Squad lifecycle, membership and governance (captain/sub-captain, elections, removal, reallocation)                         |
+| Marketing           | `app-modules/marketing/`           | Divulgação e sua medição — links curtos (`/l/{slug}`), destino versionado, captura crua de cliques                         |
 
 ## Relationships
 
@@ -71,3 +72,4 @@ This is a modular monorepo (`internachi/modular`). Each bounded context lives un
 - **Gamification** depends on Identity (Character belongs to User). Listens to Events domain events for XP.
 - **Onboarding** depends on Identity (User, tenant scoping, GitHub `ExternalIdentity` link) and listens to `integration-github`'s `GithubPullRequestApproved` domain event (reads the `challenge` repos in the allowlist). It never imports from `squads` — `squads` is a consumer of its completion gate, never the reverse.
 - **Squads** depends on Onboarding (reads the `Squads`-completion gate, "APTO") and Identity (users/tenants). It never imports from presentation; the panels depend on it.
+- **Marketing** owns short links and their click record. It depends only on **Identity** (`created_by` / `user_id` on a click) and on no other context. It renders no UI and registers no route: `portal` owns the public `/l/{slug}` edge and the "link unavailable" page, and `panel-admin` owns the staff CRUD and dashboards — both depend on `marketing`, never the reverse.

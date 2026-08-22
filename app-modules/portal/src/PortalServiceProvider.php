@@ -9,6 +9,7 @@ use He4rt\Portal\Livewire\CommunityRetrospectivePage;
 use He4rt\Portal\Livewire\HeroSection;
 use He4rt\Portal\Livewire\Homepage;
 use He4rt\Portal\Livewire\SocialLinksPage;
+use He4rt\Portal\ShortLink\ShortLinkRedirectController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Head\HeadServiceProvider;
@@ -66,6 +67,34 @@ class PortalServiceProvider extends ServiceProvider
                  * Fixar o canonical consolida tudo na versão sem parâmetros.
                  */
                 canonical: '/comunidade/retrospectiva',
+            );
+
+        /*
+         * A borda pública do encurtador (app-modules/marketing). O constraint em
+         * minúsculo é intencional: slugs são canônicos em lowercase, então
+         * `/l/Discord-A3F9K` simplesmente não casa a rota e cai no 404 do
+         * framework — mesma parede que um slug morto, sem custo de resolução.
+         *
+         * O withHead aqui não é sobre indexar: o caminho feliz é um 302 sem
+         * HTML, onde o metadata é inerte. Ele existe pelo caminho triste, o
+         * único que renderiza página — sem isso, os defaults do portal marcariam
+         * cada slug morto como `index, follow`, e o título seria o genérico do
+         * site. `noindex, follow` espelha o default de erro do SiteHead.
+         */
+        Route::get('/l/{slug}', ShortLinkRedirectController::class)
+            ->where('slug', '[a-z0-9-]+')
+            ->name('short-link.redirect')
+            ->withHead(
+                title: 'Link indisponível',
+                description: 'O link curto que você abriu não está mais disponível.',
+                robots: ['noindex', 'follow'],
+                /*
+                 * O canonical default é a URL corrente, o que escreveria o slug
+                 * dentro do <head> — e faria a resposta de um slug morto diferir
+                 * da de outro. Fixá-lo mantém as quatro páginas mortas byte a
+                 * byte idênticas, que é a propriedade que impede a enumeração.
+                 */
+                canonical: '/',
             );
 
         Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
