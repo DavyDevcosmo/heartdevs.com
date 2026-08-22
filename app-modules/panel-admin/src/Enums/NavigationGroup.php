@@ -21,10 +21,13 @@ enum NavigationGroup implements HasIcon, HasLabel
 {
     case People;
 
+    case Content;
+
     public function getLabel(): string
     {
         return match ($this) {
             self::People => __('panel-admin::navigation.groups.people'),
+            self::Content => __('panel-admin::navigation.groups.content'),
         };
     }
 
@@ -32,6 +35,7 @@ enum NavigationGroup implements HasIcon, HasLabel
     {
         return match ($this) {
             self::People => Heroicon::OutlinedUsers,
+            self::Content => Heroicon::OutlinedNewspaper,
         };
     }
 }

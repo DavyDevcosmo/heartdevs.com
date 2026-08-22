@@ -10,6 +10,7 @@ use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use He4rt\PanelAdmin\Discord\DiscordCluster;
 use He4rt\PanelAdmin\Enums\NavigationGroup as NavGroup;
+use He4rt\PanelAdmin\Filament\Resources\ContentEntries\ContentEntryResource;
 use He4rt\PanelAdmin\Filament\Resources\Events\EventResource;
 use He4rt\PanelAdmin\Filament\Resources\ExternalIdentities\ExternalIdentityResource;
 use He4rt\PanelAdmin\Filament\Resources\Profiles\ProfileResource;
@@ -52,6 +53,7 @@ class PanelAdminServiceProvider extends ServiceProvider
                     UserResource::class,
                     ProfileResource::class,
                     SkillResource::class,
+                    ContentEntryResource::class,
                 ])
                 ->discoverResources(
                     in: __DIR__.'/Moderation/Resources',
@@ -150,6 +152,11 @@ class PanelAdminServiceProvider extends ServiceProvider
                         ...ExternalIdentityResource::getNavigationItems(),
                         ...ProfileResource::getNavigationItems(),
                         ...SkillResource::getNavigationItems(),
+                    ]),
+                NavigationGroup::make(NavGroup::Content->getLabel())
+                    ->icon(NavGroup::Content->getIcon())
+                    ->items([
+                        ...ContentEntryResource::getNavigationItems(),
                     ]),
             ]);
     }
