@@ -2,14 +2,12 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Portal\Livewire;
+namespace He4rt\Portal\Retrospective;
 
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use He4rt\IntegrationGithub\Enums\ContributionType;
 use He4rt\IntegrationGithub\Models\GithubContribution;
-use He4rt\Portal\Retrospective\CommunityRetrospective;
-use He4rt\Portal\Retrospective\RetrospectiveFilters;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;

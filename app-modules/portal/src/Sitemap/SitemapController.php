@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Portal;
+namespace He4rt\Portal\Sitemap;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Response;

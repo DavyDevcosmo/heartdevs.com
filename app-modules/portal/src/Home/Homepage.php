@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Portal\Livewire;
+namespace He4rt\Portal\Home;
 
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;

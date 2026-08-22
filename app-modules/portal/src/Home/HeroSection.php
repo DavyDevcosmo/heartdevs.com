@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Portal\Livewire;
+namespace He4rt\Portal\Home;
 
 use He4rt\Activity\Message\Models\Message;
 use He4rt\Gamification\Character\Models\Character;

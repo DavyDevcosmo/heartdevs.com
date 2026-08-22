@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Portal\Livewire;
+namespace He4rt\Portal\Articles;
 
-use He4rt\Portal\Articles\ArticleFeed;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;

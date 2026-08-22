@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Portal\Livewire;
+namespace He4rt\Portal\SocialLinks;
 
-use He4rt\Portal\DTOs\SocialLink;
 use Illuminate\Contracts\View\View;
 use InvalidArgumentException;
 use Livewire\Attributes\Layout;

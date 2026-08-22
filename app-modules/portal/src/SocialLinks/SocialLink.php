@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Portal\DTOs;
+namespace He4rt\Portal\SocialLinks;
 
 final readonly class SocialLink
 {

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Carbon\CarbonImmutable;
 use He4rt\IntegrationGithub\Enums\ContributionType;
 use He4rt\IntegrationGithub\Models\GithubContribution;
-use He4rt\Portal\Livewire\CommunityRetrospectivePage;
+use He4rt\Portal\Retrospective\CommunityRetrospectivePage;
 
 use function Pest\Livewire\livewire;
 
