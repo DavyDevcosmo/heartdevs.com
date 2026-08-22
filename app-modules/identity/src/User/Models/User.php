@@ -25,6 +25,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @property string $id
@@ -47,6 +48,7 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
     use HasAddress;
     /** @use HasFactory<UserFactory> */
     use HasFactory;
+    use HasRoles;
     use HasUuids;
     use InteractsWithMedia;
     use Notifiable;
