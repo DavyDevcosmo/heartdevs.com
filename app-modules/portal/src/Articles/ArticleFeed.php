@@ -37,6 +37,25 @@ final class ArticleFeed
     }
 
     /**
+     * Query própria em vez de fatiar articles(): a vitrine da home precisa de três
+     * cards e não do acervo inteiro em memória.
+     *
+     * @return list<Article>
+     */
+    public function latest(int $limit): array
+    {
+        return array_values(
+            ContentEntry::query()
+                ->with(['contentable', 'author'])
+                ->latest('published_at')
+                ->limit($limit)
+                ->get()
+                ->map(fn (ContentEntry $entry): Article => Article::fromEntry($entry))
+                ->all(),
+        );
+    }
+
+    /**
      * Ordenados por volume e, no empate, por alcance. As duas métricas divergem
      * de propósito — quem escreveu uma vez pode ter mais reações que quem
      * escreveu quatro —, e a coluna de pessoas mostra as duas.
