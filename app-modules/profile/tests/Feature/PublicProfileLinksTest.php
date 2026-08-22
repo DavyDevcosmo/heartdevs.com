@@ -108,7 +108,6 @@ it('never leaks the email or the oauth tokens of a connected account', function 
     $response->assertSee('danielhe4rt')
         ->assertDontSee('segredo@he4rt.dev');
 
-    // The raw credentials column must not reach the page either.
     $rawCredentials = (string) $identity->getRawOriginal('credentials');
 
     expect($rawCredentials)->not->toBeEmpty()

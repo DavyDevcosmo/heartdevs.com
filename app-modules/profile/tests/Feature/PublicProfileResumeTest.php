@@ -122,7 +122,6 @@ it('shows only the start date when a past job has no end date', function (): voi
 
     $data = resolve(BuildPublicProfile::class)->handle($user);
 
-    // Duration is genuinely unknown here — it must not be guessed as "until today".
     expect($data->experiences[0]->period)->toBe('03/2018')
         ->and($data->experiences[0]->duration)->toBeNull();
 });

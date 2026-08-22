@@ -1,6 +1,4 @@
 @php
-    // Everything below the fold is optional, so the share card falls back down a
-    // ladder: headline, then current role, then the bio, then a plain sentence.
     $metaDescription = collect([
         $profile->headline,
         $profile->currentPosition && $profile->currentCompany
@@ -25,8 +23,6 @@
 
     $links = [...$profile->socialLinks, ...$profile->connectedAccounts];
 
-    // Iniciais do avatar sem foto. Só palavras que começam com letra entram, senão
-    // um nome como "Écio Gonçalves 🇧🇷" renderiza a bandeira como se fosse inicial.
     $initials = Str::of($profile->name)
         ->squish()
         ->explode(' ')
@@ -37,14 +33,11 @@
 
     $initials = $initials !== '' ? $initials : Str::upper(Str::substr($profile->username, 0, 1));
 
-    // Todo cadastro nasce com Profile, então perfil vazio é o estado padrão: sem
-    // nada pra contar, a página vira coluna única em vez de duas com metade vazia.
-    $hasContent = $profile->about || $profile->skills !== [] || $profile->experiences !== [] || $facts !== [];
+    $hasContent = $profile->about || $profile->skills !== [] || $profile->experiences !== [] || $profile->projects !== [] || $facts !== [];
 @endphp
 
 <x-profile::layout.guest
     :title="$profile->name"
-    {{-- 157 + the ellipsis: what a share card shows before it cuts the text itself. --}}
     :description="Str::limit($metaDescription, 157)"
     :image="$profile->coverUrl ?? $profile->avatarUrl"
     type="profile"
@@ -60,10 +53,6 @@
         @endif
 
         <div @class(['grid gap-10 lg:gap-14', 'lg:grid-cols-[320px_1fr]' => $hasContent])>
-            {{-- Rail de identidade: fica visível enquanto o currículo rola ao lado. --}}
-            {{-- min-w-0: item de grid nasce com min-width auto e se recusa a encolher
-                 abaixo do próprio conteúdo. Sem isso, um handle ou headline longo estica
-                 a trilha da grid e a página inteira rola de lado no mobile. --}}
             <aside class="min-w-0 lg:sticky lg:top-8 lg:self-start">
                 @if ($profile->avatarUrl)
                     <img
@@ -73,7 +62,6 @@
                         style="box-shadow: 0 0 0 3px var(--elevation-surface), 0 0 0 6px rgb(120 43 241 / 0.45)"
                     />
                 @else
-                    {{-- Sem foto: as iniciais do nome, que já está logo abaixo — daí o aria-hidden. --}}
                     <div
                         aria-hidden="true"
                         class="bg-elevation-01dp text-text-high -mt-14 flex size-28 items-center justify-center rounded-full text-3xl font-bold"
@@ -147,7 +135,6 @@
                     <div class="border-outline-low mt-6 border-t pt-6">
                         <h2 class="text-text-high text-sm font-semibold">Links</h2>
 
-                        {{-- Lista vertical, não nuvem de pílulas: escaneia melhor num rail estreito. --}}
                         <ul class="mt-3 space-y-1">
                             @foreach ($links as $link)
                                 <li>
@@ -162,7 +149,6 @@
                                             <span class="truncate">{{ $link->handle }}</span>
                                         </a>
                                     @else
-                                        {{-- Discord has no public profile page: handle only, no link. --}}
                                         <span
                                             class="text-text-medium -mx-2 flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm"
                                             title="{{ $link->label }}"
@@ -201,16 +187,12 @@
                         @endif
 
                         @if ($profile->badges !== [])
-                            {{-- Name and description only: the redeem code stays out of the DTO. --}}
-                            {{-- Nome e descrição visíveis, não em tooltip: sem eles a seção
-                                 vira uma fileira de bolinhas que parece decoração. --}}
                             <ul class="mt-4 space-y-2">
                                 @foreach ($profile->badges as $badge)
                                     <li
                                         class="border-outline-low bg-elevation-01dp flex items-center gap-3 rounded-xl border p-3"
                                     >
                                         @if ($badge->imageUrl)
-                                            {{-- alt vazio: o nome já é o texto ao lado. --}}
                                             <img
                                                 src="{{ $badge->imageUrl }}"
                                                 alt=""
@@ -330,6 +312,41 @@
                                     </li>
                                 @endforeach
                             </ol>
+                        </section>
+                    @endif
+
+                    @if ($profile->projects !== [])
+                        <section class="mt-12">
+                            <h2 class="text-text-high text-lg font-semibold">Projetos</h2>
+
+                            <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+                                @foreach ($profile->projects as $project)
+                                    <li class="border-outline-low rounded-2xl border p-4">
+                                        @if ($project->url)
+                                            <a
+                                                href="{{ $project->url }}"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="text-text-high hover:text-primary inline-flex items-center gap-1.5 font-semibold"
+                                            >
+                                                {{ $project->name }}
+                                                <x-filament::icon
+                                                    icon="heroicon-m-arrow-top-right-on-square"
+                                                    class="text-icon-medium size-3.5 shrink-0"
+                                                />
+                                            </a>
+                                        @else
+                                            <h3 class="text-text-high font-semibold">{{ $project->name }}</h3>
+                                        @endif
+
+                                        @if ($project->description)
+                                            <p class="text-text-medium mt-1.5 text-sm leading-relaxed">
+                                                {{ $project->description }}
+                                            </p>
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ul>
                         </section>
                     @endif
                 </div>

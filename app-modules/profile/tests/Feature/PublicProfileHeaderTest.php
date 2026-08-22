@@ -90,7 +90,7 @@ it('never guesses a github picture out of the he4rt username', function (): void
     $this->get('/@vazio')
         ->assertOk()
         ->assertDontSee('github.com/vazio.png')
-        ->assertSee('PV'); // iniciais, no lugar da foto
+        ->assertSee('PV');
 });
 
 it('draws initials instead of a picture when the github account is disconnected', function (): void {

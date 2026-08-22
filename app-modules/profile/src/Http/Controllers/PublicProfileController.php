@@ -17,8 +17,6 @@ final class PublicProfileController extends Controller
 
     public function __invoke(string $username): View
     {
-        // A banned user has no public profile at all. A suspended one still
-        // renders: the suspension limits what they can do, not who they are.
         $user = User::query()
             ->where('username', $username)
             ->whereNull('banned_at')

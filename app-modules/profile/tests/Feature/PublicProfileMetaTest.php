@@ -32,7 +32,6 @@ it('falls back to the current role when there is no headline', function (): void
     $user = User::factory()->create(['username' => 'sem-headline']);
     $profile = Profile::factory()->for($user)->create([
         'headline' => null,
-        // Filled on purpose: the role has to win over the bio, not just over nothing.
         'about' => 'Bio que não deve ganhar do cargo atual.',
     ]);
 
@@ -92,8 +91,6 @@ it('shares the cover image when there is one', function (): void {
         ->usingFileName('capa.png')
         ->toMediaCollection('cover');
 
-    // Asserting the tag itself, not just the file name: the cover also shows up
-    // in the header, so a plain assertSee would pass on the avatar too.
     $this->get('/@com-capa')
         ->assertOk()
         ->assertSee('<meta property="og:image" content="'.e($user->getFirstMediaUrl('cover')).'" />', escape: false)

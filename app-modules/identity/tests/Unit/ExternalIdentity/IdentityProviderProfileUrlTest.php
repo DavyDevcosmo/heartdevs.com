@@ -43,8 +43,6 @@ it('returns null for an empty handle', function (?string $handle): void {
 ]);
 
 it('gives every supported provider a decided answer', function (): void {
-    // The page renders whatever supportedProviders() returns, so a new one must
-    // not silently fall into the null branch by accident.
     $decided = [
         IdentityProvider::GitHub->value => 'https://github.com/handle',
         IdentityProvider::Twitch->value => 'https://twitch.tv/handle',

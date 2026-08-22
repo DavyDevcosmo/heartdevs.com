@@ -59,7 +59,6 @@ it('never exposes the age nor the birthdate', function (): void {
         'birthdate' => now()->subYears(30)->subMonths(2)->toDateString(),
     ]);
 
-    // The DTO is the allowlist: with no age field, there is nowhere for it to live.
     $data = resolve(BuildPublicProfile::class)->handle($user->refresh());
     expect($data)->not->toHaveProperty('age');
 
@@ -83,7 +82,6 @@ it('never exposes the disability flag', function (): void {
 
     $data = resolve(BuildPublicProfile::class)->handle($user->refresh());
 
-    // The DTO is the allowlist: there is nowhere for the flag to live.
     expect($data)->not->toHaveProperty('hasDisability');
     expect($data->openToRemote)->toBeTrue();
 

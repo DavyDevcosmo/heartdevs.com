@@ -104,6 +104,14 @@ final class Profile extends Model
     }
 
     /**
+     * @return HasMany<ProfileProject, $this>
+     */
+    public function projects(): HasMany
+    {
+        return $this->hasMany(ProfileProject::class)->latest('created_at');
+    }
+
+    /**
      * @return BelongsToMany<Skill, $this>
      */
     public function skills(): BelongsToMany
@@ -119,10 +127,6 @@ final class Profile extends Model
     }
 
     /**
-     * Validation happens on write; reading goes through the `array` cast, so the
-     * accessor side of the attribute is the decoded map — not `never`, which
-     * would tell static analysis the column can only ever be read as null.
-     *
      * @return Attribute<array<string, string>|null, array<string, string>|null>
      */
     protected function socialLinks(): Attribute

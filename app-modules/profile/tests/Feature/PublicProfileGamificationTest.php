@@ -21,7 +21,6 @@ function characterFor(User $user, int $experience = 1_500): Character
 it('renders the level derived from the experience', function (): void {
     $user = User::factory()->create(['username' => 'danielhe4rt']);
 
-    // 1500 XP is exactly the threshold for level 6.
     characterFor($user);
 
     $this->get('/@danielhe4rt')
@@ -58,8 +57,6 @@ it('never publishes the badge redeem code', function (): void {
 
     $character->badges()->attach($badge, ['claimed_at' => now()]);
 
-    // The code is what anyone types to claim the badge for themselves: on a page
-    // with no login in front of it, publishing it gives the badge away.
     $this->get('/@colecionador')
         ->assertOk()
         ->assertSee('Fundador')
@@ -125,7 +122,6 @@ it('hides the whole community section when the member never played', function ()
 it('tells how much XP the next level needs', function (): void {
     $user = User::factory()->create(['username' => 'subindo']);
 
-    // 2400 XP → level 7 (threshold 2100); level 8 asks 2800, so 400 to go.
     characterFor($user, experience: 2_400);
 
     $this->get('/@subindo')
@@ -138,7 +134,7 @@ it('tells how much XP the next level needs', function (): void {
 it('shows only the total at the level cap, where there is no next level', function (): void {
     $user = User::factory()->create(['username' => 'lendario']);
 
-    characterFor($user, experience: 450_000); // past the level-50 threshold
+    characterFor($user, experience: 450_000);
 
     $this->get('/@lendario')
         ->assertOk()

@@ -14,6 +14,7 @@ use He4rt\Identity\User\Models\User;
 use He4rt\Profile\Data\WorkPreferences;
 use He4rt\Profile\DTOs\ProfileBadgeData;
 use He4rt\Profile\DTOs\ProfileLinkData;
+use He4rt\Profile\DTOs\ProfileProjectData;
 use He4rt\Profile\DTOs\ProfileSkillData;
 use He4rt\Profile\DTOs\PublicProfileData;
 use He4rt\Profile\DTOs\WorkExperienceData;
@@ -24,26 +25,14 @@ use He4rt\Profile\Models\ProfileSkill;
 use He4rt\Profile\Models\WorkExperience;
 use Illuminate\Database\Eloquent\Collection;
 
-/**
- * Maps a User onto the fields the public profile page may render.
- *
- * Every new section on the page starts here: if a field is not copied into
- * PublicProfileData, it cannot reach the view.
- */
 final class BuildPublicProfile
 {
     public function handle(User $user): PublicProfileData
     {
-        // A profile always exists in practice (UserObserver creates one on
-        // signup), but it is a separate row, not a guaranteed relation — so the
-        // page treats "no profile" the same as "empty profile".
         $profile = Profile::query()
             ->where('user_id', $user->getKey())
             ->first();
 
-        // Fetched once and used twice: the header needs the ongoing job, the
-        // resume section needs the whole list. The relation already sorts
-        // ongoing first, then most recent.
         $experiences = $profile instanceof Profile
             ? $profile->workExperiences()->get()
             : new Collection();
@@ -53,12 +42,6 @@ final class BuildPublicProfile
         );
         $preferences = $profile?->preferences;
 
-        // Gamification lives in its own module and its own row: a member who
-        // never touched the bot has no Character at all, and the whole section
-        // disappears rather than showing a level 1 they never played for.
-        //
-        // badges.media, not badges: every badge reaches for its image, and
-        // without the media loaded up front that is one query per badge.
         $character = Character::query()
             ->with('badges.media')
             ->where('user_id', $user->getKey())
@@ -86,6 +69,7 @@ final class BuildPublicProfile
             connectedAccounts: $this->connectedAccounts($user),
             skills: $this->skills($profile),
             experiences: $this->experiences($experiences),
+            projects: $this->projects($profile),
             level: $character?->level,
             experience: $character?->experience,
             levelProgress: $character?->percentage_experience,
@@ -102,9 +86,6 @@ final class BuildPublicProfile
     }
 
     /**
-     * Earned badges, without the redeem code that would let any visitor claim
-     * the same badge.
-     *
      * @return list<ProfileBadgeData>
      */
     private function badges(?Character $character): array
@@ -141,8 +122,6 @@ final class BuildPublicProfile
 
         $skills = [];
 
-        // profileSkills() instead of skills(): the pivot is untyped, while the
-        // ProfileSkill model casts proficiency to its enum.
         $rows = $profile->profileSkills()
             ->with('skill')
             ->get()
@@ -191,8 +170,6 @@ final class BuildPublicProfile
             return $start.' — atual';
         }
 
-        // A past job with no end date: show the start alone rather than implying
-        // it ran until today.
         return $experience->end_date instanceof CarbonInterface
             ? $start.' — '.$experience->end_date->format('m/Y')
             : $start;
@@ -252,11 +229,6 @@ final class BuildPublicProfile
     }
 
     /**
-     * Connected OAuth accounts, limited to the providers the platform supports.
-     *
-     * Only the handle is read out of the identity: `metadata['email']` and the
-     * `credentials` cast (OAuth tokens) stay behind.
-     *
      * @return list<ProfileLinkData>
      */
     private function connectedAccounts(User $user): array
@@ -309,17 +281,6 @@ final class BuildPublicProfile
         );
     }
 
-    /**
-     * The uploaded avatar, else the picture of the GitHub account the member
-     * actually connected.
-     *
-     * Deliberately not `getFilamentAvatarUrl()`: that one builds
-     * github.com/{username}.png out of the He4rt username, which assumes the two
-     * handles are the same person. When they are not, the page either shows a
-     * broken image or — worse — a stranger's face, because someone else owns
-     * that GitHub account. Null here means "no picture", and the view draws
-     * initials instead of guessing.
-     */
     private function avatarUrl(User $user): ?string
     {
         $uploaded = $user->getFirstMediaUrl('avatar');
@@ -331,6 +292,39 @@ final class BuildPublicProfile
         $handle = $this->githubHandle($user);
 
         return $handle === null ? null : sprintf('https://github.com/%s.png', $handle);
+    }
+
+    /**
+     * @return list<ProfileProjectData>
+     */
+    private function projects(?Profile $profile): array
+    {
+        if (!$profile instanceof Profile) {
+            return [];
+        }
+
+        $projects = [];
+
+        foreach ($profile->projects as $project) {
+            $projects[] = new ProfileProjectData(
+                name: $project->name,
+                description: $project->description,
+                url: $this->safeUrl($project->url),
+            );
+        }
+
+        return $projects;
+    }
+
+    private function safeUrl(?string $url): ?string
+    {
+        if ($url === null || $url === '') {
+            return null;
+        }
+
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+
+        return in_array($scheme, ['http', 'https'], strict: true) ? $url : null;
     }
 
     private function githubHandle(User $user): ?string
@@ -349,10 +343,6 @@ final class BuildPublicProfile
         return is_string($handle) && filled($handle) ? $handle : null;
     }
 
-    /**
-     * City, state and country joined into one line — never the zip code, which
-     * narrows a public page down to someone's street.
-     */
     private function location(User $user): ?string
     {
         /** @var Address|null $address */

@@ -18,8 +18,6 @@
     <link rel="icon" href="{{ asset('favicon.ico') }}" />
     <title>{{ $pageTitle }}</title>
 
-    {{-- The page is meant to be pasted into LinkedIn and Discord: without these,
-         the unfurl falls back to the site name and a blank card. --}}
     @if ($description)
         <meta name="description" content="{{ $description }}" />
     @endif
