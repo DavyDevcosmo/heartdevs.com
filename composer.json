@@ -84,6 +84,7 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/",
+            "He4rt\\PanelAdmin\\": "app-modules/panel-admin/src/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         },

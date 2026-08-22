@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace He4rt\PanelAdmin;
 
+use BezhanSalleh\FilamentShield\Facades\FilamentShield;
+use Filament\Facades\Filament;
 use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationItem;
 use Filament\Panel;
@@ -18,7 +20,9 @@ use He4rt\PanelAdmin\Moderation\Livewire\ModerationQueue;
 use He4rt\PanelAdmin\Moderation\ModerationCluster;
 use He4rt\PanelAdmin\Pages\Dashboard;
 use He4rt\PanelAdmin\Twitch\TwitchCluster;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 
 class PanelAdminServiceProvider extends ServiceProvider
@@ -86,12 +90,50 @@ class PanelAdminServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->configureShield();
+
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'panel-admin');
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'panel-admin');
 
         Livewire::component('moderation-queue', ModerationQueue::class);
         Livewire::component('appeal-queue', AppealQueue::class);
         Livewire::component('moderation-dashboard', ModerationDashboardLivewire::class);
+    }
+
+    private function configureShield(): void
+    {
+        // Shield refuses the '_' separator alongside snake case, so the config carries a
+        // placeholder separator and this builder joins the parts itself.
+        FilamentShield::buildPermissionKeyUsing(
+            fn (string $affix, string $subject): string => Str::snake($affix).'_'.Str::snake($subject),
+        );
+
+        $this->registerPanelPolicies();
+    }
+
+    /**
+     * Authorising a panel screen is a presentation concern, so the policies live in this
+     * module instead of beside each domain model. Shield only looks for a sibling
+     * "Policies" directory whenever a model sits under "Models", so it never finds them
+     * and Laravel's own discovery does not either. Bind each one here.
+     */
+    private function registerPanelPolicies(): void
+    {
+        Filament::serving(function (): void {
+            foreach (Filament::getPanel('admin')->getResources() as $resource) {
+                $model = $resource::getModel();
+
+                if (!is_string($model)) {
+                    continue;
+                }
+
+                $policy = 'He4rt\\PanelAdmin\\Policies\\'.class_basename($model).'Policy';
+
+                if (class_exists($policy)) {
+                    Gate::policy($model, $policy);
+                }
+            }
+        });
     }
 
     private function buildNavigation(NavigationBuilder $builder): NavigationBuilder

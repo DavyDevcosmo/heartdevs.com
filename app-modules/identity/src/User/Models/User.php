@@ -53,11 +53,6 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
     use InteractsWithMedia;
     use Notifiable;
 
-    public function isAdmin(): bool
-    {
-        return in_array($this->username, str(config('he4rt.admins'))->explode(',')->toArray(), strict: true);
-    }
-
     /**
      * @return MorphMany<ExternalIdentity, $this>
      */
@@ -93,8 +88,8 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
     public function canAccessPanel(Panel $panel): bool
     {
         return match ($panel->getId()) {
-            'admin' => app()->isProduction() ? $this->isAdmin() : true,
-            default => true
+            'admin' => $this->roles()->exists(),
+            default => true,
         };
     }
 
