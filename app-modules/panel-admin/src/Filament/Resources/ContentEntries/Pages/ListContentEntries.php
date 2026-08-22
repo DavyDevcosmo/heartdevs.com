@@ -10,11 +10,22 @@ use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Icons\Heroicon;
 use He4rt\Contents\Enums\ContentProvider;
 use He4rt\PanelAdmin\Filament\Resources\ContentEntries\ContentEntryResource;
+use He4rt\PanelAdmin\Filament\Resources\ContentEntries\Widgets\ContentEntryStatsWidget;
 use Illuminate\Support\Facades\Artisan;
 
 class ListContentEntries extends ListRecords
 {
     protected static string $resource = ContentEntryResource::class;
+
+    /**
+     * @return array<int, class-string>
+     */
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            ContentEntryStatsWidget::class,
+        ];
+    }
 
     /**
      * @return array<int, Action>

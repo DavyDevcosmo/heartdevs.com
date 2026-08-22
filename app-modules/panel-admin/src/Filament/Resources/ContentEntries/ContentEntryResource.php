@@ -17,6 +17,7 @@ use He4rt\PanelAdmin\Filament\Resources\ContentEntries\Pages\ViewContentEntry;
 use He4rt\PanelAdmin\Filament\Resources\ContentEntries\Schemas\ContentEntryForm;
 use He4rt\PanelAdmin\Filament\Resources\ContentEntries\Schemas\ContentEntryInfolist;
 use He4rt\PanelAdmin\Filament\Resources\ContentEntries\Tables\ContentEntriesTable;
+use He4rt\PanelAdmin\Filament\Resources\ContentEntries\Widgets\ContentEntryStatsWidget;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -69,6 +70,16 @@ class ContentEntryResource extends Resource
     public static function table(Table $table): Table
     {
         return ContentEntriesTable::configure($table);
+    }
+
+    /**
+     * @return array<int, class-string>
+     */
+    public static function getWidgets(): array
+    {
+        return [
+            ContentEntryStatsWidget::class,
+        ];
     }
 
     /**
