@@ -18,13 +18,13 @@
     <div class="mx-auto grid max-w-[1720px] gap-7 px-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-12">
         <div class="min-w-0">
             @if ($articles === [])
-                {{-- O acervo vem de terceiro; quando o dev.to não responde a página
-                     continua de pé e diz o que houve, em vez de fingir que não há artigos. --}}
+                {{-- O catálogo é preenchido pelo sync; até a primeira rodada rodar, a
+                     página diz o que houve em vez de fingir que ninguém escreveu. --}}
                 <div class="border-outline-low bg-elevation-01dp flex flex-col items-center gap-3 rounded-lg border border-dashed p-12 text-center">
-                    <p class="text-text-high text-sm font-semibold">Não deu para carregar o acervo agora.</p>
+                    <p class="text-text-high text-sm font-semibold">Ainda não há artigos por aqui.</p>
                     <p class="text-text-medium max-w-sm text-xs">
-                        Os artigos vivem no dev.to e a listagem não respondeu. Tente recarregar em instantes — ou vá
-                        direto para a organização.
+                        O acervo da comunidade é publicado no dev.to. Enquanto ele não aparece aqui, vá direto
+                        para a organização.
                     </p>
                     <x-he4rt::button href="https://dev.to/he4rt" target="_blank" rel="noopener" size="sm">
                         Abrir no dev.to

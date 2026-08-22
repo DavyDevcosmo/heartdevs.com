@@ -5,75 +5,35 @@ declare(strict_types=1);
 namespace He4rt\Portal\Articles;
 
 use Carbon\CarbonImmutable;
-use He4rt\IntegrationDevTo\Polling\DevToApiClient;
+use He4rt\Contents\Models\ContentEntry;
 use He4rt\Portal\Articles\DTOs\Article;
 use He4rt\Portal\Articles\DTOs\ArticleAuthor;
 use He4rt\Portal\Articles\DTOs\ArticleTopic;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
-use RuntimeException;
-use Throwable;
 
 /**
- * Read model do acervo de artigos publicados na organização do dev.to.
+ * Read model do acervo de artigos da comunidade.
  *
- * A fonte é a API do dev.to. O módulo `contents` já espelha esse acervo em
- * banco, incluindo autores sem identidade vinculada; migrar esta leitura para
- * lá é trabalho pendente.
+ * A fonte é o catálogo do módulo `contents`, alimentado por `contents:sync-articles`.
+ * Ele guarda também quem publicou sem identidade vinculada, então a página credita
+ * todo mundo que escreveu pela organização.
  */
 final class ArticleFeed
 {
-    private const string CACHE_KEY = 'portal.articles.devto-org';
-
     /** @var list<Article>|null */
     private ?array $articles = null;
-
-    public function __construct(
-        private readonly DevToApiClient $client,
-    ) {}
 
     /** @return list<Article> */
     public function articles(): array
     {
-        if ($this->articles !== null) {
-            return $this->articles;
-        }
-
-        $payload = $this->fetch();
-
-        $articles = [];
-        $rejected = 0;
-
-        foreach ($payload as $item) {
-            $article = is_array($item) ? Article::fromApi($item) : null;
-
-            if (!$article instanceof Article) {
-                $rejected++;
-
-                continue;
-            }
-
-            $articles[] = $article;
-        }
-
-        if ($rejected > 0) {
-            Log::warning('Portal: itens do acervo do dev.to descartados por falta de título ou data', [
-                'descartados' => $rejected,
-                'aceitos' => count($articles),
-            ]);
-        }
-
-        // Payload com itens, nenhum aproveitável: contrato quebrado, não acervo
-        // vazio. Sem descartar o cache, a janela obsoleta serviria o mesmo lixo
-        // por um dia inteiro.
-        if ($articles === [] && $payload !== []) {
-            Cache::forget(self::CACHE_KEY);
-        }
-
-        usort($articles, fn (Article $a, Article $b): int => $b->publishedAt <=> $a->publishedAt);
-
-        return $this->articles = $articles;
+        return $this->articles ??= array_values(
+            ContentEntry::query()
+                ->with(['contentable', 'author'])
+                ->latest('published_at')
+                ->get()
+                ->map(fn (ContentEntry $entry): Article => Article::fromEntry($entry))
+                ->all(),
+        );
     }
 
     /**
@@ -142,47 +102,5 @@ final class ArticleFeed
         $pool = $recent->isNotEmpty() ? $recent : Collection::make($this->articles());
 
         return $pool->sortByDesc(fn (Article $article): int => $article->reactions)->first();
-    }
-
-    /**
-     * O acervo é de terceiro: uma queda do dev.to não pode derrubar uma página
-     * institucional.
-     *
-     * `flexible` serve o valor fresco até o TTL e continua servindo o obsoleto
-     * por até um dia enquanto revalida em segundo plano. Ninguém paga a latência
-     * da revalidação, e uma queda depois do primeiro sucesso mantém a página com
-     * conteúdo.
-     *
-     * @return array<array-key, mixed>
-     */
-    private function fetch(): array
-    {
-        $ttl = config()->integer('integration-devto.polling_interval_minutes');
-
-        try {
-            /** @var array<array-key, mixed> $payload */
-            $payload = Cache::flexible(
-                self::CACHE_KEY,
-                [now()->addMinutes($ttl), now()->addDay()],
-                function (): array {
-                    $articles = $this->client->getArticlesByOrg(config()->string('integration-devto.org_slug'));
-
-                    // Estourar aqui impede que uma resposta vazia entre em cache
-                    // e preserva o valor anterior para a janela obsoleta servir.
-                    throw_if($articles === [], RuntimeException::class, 'dev.to devolveu um acervo vazio');
-
-                    return $articles;
-                },
-            );
-
-            return $payload;
-        } catch (Throwable $throwable) {
-            Log::warning('Portal: acervo do dev.to indisponível', ['exception' => $throwable->getMessage()]);
-
-            /** @var array<array-key, mixed> $stale */
-            $stale = Cache::get(self::CACHE_KEY) ?? [];
-
-            return $stale;
-        }
     }
 }

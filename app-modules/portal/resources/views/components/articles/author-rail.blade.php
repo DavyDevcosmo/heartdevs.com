@@ -50,7 +50,7 @@
                     }"
                     class="hover:bg-primary/10 text-text-high flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start transition-[background-color,opacity] duration-200"
                 >
-                    <img src="{{ $author->avatar }}" alt="" loading="lazy" decoding="async" width="90" height="90" class="size-7 shrink-0 rounded-full" />
+                    <x-portal::articles.author-avatar :name="$author->name" :avatar="$author->avatar" size="size-7" />
                     <span class="min-w-0 flex-1 truncate text-xs font-medium">{{ $author->name }}</span>
                     <span class="text-text-medium shrink-0 font-mono text-xs tabular-nums">
                         {{ $author->articleCount }}

@@ -3967,7 +3967,10 @@
             "dist": {
                 "type": "path",
                 "url": "app-modules/portal",
-                "reference": "289230f39053d3339ee643d7b32cf3be89f6d94e"
+                "reference": "c50d51f0b4816e44c79c5b3a086d5234c95eef9b"
+            },
+            "require": {
+                "he4rt/contents": "^1.0.0"
             },
             "type": "library",
             "extra": {
