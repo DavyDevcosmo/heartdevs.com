@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace He4rt\Portal;
 
-use He4rt\Portal\Livewire\ArticlesPage;
-use He4rt\Portal\Livewire\CommunityRetrospectivePage;
-use He4rt\Portal\Livewire\HeroSection;
-use He4rt\Portal\Livewire\Homepage;
-use He4rt\Portal\Livewire\SocialLinksPage;
+use He4rt\Portal\Articles\ArticlesPage;
+use He4rt\Portal\Home\HeroSection;
+use He4rt\Portal\Home\Homepage;
+use He4rt\Portal\Retrospective\CommunityRetrospectivePage;
 use He4rt\Portal\ShortLink\ShortLinkRedirectController;
+use He4rt\Portal\Sitemap\SitemapController;
+use He4rt\Portal\SocialLinks\SocialLinksPage;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Head\HeadServiceProvider;

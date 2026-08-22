@@ -1,8 +1,8 @@
 @php
-    // Payload mínimo para o recorte e a lente no cliente: quem assina e quais temas
-    // cada artigo carrega. Os cards já vêm renderizados do servidor — o Alpine só
-    // decide o que fica visível e o que esmaece.
-    $lensItems = collect($articles)
+    // Payload mínimo para o recorte no cliente: quem assina e quais temas cada
+    // artigo carrega. Os cards já vêm renderizados do servidor — o Alpine só
+    // decide o que fica visível.
+    $feedItems = collect($articles)
         ->map(fn ($article): array => [
             'a' => $article->authorUsername,
             'n' => $article->authorName,
@@ -12,25 +12,29 @@
         ->all();
 @endphp
 
-<div x-data="articlesFeed(@js($lensItems))" class="pb-20">
-    <x-portal::articles.opening-band :stats="$stats" :highlight="$highlight" />
+<div x-data="articlesFeed(@js($feedItems))" class="pb-20">
+    <x-portal::articles.opening-band :stats="$stats" />
 
-    <div class="mx-auto grid max-w-[1720px] gap-7 px-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-12">
+    <div class="hp-page grid gap-7 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div class="min-w-0">
             @if ($articles === [])
-                {{-- O acervo vem de terceiro; quando o dev.to não responde a página
-                     continua de pé e diz o que houve, em vez de fingir que não há artigos. --}}
+                {{-- O catálogo é preenchido pelo sync; até a primeira rodada rodar, a
+                     página diz o que houve em vez de fingir que ninguém escreveu. --}}
                 <div class="border-outline-low bg-elevation-01dp flex flex-col items-center gap-3 rounded-lg border border-dashed p-12 text-center">
-                    <p class="text-text-high text-sm font-semibold">Não deu para carregar o acervo agora.</p>
+                    <p class="text-text-high text-sm font-semibold">Ainda não há artigos por aqui.</p>
                     <p class="text-text-medium max-w-sm text-xs">
-                        Os artigos vivem no dev.to e a listagem não respondeu. Tente recarregar em instantes — ou vá
-                        direto para a organização.
+                        O acervo da comunidade é publicado no dev.to. Enquanto ele não aparece aqui, vá direto
+                        para a organização.
                     </p>
                     <x-he4rt::button href="https://dev.to/he4rt" target="_blank" rel="noopener" size="sm">
                         Abrir no dev.to
                     </x-he4rt::button>
                 </div>
             @else
+            @if ($highlight)
+                <x-portal::articles.featured :article="$highlight" />
+            @endif
+
             <x-portal::articles.toolbar :topics="$topics" :total="count($articles)" />
 
             {{-- A grade é o padrão do servidor; o Alpine só troca para lista. Assim a
@@ -89,10 +93,6 @@
                 authorSort: 'articles',
                 topicsOpen: false,
                 topicsMaxHeight: 420,
-                lensType: null,
-                lensKey: null,
-                lensTimer: null,
-                lensEnabled: false,
 
                 // Recorte compartilhável: sem isso, "olha os artigos da Cherry" não cabe
                 // num link. Os valores são conferidos contra o acervo antes de aplicar,
@@ -117,12 +117,6 @@
                     this.readUrl()
                     this.$watch('author', () => this.syncUrl())
                     this.$watch('topic', () => this.syncUrl())
-
-                    // A lente é um afeto de ponteiro: no toque viraria clique acidental,
-                    // e sob reduced-motion não deve piscar opacidade.
-                    this.lensEnabled =
-                        window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
-                        !window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
                     this.$watch('topicsOpen', (open) => open && this.$nextTick(() => this.measurePanel()))
                     window.addEventListener('resize', () => this.measurePanel(), { passive: true })
@@ -177,64 +171,6 @@
                 authorName(username) {
                     const item = this.items.find((candidate) => candidate.a === username)
                     return item ? item.n : username
-                },
-
-                lensEnter(type, key) {
-                    if (!this.lensEnabled) return
-                    // O atraso evita a página piscar quando o ponteiro atravessa a lista.
-                    clearTimeout(this.lensTimer)
-                    this.lensTimer = setTimeout(() => {
-                        this.lensType = type
-                        this.lensKey = key
-                    }, 120)
-                },
-
-                lensLeave() {
-                    clearTimeout(this.lensTimer)
-                    this.lensType = null
-                    this.lensKey = null
-                },
-
-                get lensOn() {
-                    return this.lensEnabled && this.lensKey !== null
-                },
-
-                get lensArticles() {
-                    if (!this.lensOn) return null
-                    if (this.lensType === 'article') return new Set([this.lensKey])
-
-                    const key = this.lensKey
-                    const matches =
-                        this.lensType === 'author'
-                            ? (item) => item.a === key
-                            : (item) => item.t.includes(key)
-
-                    const found = new Set()
-                    this.items.forEach((item, index) => matches(item) && found.add(index))
-                    return found
-                },
-
-                get lensAuthors() {
-                    if (!this.lensOn) return null
-                    const found = new Set()
-                    this.lensArticles.forEach((index) => found.add(this.items[index].a))
-                    return found
-                },
-
-                get lensTopics() {
-                    if (!this.lensOn) return null
-                    const found = new Set()
-                    this.lensArticles.forEach((index) => this.items[index].t.forEach((tag) => found.add(tag)))
-                    return found
-                },
-
-                // Esmaece o que não se relaciona, em vez de acender o que se relaciona:
-                // lê mais rápido e não transforma a página num painel de luzes.
-                isDim(kind, key) {
-                    if (!this.lensOn) return false
-                    if (kind === 'article') return !this.lensArticles.has(key)
-                    if (kind === 'author') return !this.lensAuthors.has(key)
-                    return !this.lensTopics.has(key)
                 },
             }))
         })

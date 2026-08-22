@@ -5,7 +5,7 @@
     >
         <x-portal::animated-logo class="w-full max-w-5xl" />
     </div>
-    <div class="hp-container">
+    <div class="hp-page hp-container">
         <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
             <div class="flex flex-col gap-4">
                 <x-he4rt::headline size="2xl" :keywords="['potencial']">
