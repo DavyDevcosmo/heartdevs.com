@@ -12,7 +12,7 @@
     <div class="absolute -z-1 flex h-[150%] w-[150%] sm:h-full sm:w-full sm:p-16">
         <img src="{{ asset('images/landingLogo.svg') }}" alt="Logo" class="h-full w-full" />
     </div>
-    <div class="hp-container">
+    <div class="hp-page hp-container">
         <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
             <div class="flex flex-col gap-4">
                 <x-he4rt::headline size="2xl" :keywords="['potencial']">

@@ -17,9 +17,9 @@
     @scroll.window.passive="onScroll()"
     @keydown.escape.window="open = false"
     x-effect="document.documentElement.style.overflow = open ? 'hidden' : ''"
-    class="hp-navbar sticky top-0 z-50 w-full px-4 flex"
+    class="hp-navbar sticky top-0 z-50 flex w-full"
 >
-    <div class="relative mx-auto max-w-5xl flex-1">
+    <div class="hp-page relative flex-1">
         {{-- glow roxo radial atrás da pill --}}
         <div
             aria-hidden="true"

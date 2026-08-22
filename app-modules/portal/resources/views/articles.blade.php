@@ -15,7 +15,7 @@
 <div x-data="articlesFeed(@js($feedItems))" class="pb-20">
     <x-portal::articles.opening-band :stats="$stats" />
 
-    <div class="mx-auto grid max-w-[1720px] gap-7 px-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-12">
+    <div class="hp-page grid gap-7 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div class="min-w-0">
             @if ($articles === [])
                 {{-- O catálogo é preenchido pelo sync; até a primeira rodada rodar, a

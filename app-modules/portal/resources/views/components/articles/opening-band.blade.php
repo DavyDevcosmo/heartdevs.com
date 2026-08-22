@@ -8,9 +8,7 @@
         style="background: radial-gradient(60% 120% at 50% 0%, color-mix(in oklab, var(--primary) 40%, transparent), transparent 70%)"
     ></div>
 
-    {{-- Mesmo container da listagem: max-w e padding no mesmo elemento, senão
-         as duas réguas laterais divergem pela largura do padding. --}}
-    <div class="mx-auto max-w-[1720px] px-6 lg:px-12">
+    <div class="hp-page">
         <div class="flex max-w-3xl flex-col gap-5">
             <p class="text-text-medium flex items-center gap-3 font-mono text-xs tracking-[0.2em] uppercase">
                 <span aria-hidden="true" class="bg-outline-low inline-block h-px w-8"></span>
