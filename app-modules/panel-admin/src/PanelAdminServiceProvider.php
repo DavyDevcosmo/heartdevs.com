@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace He4rt\PanelAdmin;
 
 use BezhanSalleh\FilamentShield\Facades\FilamentShield;
-use Filament\Facades\Filament;
 use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationItem;
 use Filament\Panel;
@@ -113,27 +112,16 @@ class PanelAdminServiceProvider extends ServiceProvider
 
     /**
      * Authorising a panel screen is a presentation concern, so the policies live in this
-     * module instead of beside each domain model. Shield only looks for a sibling
-     * "Policies" directory whenever a model sits under "Models", so it never finds them
-     * and Laravel's own discovery does not either. Bind each one here.
+     * module instead of beside each domain model. Neither Laravel's discovery nor
+     * Shield's looks here, so teach the Gate where to look. Names that do not resolve
+     * are discarded by the Gate, and the framework default stays as a fallback.
      */
     private function registerPanelPolicies(): void
     {
-        Filament::serving(function (): void {
-            foreach (Filament::getPanel('admin')->getResources() as $resource) {
-                $model = $resource::getModel();
-
-                if (!is_string($model)) {
-                    continue;
-                }
-
-                $policy = 'He4rt\\PanelAdmin\\Policies\\'.class_basename($model).'Policy';
-
-                if (class_exists($policy)) {
-                    Gate::policy($model, $policy);
-                }
-            }
-        });
+        Gate::guessPolicyNamesUsing(fn (string $model): array => [
+            'He4rt\\PanelAdmin\\Policies\\'.class_basename($model).'Policy',
+            'App\\Policies\\'.class_basename($model).'Policy',
+        ]);
     }
 
     private function buildNavigation(NavigationBuilder $builder): NavigationBuilder
