@@ -41,8 +41,14 @@ test('o filtro de provider restringe ao provedor escolhido', function (): void {
 });
 
 test('o filtro de conexão ativa separa conectadas de desconectadas', function (): void {
-    $active = ExternalIdentity::factory()->create(['disconnected_at' => null]);
-    $disconnected = ExternalIdentity::factory()->create(['disconnected_at' => now()->subDay()]);
+    $active = ExternalIdentity::factory()->create([
+        'provider' => IdentityProvider::Discord,
+        'disconnected_at' => null,
+    ]);
+    $disconnected = ExternalIdentity::factory()->create([
+        'provider' => IdentityProvider::Discord,
+        'disconnected_at' => now()->subDay(),
+    ]);
 
     livewire(ListExternalIdentities::class)
         ->loadTable()
