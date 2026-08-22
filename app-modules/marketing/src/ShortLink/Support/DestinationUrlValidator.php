@@ -7,11 +7,10 @@ namespace He4rt\Marketing\ShortLink\Support;
 use He4rt\Marketing\ShortLink\Exceptions\InvalidDestinationUrl;
 
 /**
- * Single owner of the "is this URL redirectable?" rule.
+ * The single owner of the rule "can this URL be a redirect target?".
  *
- * It lives in the domain (not in the Filament form) because both write Actions
- * are callable from outside the panel — a console command, a future bot command
- * or a test can reach them without ever touching a form request.
+ * It lives in the domain, not in the Filament form, because a command, a bot or
+ * a test can call the write Actions without a form request.
  */
 final class DestinationUrlValidator
 {

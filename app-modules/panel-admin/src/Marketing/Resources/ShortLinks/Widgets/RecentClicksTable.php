@@ -13,20 +13,20 @@ use He4rt\Marketing\ShortLink\Models\ShortLinkClick;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * O log cru por trás dos agregados: cada linha é um clique que virou 302.
+ * The raw log behind the aggregates: one row for each click.
  *
- * `ip_address` e `user_agent` existem na tabela mas não têm coluna aqui — são
- * dado pessoal (LGPD) e o projeto ainda não tem política de privacidade que
- * justifique jogá-los na tela. Continuam no banco; não voltam para o painel.
+ * `ip_address` and `user_agent` are in the table but have no column here. They
+ * are personal data and the project has no privacy policy yet. See ADR-0003.
  */
 class RecentClicksTable extends TableWidget
 {
-    /** Injetado por `Filament\Schemas\Components\Livewire::getComponentProperties()`. */
+    /** Set by `Filament\Schemas\Components\Livewire::getComponentProperties()`. */
     public ?ShortLink $record = null;
 
     /**
-     * Renderizado como ilha Livewire, que só entrega dado serializável: o filtro
-     * da página chega por parâmetro de mount, não por `pageFilters`.
+     * Set at mount by the page. A Livewire island only accepts serializable
+     * data, so the filter cannot arrive through `pageFilters`. The island's
+     * dynamic `key()` is what remounts this widget with a new value.
      */
     public bool $includeBots = false;
 
@@ -68,8 +68,6 @@ class RecentClicksTable extends TableWidget
                     ->color('gray')
                     ->placeholder(__('panel-admin::marketing.short_links.placeholders.unknown')),
 
-                // Sem `->toggleable()`: uma única coluna alternável faz o Filament
-                // reservar uma faixa inteira de toolbar só para o botão de colunas.
                 TextColumn::make('utm_source')
                     ->label(__('panel-admin::marketing.short_links.fields.utm_source'))
                     ->placeholder(__('panel-admin::marketing.short_links.placeholders.none')),
@@ -88,8 +86,8 @@ class RecentClicksTable extends TableWidget
     }
 
     /**
-     * Query Eloquent de verdade (e não `records()`): é o que dá paginação e
-     * ordenação de graça. A PK `bigint` já serve de chave de linha.
+     * A real Eloquent query, not `records()`: it gives pagination and sorting
+     * for free, and the `bigint` primary key already identifies each row.
      *
      * @return Builder<ShortLinkClick>
      */
@@ -98,7 +96,6 @@ class RecentClicksTable extends TableWidget
         $query = ShortLinkClick::query()
             ->where('short_link_id', $this->record?->getKey());
 
-        // Bots de preview (Discord, WhatsApp, Slack) ficam de fora por padrão.
         if (!$this->includeBots) {
             $query->where('is_bot', operator: false);
         }

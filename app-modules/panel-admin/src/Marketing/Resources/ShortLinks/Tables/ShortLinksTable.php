@@ -38,7 +38,6 @@ class ShortLinksTable
                     ->searchable()
                     ->sortable()
                     ->copyable()
-                    // Mostra o slug, copia a URL curta inteira: é ela que vai ser colada.
                     ->copyableState(fn (ShortLink $record): string => ShortLinkResource::shortUrl($record))
                     ->copyMessage(__('panel-admin::marketing.short_links.actions.copy_url.copied'))
                     ->description(fn (ShortLink $record): string => ShortLinkResource::shortUrl($record)),
@@ -56,15 +55,12 @@ class ShortLinksTable
                     ->state(fn (ShortLink $record): array => $record->tags->toArray())
                     ->placeholder(__('panel-admin::marketing.short_links.placeholders.none')),
 
-                // `status` é derivado (accessor), não coluna — por isso nada de
-                // `sortable()`/`searchable()`, que virariam SQL numa coluna inexistente.
+                // `status` is an accessor, not a column: no sortable or searchable.
                 TextColumn::make('status')
                     ->label(__('panel-admin::marketing.short_links.fields.status'))
                     ->badge()
                     ->state(fn (ShortLink $record): ShortLinkStatus => $record->status),
 
-                // A contagem visível é a humana. `clicks_count` inclui os bots de preview
-                // do Discord/WhatsApp e faria todo número nascer inflado.
                 TextColumn::make('human_clicks_count')
                     ->label(__('panel-admin::marketing.short_links.fields.clicks'))
                     ->numeric()
@@ -91,7 +87,6 @@ class ShortLinksTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                // O status não existe no banco: cada opção vira a condição equivalente.
                 SelectFilter::make('status')
                     ->label(__('panel-admin::marketing.short_links.filters.status'))
                     ->options(ShortLinkStatus::class)
@@ -106,7 +101,6 @@ class ShortLinksTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                // Mesmo handler Alpine que o `TextColumn::copyable()` gera internamente.
                 Action::make('copy_url')
                     ->label(__('panel-admin::marketing.short_links.actions.copy_url.label'))
                     ->icon(Heroicon::OutlinedClipboardDocument)
@@ -131,8 +125,8 @@ class ShortLinksTable
     }
 
     /**
-     * `status` não existe no banco — cada opção do filtro vira a condição que
-     * o accessor `ShortLink::$status` derivaria, na mesma ordem de precedência.
+     * `status` is not a column, so each option becomes the condition that the
+     * `ShortLink::$status` accessor would derive, in the same order.
      *
      * @param  Builder<ShortLink>  $query
      * @param  array<string, mixed>  $data

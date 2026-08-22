@@ -17,8 +17,8 @@ final readonly class UtmParameters
     ) {}
 
     /**
-     * Aceita tanto as chaves canônicas (`utm_source`) quanto o nome curto (`source`),
-     * porque o formulário do painel e o jsonb persistido não falam a mesma língua.
+     * Accepts the canonical key (`utm_source`) and the short name (`source`).
+     * The panel form and the stored jsonb use different spellings.
      *
      * @param  array<array-key, mixed>  $data
      */
@@ -34,12 +34,13 @@ final readonly class UtmParameters
     }
 
     /**
-     * Monta a URL final. Precedência, do mais forte pro mais fraco:
-     * 1. o que já está na URL de destino cadastrada  (staff escreveu de propósito)
-     * 2. o que veio na query da URL curta            (quem clicou trouxe)
-     * 3. o UTM configurado no link                   (preenche só o que faltou)
+     * Builds the final URL. Precedence, strongest first:
      *
-     * @param  array<string, mixed>  $incoming  query params que chegaram na URL curta
+     * 1. the query already in the destination URL, which staff wrote on purpose
+     * 2. the query the visitor sent to the short URL
+     * 3. the UTM configured on the link, which fills only what is missing
+     *
+     * @param  array<string, mixed>  $incoming  query sent to the short URL
      */
     public function appendTo(string $destination, array $incoming = []): string
     {
@@ -125,7 +126,7 @@ final readonly class UtmParameters
     }
 
     /**
-     * Só os pares com valor de verdade, prontos pra virar query string.
+     * Only the pairs that have a value, ready for a query string.
      *
      * @param  array<array-key, mixed>|null  $source
      * @return array<string, string>

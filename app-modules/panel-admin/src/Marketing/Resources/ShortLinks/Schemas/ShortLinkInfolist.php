@@ -31,15 +31,15 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Number;
 
 /**
- * O layout 80/20 da página de um link curto.
+ * The layout of the short link page.
  *
- * `Grid::make(4)` com filhos de span 3 e 1 dá 75% / 25% e empilha
- * sozinho em tela estreita — nada de breakpoint na mão.
+ * `Grid::make(4)` with spans of 3 and 1 gives a 75/25 split that stacks on a
+ * narrow screen without a manual breakpoint.
  *
- * Os números são `TextEntry` e não um `StatsOverviewWidget` de propósito: o
- * infolist é schema da própria página, então uma closure em `state()` que lê
- * `ViewShortLink::includeBots()` reage ao toggle sem remontar nada. Gráficos e
- * tabelas, que são ilhas Livewire isoladas, dependem da `key()` dinâmica.
+ * The numbers are `TextEntry`, not a `StatsOverviewWidget`, because the infolist
+ * is a schema of the page itself: a `state()` closure can read
+ * `ViewShortLink::includeBots()` and answer the toggle without a remount. The
+ * charts and tables are isolated Livewire islands and need the dynamic `key()`.
  */
 class ShortLinkInfolist
 {
@@ -58,7 +58,7 @@ class ShortLinkInfolist
     }
 
     /**
-     * A coluna de 80%: o que o link é, seguido do que ele produziu.
+     * The wide column: what the link is, then what it produced.
      *
      * @return array<int, mixed>
      */
@@ -71,9 +71,6 @@ class ShortLinkInfolist
                 ->schema([
                     TextEntry::make('status')
                         ->label(__('panel-admin::marketing.short_links.fields.status'))
-                        // `status` é accessor derivado, nunca coluna: nada de
-                        // sortable/searchable. O enum implementa HasLabel/HasColor/
-                        // HasIcon, então `badge()` sozinho já pinta certo.
                         ->badge()
                         ->state(fn (ShortLink $record): ShortLinkStatus => $record->status),
 
@@ -95,8 +92,6 @@ class ShortLinkInfolist
                     TextEntry::make('tags')
                         ->label(__('panel-admin::marketing.short_links.fields.tags'))
                         ->badge()
-                        // `tags` é cast para TagList (VO), não array: sem o
-                        // `toArray()` o badge recebe o objeto e quebra.
                         ->state(fn (ShortLink $record): array => $record->tags->toArray())
                         ->placeholder(__('panel-admin::marketing.short_links.placeholders.none'))
                         ->columnSpanFull(),
@@ -165,9 +160,6 @@ class ShortLinkInfolist
                         ->helperText(fn (ShortLink $record, ViewShortLink $livewire): string => self::topSource($record, $livewire->includeBots())['helper']),
                 ]),
 
-            // Sem `Section` em volta: cada widget já renderiza o próprio card com
-            // heading (`ChartWidget` monta um `<x-filament::section>`), e embrulhar
-            // de novo daria moldura dentro de moldura.
             Livewire::make(ClicksOverTimeChart::class, self::islandData())
                 ->key(fn (ViewShortLink $livewire): string => $livewire->islandKey('clicks-over-time'))
                 ->columnSpanFull(),
@@ -175,8 +167,6 @@ class ShortLinkInfolist
             Grid::make(2)
                 ->columnSpanFull()
                 ->schema([
-                    // Este widget já tem filtro de dimensão próprio (referer /
-                    // utm_source / país) — por isso são duas ilhas aqui, não três.
                     Livewire::make(TopReferersTable::class, self::islandData())
                         ->key(fn (ViewShortLink $livewire): string => $livewire->islandKey('top-referers'))
                         ->columnSpan(1),
@@ -193,7 +183,7 @@ class ShortLinkInfolist
     }
 
     /**
-     * A faixa de 20%: quem manda no filtro e para onde o link já apontou.
+     * The sidebar: the filter, and where the link has pointed.
      *
      * @return array<int, mixed>
      */
@@ -204,13 +194,11 @@ class ShortLinkInfolist
                 ->columnSpanFull()
                 ->compact()
                 ->schema([
-                    // O MESMO schema `filtersForm` da página, só que aqui. Duplicar
-                    // o Toggle criaria um segundo state path e dois filtros rivais.
+                    // The page's own `filtersForm` schema. A second Toggle would
+                    // create a second state path and two competing filters.
                     EmbeddedSchema::make('filtersForm'),
                 ]),
 
-            // O histórico é uma das três razões do projeto existir: sem ele um
-            // gráfico de cliques mente, porque metade pode ter ido pro destino antigo.
             Section::make(__('panel-admin::marketing.short_links.sections.destination_history'))
                 ->description(__('panel-admin::marketing.short_links.sections.destination_history_hint'))
                 ->columnSpanFull()
@@ -218,8 +206,6 @@ class ShortLinkInfolist
                 ->schema([
                     RepeatableEntry::make('destinations')
                         ->hiddenLabel()
-                        // Sem moldura por item: em 20% de largura ela come quase
-                        // toda a largura útil.
                         ->contained(condition: false)
                         ->state(fn (ShortLink $record) => $record->destinations()
                             ->orderByDesc('valid_from')
@@ -235,8 +221,7 @@ class ShortLinkInfolist
                                 ->hiddenLabel()
                                 ->fontFamily(FontFamily::Mono)
                                 ->size(TextSize::Small)
-                                // Sem o limit a URL parte no meio da palavra
-                                // ("he4 / rt"); o tooltip devolve o valor inteiro.
+                                // Without the limit the URL breaks mid-word.
                                 ->limit(30)
                                 ->tooltip(fn (?string $state): ?string => $state),
                         ]),
@@ -245,9 +230,8 @@ class ShortLinkInfolist
     }
 
     /**
-     * Os parâmetros de mount de uma ilha. `record` o próprio componente já passa;
-     * `includeBots` é o filtro da página congelado no instante do mount — quem o
-     * atualiza é a troca de `key()`, não reatividade.
+     * The mount parameters of an island. Filament passes `record` itself.
+     * `includeBots` is frozen at mount and only changes when `key()` changes.
      *
      * @return Closure(ViewShortLink): array<string, mixed>
      */
@@ -259,8 +243,8 @@ class ShortLinkInfolist
     }
 
     /**
-     * "Vigente desde 12/03/2026" para o intervalo aberto, "12/03 → 04/07" para
-     * os fechados.
+     * "Current since 12/03/2026" for the open interval, "12/03 → 04/07" for the
+     * closed ones.
      */
     private static function validity(ShortLinkDestination $record): string
     {
@@ -275,9 +259,8 @@ class ShortLinkInfolist
     }
 
     /**
-     * O dia de maior volume, numa consulta só.
-     *
-     * `AT TIME ZONE` UMA vez: a conversão dupla desloca o dia em +3h.
+     * The busiest day, in one query. Use `AT TIME ZONE` once: a double
+     * conversion moves the day by three hours.
      *
      * @return array{value: string, helper: string}
      */
@@ -305,7 +288,7 @@ class ShortLinkInfolist
     }
 
     /**
-     * A origem que mais trouxe clique, com a fatia que ela representa.
+     * The origin with the most clicks, and its share of the total.
      *
      * @return array{value: string, helper: string}
      */
@@ -349,8 +332,8 @@ class ShortLinkInfolist
     }
 
     /**
-     * Agregados vão por `DB::table()` (via query builder do model) porque não têm
-     * chave primária — hidratar model para um `GROUP BY` seria mentira.
+     * Aggregates go through the query builder: a `GROUP BY` row has no primary
+     * key, so there is no model to hydrate.
      */
     private static function clicksQuery(ShortLink $record, bool $includeBots): QueryBuilder
     {

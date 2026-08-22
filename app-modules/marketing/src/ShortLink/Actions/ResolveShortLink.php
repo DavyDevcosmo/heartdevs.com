@@ -9,12 +9,12 @@ use He4rt\Marketing\ShortLink\Models\ShortLink;
 use He4rt\Marketing\ShortLink\Support\ShortLinkCache;
 
 /**
- * The hottest path in the module: every click passes through here.
+ * Answers what `/l/{slug}` points at.
  *
- * It answers with data, never with an HTTP response — deciding to redirect or to
- * render the "unavailable" page belongs to `portal`. Soft-deleted links are
- * invisible to the query, so they collapse into the same "does not resolve"
- * answer as an unknown slug: the edge cannot become a slug-enumeration oracle.
+ * The answer is data, not an HTTP response — the `portal` module decides
+ * whether to redirect. Soft-deleted links are invisible to the query, so they
+ * give the same answer as an unknown slug and the edge cannot be used to
+ * enumerate slugs.
  */
 final readonly class ResolveShortLink
 {
@@ -30,8 +30,6 @@ final readonly class ResolveShortLink
     }
 
     /**
-     * Raw columns only — the status is a function of these, evaluated per read.
-     *
      * @return array<string, mixed>|null
      */
     private function lookup(string $slug): ?array

@@ -11,15 +11,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('marketing_short_link_clicks', static function (Blueprint $table): void {
-            // Divergência consciente do padrão UUID do projeto (ver §6 da spec):
-            // tabela append-only de alto volume, onde UUID v4 fragmenta e infla o
-            // índice B-tree da PK. A chave é sequencial de propósito.
+            // A deliberate divergence from the project UUID convention: this is
+            // a high-volume append-only table where a UUID v4 would fragment the
+            // B-tree index. See ADR-0003.
             $table->bigIncrements('id');
 
             $table->foreignUuid('short_link_id')->constrained('marketing_short_links')->cascadeOnDelete();
             $table->timestampTz('clicked_at')->index();
 
-            // ⚠︎ Dado pessoal (LGPD, §8 da spec): gravado cru e sem retenção, por decisão explícita.
+            // Personal data, stored raw and with no retention policy. See ADR-0003.
             $table->string('ip_address', 45);
             $table->text('user_agent');
 
@@ -33,16 +33,15 @@ return new class extends Migration
             $table->boolean('is_bot')->default(value: false)->index();
             $table->string('bot_name')->nullable();
 
-            // O que veio NA URL curta — evidência de origem, não o UTM configurado no link.
+            // What arrived on the short URL, not the UTM configured on the link.
             $table->string('utm_source')->nullable();
             $table->string('utm_medium')->nullable();
             $table->string('utm_campaign')->nullable();
 
             $table->foreignUuid('user_id')->nullable()->constrained('users')->nullOnDelete();
 
-            // O índice de `short_link_id` sozinho seria redundante: o composto abaixo
-            // já o cobre como prefixo, e um índice a menos numa tabela append-only
-            // de alto volume é escrita mais barata.
+            // No standalone `short_link_id` index: the composite below covers it
+            // as a prefix, and one index less makes each write cheaper.
             $table->index(['short_link_id', 'clicked_at'], 'idx_short_link_clicks_timeline');
             $table->index('country_code', 'idx_short_link_clicks_country');
         });

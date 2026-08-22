@@ -8,12 +8,10 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 
 /**
- * The click, flattened for the queue.
+ * A click, flattened for the queue.
  *
- * Deliberately not the `Request`: a serialized request drags session, container
- * bindings and uploaded files into the payload and does not survive the round
- * trip. Everything the job needs is copied out at the edge, while the request
- * is still alive.
+ * A serialized `Request` does not survive the round trip, so the job reads
+ * everything it needs at the edge while the request is still alive.
  */
 final readonly class ClickContext
 {
@@ -37,8 +35,6 @@ final readonly class ClickContext
         return new self(
             shortLinkId: $shortLinkId,
             clickedAt: CarbonImmutable::now(),
-            // Real visitor IP, not the edge's: TrustProxies + laravel-cloudflare
-            // already rewrite it in bootstrap/app.php.
             ip: $request->ip(),
             userAgent: self::stringOrNull($request->userAgent()),
             referer: self::stringOrNull($request->headers->get('referer')),
@@ -51,8 +47,7 @@ final readonly class ClickContext
     }
 
     /**
-     * Cloudflare hands us the country for free — no MaxMind database to ship or
-     * keep fresh. Locally the header simply is not there and the column stays null.
+     * Cloudflare sets this header. Locally it is absent and the column stays null.
      */
     private static function countryFrom(Request $request): ?string
     {

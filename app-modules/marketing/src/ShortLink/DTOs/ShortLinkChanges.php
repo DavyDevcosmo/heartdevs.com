@@ -13,14 +13,12 @@ use He4rt\Marketing\ShortLink\ValueObjects\UtmParameters;
 /**
  * A partial edit of a short link.
  *
- * Only the keys actually present are applied — that is what lets the caller say
- * "clear the expiry" (`expires_at => null` present) without it being confused
- * with "leave the expiry alone" (key absent). The distinction matters because
- * `UpdateShortLink` decides whether to close a destination interval by looking
- * at what this object carries.
+ * Only the keys that are present are applied. This is what separates "clear the
+ * expiry" (the key is present and null) from "leave the expiry alone" (the key
+ * is absent). `UpdateShortLink` reads these keys to decide whether to close a
+ * destination interval.
  *
- * The slug is deliberately not editable: the whole point of the link is that
- * the printed/pasted URL never moves.
+ * The slug is not editable. A published URL must never move.
  */
 final readonly class ShortLinkChanges
 {
@@ -33,8 +31,7 @@ final readonly class ShortLinkChanges
     ) {}
 
     /**
-     * Explicit builder. `null` means "not changing"; use the `clear*` flags to
-     * blank a nullable column on purpose.
+     * `null` means "do not change". Use the `clear*` flags to empty a column.
      */
     public static function make(
         ?string $destinationUrl = null,
@@ -73,8 +70,7 @@ final readonly class ShortLinkChanges
     }
 
     /**
-     * Built from a Filament form payload — every key the form submitted counts
-     * as an intent, including the ones submitted as `null`.
+     * Every key the form submits counts as an edit, including the null ones.
      *
      * @param  array<string, mixed>  $data
      */
@@ -137,9 +133,10 @@ final readonly class ShortLinkChanges
     /**
      * Does this edit move where the link points?
      *
-     * Only the destination URL and the appended UTM count — retagging a link is
-     * bookkeeping, not a redirect change, and must not forge a history row.
-     * Call this **before** filling the model, while it still holds the old values.
+     * Only the destination URL and the UTM count. A tag change is not a redirect
+     * change and must not write a history row.
+     *
+     * Call this before you fill the model, while it still holds the old values.
      */
     public function hasDestinationChange(ShortLink $link): bool
     {

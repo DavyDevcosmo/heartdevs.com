@@ -9,11 +9,11 @@ use He4rt\Marketing\ShortLink\Enums\ShortLinkStatus;
 use He4rt\Marketing\ShortLink\ValueObjects\UtmParameters;
 
 /**
- * The verdict for one `/l/{slug}` lookup.
+ * The result of one `/l/{slug}` lookup.
  *
- * A `null` status means the slug does not resolve at all (unknown or soft
- * deleted). Everything else — disabled, expired, active — carries the columns
- * the edge needs, so the HTTP layer never has to touch a model.
+ * A `null` status means the slug does not resolve: it is unknown or soft
+ * deleted. Every other status carries the columns the edge needs, so the HTTP
+ * layer never touches a model.
  */
 final readonly class Resolution
 {
@@ -30,11 +30,10 @@ final readonly class Resolution
     }
 
     /**
-     * Evaluates the status from the raw cached columns, on every read.
+     * Evaluates the status from the cached columns on every read.
      *
-     * This is why the cache stores `expires_at` instead of a pre-computed
-     * verdict: a link that expires at 14:00 starts answering 404 at 14:00
-     * without a scheduled invalidation nobody would remember to write.
+     * The cache stores `expires_at` instead of a pre-computed status, so an
+     * expired link starts to answer 404 without a scheduled invalidation.
      *
      * @param  array<string, mixed>  $payload
      */
@@ -73,8 +72,7 @@ final readonly class Resolution
     }
 
     /**
-     * Turning a link off by hand beats the calendar: an explicitly disabled link
-     * reads as `Disabled` even when its `expires_at` is also in the past.
+     * A disabled link stays `Disabled`, even when `expires_at` is also in the past.
      */
     private static function statusFor(bool $active, ?CarbonImmutable $expiresAt): ShortLinkStatus
     {

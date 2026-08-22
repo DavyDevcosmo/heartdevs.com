@@ -144,7 +144,6 @@ test('ClickContext reads the country from the Cloudflare header', function (): v
 });
 
 test('ClickContext leaves the country null without the header', function (): void {
-    // Local development has no Cloudflare in front, so the header simply is not there.
     $request = Request::create('/l/discord-a3f9k');
     $request->headers->remove('user-agent');
 

@@ -10,11 +10,11 @@ use He4rt\Marketing\ShortLink\ValueObjects\TagList;
 use He4rt\Marketing\ShortLink\ValueObjects\UtmParameters;
 
 /**
- * Turns a raw Filament payload into the typed values the DTOs speak.
+ * Converts a Filament payload into the typed values the DTOs accept.
  *
- * Shared by `NewShortLinkData::fromForm()` and `ShortLinkChanges::fromForm()`
- * so the panel is free to lay UTM fields out nested (`utm.source`) or flat
- * (`utm_source`) without either DTO learning about form shapes twice.
+ * Shared by `NewShortLinkData::fromForm()` and `ShortLinkChanges::fromForm()`,
+ * so the panel can send UTM fields nested (`utm.source`) or flat (`utm_source`)
+ * and neither DTO has to know about form shapes.
  */
 final class FormPayloadNormalizer
 {

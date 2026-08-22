@@ -10,6 +10,7 @@ use He4rt\Marketing\ShortLink\Actions\CreateShortLink as CreateShortLinkAction;
 use He4rt\Marketing\ShortLink\DTOs\NewShortLinkData;
 use He4rt\Marketing\ShortLink\Exceptions\InvalidDestinationUrl;
 use He4rt\Marketing\ShortLink\Models\ShortLink;
+use He4rt\PanelAdmin\Marketing\Concerns\ResolvesCurrentUserId;
 use He4rt\PanelAdmin\Marketing\Resources\ShortLinks\ShortLinkResource;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
@@ -19,13 +20,14 @@ use Illuminate\Validation\ValidationException;
  */
 class CreateShortLink extends CreateRecord
 {
+    use ResolvesCurrentUserId;
+
     protected static string $resource = ShortLinkResource::class;
 
     /**
-     * Quem grava é a Action. Um `ShortLink::create($data)` daqui pularia a geração
-     * do slug com sufixo, a validação de esquema do destino e — o mais grave — a
-     * abertura do primeiro intervalo de destino, deixando todo clique futuro
-     * sem destino atribuível.
+     * The domain Action writes the record. A `ShortLink::create($data)` here
+     * would skip the slug suffix, the destination validation and the first
+     * destination interval.
      *
      * @param  array<string, mixed>  $data
      */
@@ -55,17 +57,5 @@ class CreateShortLink extends CreateRecord
     protected function getRedirectUrl(): string
     {
         return ShortLinkResource::getUrl('view', ['record' => $this->record]);
-    }
-
-    /**
-     * O `id` do User é um UUID (string); `auth()->id()` continua declarado como
-     * `int|string|null` por causa das PKs auto-incremento que o contrato ainda
-     * admite. Estreitar aqui é o que mantém o DTO honesto.
-     */
-    private function currentUserId(): ?string
-    {
-        $id = auth()->id();
-
-        return is_string($id) ? $id : null;
     }
 }

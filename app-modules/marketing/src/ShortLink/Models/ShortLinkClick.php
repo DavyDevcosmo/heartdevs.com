@@ -15,11 +15,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Um clique resolvido em `/l/{slug}` que produziu um 302. Gravado cru e sem
- * retenção — `ip_address` e `user_agent` são dado pessoal (LGPD, §8 da spec).
+ * One click on `/l/{slug}` that produced a redirect.
  *
- * A PK é `bigIncrements`, não UUID: tabela append-only de alto volume onde
- * UUID v4 fragmentaria o índice B-tree. Divergência consciente, ver §6 da spec.
+ * Rows are stored raw and with no retention policy. `ip_address` and
+ * `user_agent` are personal data. See ADR-0003.
+ *
+ * The primary key is a `bigint`, not a UUID: this is a high-volume append-only
+ * table where a UUID v4 would fragment the B-tree index.
  *
  * @property int $id
  * @property string $short_link_id

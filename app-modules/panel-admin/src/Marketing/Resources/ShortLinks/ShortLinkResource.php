@@ -37,12 +37,11 @@ class ShortLinkResource extends Resource
     protected static ?string $recordTitleAttribute = 'slug';
 
     /**
-     * A URL pública de um link curto.
+     * The public URL of a short link.
      *
-     * A rota nomeada mora no `portal` (`/l/{slug}`); usá-la aqui faz o painel
-     * herdar qualquer mudança de prefixo ou domínio sem edição, e quebra em
-     * `RouteNotFoundException` se a borda pública sumir — melhor do que copiar
-     * silenciosamente uma URL que ninguém mais serve.
+     * The named route lives in the `portal` module. Using it here makes the
+     * panel follow any prefix or domain change, and fails loudly if the public
+     * edge is removed.
      */
     public static function shortUrl(ShortLink|string $link): string
     {
@@ -103,8 +102,8 @@ class ShortLinkResource extends Resource
     }
 
     /**
-     * O slug segue reservado depois do soft delete, então a rota precisa
-     * enxergar o registro removido — senão editar/restaurar dá 404.
+     * A slug stays reserved after a soft delete, so the route must find the
+     * deleted record. Without this, edit and restore answer 404.
      *
      * @return Builder<ShortLink>
      */

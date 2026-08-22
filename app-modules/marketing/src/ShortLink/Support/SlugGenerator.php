@@ -7,15 +7,14 @@ namespace He4rt\Marketing\ShortLink\Support;
 use Illuminate\Support\Str;
 
 /**
- * Builds `{apelido}-{5 chars base36}` slugs.
+ * Builds `{nickname}-{5 base36 characters}` slugs.
  *
- * The apelido half is what makes the link pasteable (`/l/discord-a3f9k` instead
- * of a query-string wall); the generated half is what makes it unique without a
- * collision-retry loop and without leaking how many links exist.
+ * The nickname makes the link readable. The random suffix makes it unique
+ * without a retry loop and hides how many links exist.
  *
- * `random_int` over an explicit alphabet — not `Str::random()`, which draws from
- * `[A-Za-z0-9]` and would produce uppercase characters the `[a-z0-9-]+` route
- * constraint rejects.
+ * The suffix uses `random_int` over an explicit lowercase alphabet.
+ * `Str::random()` draws from `[A-Za-z0-9]` and would produce uppercase
+ * characters that the `[a-z0-9-]+` route constraint rejects.
  */
 final class SlugGenerator
 {
@@ -29,8 +28,8 @@ final class SlugGenerator
     }
 
     /**
-     * The stable, human-written half of the slug — indexed on its own column so
-     * "every link staff called `discord`" stays a cheap query.
+     * The nickname half of the slug. It has its own indexed column, so all the
+     * links that share a nickname stay one cheap query.
      */
     public static function base(string $nickname): string
     {

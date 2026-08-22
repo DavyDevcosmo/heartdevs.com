@@ -17,23 +17,22 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Number;
 
 /**
- * Ranking de origem do clique. A dimensão é escolhida no filtro — referer,
- * `utm_source` ou país — porque as três respondem à mesma pergunta ("de onde
- * veio isso?") e mereciam uma tabela só em vez de três meio vazias.
+ * A ranking of where the clicks came from. The filter chooses the dimension:
+ * referer, `utm_source` or country. All three answer the same question, so they
+ * share one table.
  *
- * Usa dados customizados (`records()`) em vez de `query()`: são agregados com
- * `GROUP BY`, que não têm chave primária para o Filament diferenciar linhas.
+ * It uses `records()` instead of `query()`, because a `GROUP BY` row has no
+ * primary key for Filament to identify it with.
  */
 class TopReferersTable extends TableWidget
 {
-    /** Injetado por `Filament\Schemas\Components\Livewire::getComponentProperties()`. */
+    /** Set by `Filament\Schemas\Components\Livewire::getComponentProperties()`. */
     public ?ShortLink $record = null;
 
     /**
-     * Renderizado como ilha Livewire (`Filament\Schemas\Components\Livewire`), que
-     * só entrega dado serializável: o filtro da página chega por parâmetro de mount,
-     * não por `pageFilters`. Quem troca o valor é a `key()` dinâmica da ilha, que
-     * remonta o componente com o novo `includeBots`.
+     * Set at mount by the page. A Livewire island only accepts serializable
+     * data, so the filter cannot arrive through `pageFilters`. The island's
+     * dynamic `key()` is what remounts this widget with a new value.
      */
     public bool $includeBots = false;
 
@@ -42,8 +41,6 @@ class TopReferersTable extends TableWidget
     public function table(Table $table): Table
     {
         return $table
-            // `TableWidget::makeTable()` deriva o heading do nome da classe quando
-            // ninguém o define — sem isto o card diz "Top Referers Table".
             ->heading(__('panel-admin::marketing.short_links.widgets.top_referers.heading'))
             ->records(fn (array $filters): Collection => $this->rows($filters))
             ->columns([
@@ -71,11 +68,6 @@ class TopReferersTable extends TableWidget
                     ->default('referer')
                     ->selectablePlaceholder(condition: false),
             ])
-            /*
-             * Inline em vez de Dropdown: com layout Dropdown o Filament reserva
-             * uma faixa de toolbar só para o funil e ainda desenha a barra de
-             * "filtros ativos" — quatro faixas de moldura para uma linha de dado.
-             */
             ->filtersLayout(FiltersLayout::AboveContent)
             ->hiddenFilterIndicators()
             ->paginated(condition: false)
@@ -104,7 +96,6 @@ class TopReferersTable extends TableWidget
             ->orderByDesc('total')
             ->limit(10);
 
-        // Bots de preview (Discord, WhatsApp, Slack) ficam de fora por padrão.
         if (!$this->includeBots) {
             $query->where('is_bot', operator: false);
         }
@@ -137,8 +128,8 @@ class TopReferersTable extends TableWidget
     }
 
     /**
-     * O valor vem do filtro, que é estado do cliente. O `match` devolve um nome
-     * de coluna literal, então nada recebido do browser entra no SQL.
+     * The value comes from client state. The `match` returns a literal column
+     * name, never the received value.
      *
      * @param  array<array-key, mixed>  $filters
      * @return 'referer'|'utm_source'|'country_code'
@@ -156,8 +147,7 @@ class TopReferersTable extends TableWidget
     }
 
     /**
-     * A expressão inteira é literal, nunca interpolada — é o que `selectRaw()`
-     * exige e o que garante que a dimensão vinda do browser não vire SQL.
+     * The whole expression is literal, never interpolated.
      *
      * @param  'referer'|'utm_source'|'country_code'  $dimension
      * @return literal-string

@@ -1,11 +1,7 @@
 {{--
-    A página dos quatro desfechos mortos de /l/{slug}: slug inexistente, link
-    desativado, vencido e soft-deletado.
-
-    Nada aqui pode variar por caso. Uma mensagem diferente por motivo
-    transformaria a rota num oráculo de enumeração — bastaria varrer slugs e
-    ler a resposta para descobrir quais existem. Por isso o texto cita as
-    possibilidades juntas, sem apontar qual delas aconteceu.
+    The single answer for every dead /l/{slug}: unknown, disabled, expired and
+    soft deleted. Nothing here may vary by case — a different message for each
+    would let anyone scan slugs and learn which ones exist.
 --}}
 @php
     $discordUrl = config()->string('he4rt.social_media.discord.url');

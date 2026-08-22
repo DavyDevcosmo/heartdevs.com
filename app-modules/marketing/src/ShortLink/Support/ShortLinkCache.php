@@ -8,17 +8,14 @@ use Closure;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * The read-through store in front of every redirect.
+ * The read-through cache in front of every redirect.
  *
- * Two rules shape it:
+ * It stores raw columns, never a status. `Resolution` evaluates the status on
+ * each read, so an expiry needs no scheduled invalidation.
  *
- * 1. **Raw columns only, never the verdict.** `expires_at` is stored as data and
- *    the status is evaluated per read, so expiry needs no scheduled invalidation.
- * 2. **Positive entries live forever, negative ones for a minute.** A hit is only
- *    ever wrong because someone edited the link — and the observer forgets the
- *    key on save. A miss, on the other hand, is what a slug scanner produces by
- *    the thousand; a short-lived sentinel keeps that traffic off Postgres without
- *    making a freshly created slug wait a minute to work.
+ * Positive entries live forever, because only an edit can make one stale and
+ * the observer clears the key on save. Negative entries live for a minute,
+ * which keeps a slug scanner off Postgres without making a new slug wait.
  */
 final class ShortLinkCache
 {
@@ -27,8 +24,7 @@ final class ShortLinkCache
     public const int NEGATIVE_TTL_SECONDS = 60;
 
     /**
-     * Sentinel for "this slug does not resolve" — distinguishable from an absent
-     * key, which `Cache::get()` also reports as `null`.
+     * Marks a slug that does not resolve. An absent key also reads as `null`.
      */
     private const string MISSING = '__missing__';
 

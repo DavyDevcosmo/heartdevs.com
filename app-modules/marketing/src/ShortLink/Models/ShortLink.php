@@ -73,7 +73,7 @@ final class ShortLink extends Model
     }
 
     /**
-     * O destino vigente: a única linha de histórico com o intervalo ainda aberto.
+     * The current destination: the one history row with an open interval.
      *
      * @return HasOne<ShortLinkDestination, $this>
      */
@@ -91,7 +91,7 @@ final class ShortLink extends Model
     }
 
     /**
-     * Só links que podem, de fato, redirecionar agora.
+     * Only the links that can redirect right now.
      *
      * @param  Builder<$this>  $query
      * @return Builder<$this>
@@ -106,7 +106,7 @@ final class ShortLink extends Model
     }
 
     /**
-     * Estado derivado, nunca persistido.
+     * Derived state, never persisted.
      *
      * @return Attribute<ShortLinkStatus, never>
      */
@@ -129,8 +129,7 @@ final class ShortLink extends Model
     }
 
     /**
-     * Precedência: desligar manualmente (ou remover) ganha da data de expiração —
-     * um link com `active = false` e `expires_at` no futuro é `Disabled`, não `Active`.
+     * Disabling or deleting a link wins over its expiry date.
      */
     private function resolveStatus(): ShortLinkStatus
     {

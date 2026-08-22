@@ -19,8 +19,8 @@ return new class extends Migration
 
             $table->foreignUuid('changed_by')->nullable()->constrained('users')->nullOnDelete();
 
-            // Histórico append-only de intervalos [valid_from, valid_until).
-            // valid_until = null marca a linha vigente — há no máximo uma por link.
+            // Append-only history of [valid_from, valid_until) intervals. A null
+            // valid_until marks the current row: there is at most one per link.
             $table->timestampTz('valid_from');
             $table->timestampTz('valid_until')->nullable();
 

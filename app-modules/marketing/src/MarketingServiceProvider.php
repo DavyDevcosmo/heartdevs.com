@@ -8,8 +8,6 @@ use Illuminate\Support\ServiceProvider;
 
 class MarketingServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
-
     public function boot(): void
     {
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'marketing');

@@ -12,23 +12,18 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ClicksOverTimeChart extends ChartWidget
 {
-    /** Injetado por `Filament\Schemas\Components\Livewire::getComponentProperties()`. */
+    /** Set by `Filament\Schemas\Components\Livewire::getComponentProperties()`. */
     public ?ShortLink $record = null;
 
     /**
-     * Renderizado como ilha Livewire (`Filament\Schemas\Components\Livewire`), que
-     * só entrega dado serializável: o filtro da página chega por parâmetro de mount,
-     * não por `pageFilters`. Quem troca o valor é a `key()` dinâmica da ilha, que
-     * remonta o componente com o novo `includeBots`.
+     * Set at mount by the page. A Livewire island only accepts serializable
+     * data, so the filter cannot arrive through `pageFilters`. The island's
+     * dynamic `key()` is what remounts this widget with a new value.
      */
     public bool $includeBots = false;
 
     public ?string $filter = '30d';
 
-    /*
-     * A série é uma linha só, quase sempre rasa. Sem teto, o Chart.js estica
-     * até a largura do card e a altura vira 400px+ de espaço morto.
-     */
     protected ?string $maxHeight = '240px';
 
     protected ?string $pollingInterval = null;
@@ -57,8 +52,7 @@ class ClicksOverTimeChart extends ChartWidget
      */
     protected function getFilters(): ?array
     {
-        // Chaves com sufixo `d` de propósito: '7'/'30'/'90' virariam chaves int
-        // por coerção do PHP e quebrariam o contrato `array<string, string>`.
+        // The `d` suffix keeps the keys strings: '7' would be cast to an int.
         return [
             '7d' => trans('panel-admin::marketing.short_links.widgets.clicks_over_time.ranges.7'),
             '30d' => trans('panel-admin::marketing.short_links.widgets.clicks_over_time.ranges.30'),
@@ -67,8 +61,8 @@ class ClicksOverTimeChart extends ChartWidget
     }
 
     /**
-     * A série é sempre preenchida com zeros no intervalo inteiro: um link sem
-     * clique nenhum rende uma linha rasa, nunca um gráfico quebrado.
+     * The series is zero-filled across the whole range, so a link with no
+     * clicks draws a flat line instead of an empty chart.
      *
      * @return array<string, mixed>
      */
@@ -80,7 +74,7 @@ class ClicksOverTimeChart extends ChartWidget
 
         $totals = $this->clicksQuery()
             ->where('clicked_at', '>=', $start->utc())
-            // Uma conversão só: `AT TIME ZONE` duplicado desloca o dia em +3h.
+            // Convert once: a double `AT TIME ZONE` moves the day by three hours.
             ->selectRaw('(clicked_at AT TIME ZONE ?)::date AS day', [$timezone])
             ->selectRaw('COUNT(*) AS total')
             ->groupBy('day')
@@ -112,8 +106,8 @@ class ClicksOverTimeChart extends ChartWidget
     }
 
     /**
-     * `$this->filter` chega do browser e não é validado pelo Livewire — resolver
-     * por `match` com default é o que impede um valor forjado de virar consulta.
+     * `$this->filter` comes from the browser. The `match` default is what stops
+     * a forged value from reaching the query.
      */
     private function rangeInDays(): int
     {
@@ -135,7 +129,6 @@ class ClicksOverTimeChart extends ChartWidget
         $query = ShortLinkClick::query()
             ->where('short_link_id', $this->record?->getKey());
 
-        // Bots de preview (Discord, WhatsApp, Slack) ficam de fora por padrão.
         if (!$this->includeBots) {
             $query->where('is_bot', operator: false);
         }

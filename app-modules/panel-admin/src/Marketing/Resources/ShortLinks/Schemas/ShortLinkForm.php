@@ -24,8 +24,6 @@ class ShortLinkForm
                 Section::make(__('panel-admin::marketing.short_links.sections.link'))
                     ->columns(2)
                     ->schema([
-                        // Só na criação: o apelido não é o slug, é a matéria-prima dele.
-                        // Quem monta o slug (e anexa o sufixo) é a Action de domínio.
                         TextInput::make('nickname')
                             ->label(__('panel-admin::marketing.short_links.fields.nickname'))
                             ->helperText(__('panel-admin::marketing.short_links.helpers.nickname'))
@@ -35,8 +33,6 @@ class ShortLinkForm
                             ->visibleOn('create')
                             ->columnSpanFull(),
 
-                        // Na edição o slug é imutável e nunca reusado — mostrado como a
-                        // URL curta completa, desabilitada e copiável.
                         TextInput::make('slug')
                             ->label(__('panel-admin::marketing.short_links.fields.short_url'))
                             ->helperText(__('panel-admin::marketing.short_links.helpers.slug'))
@@ -55,8 +51,7 @@ class ShortLinkForm
                             ->url()
                             ->required()
                             ->maxLength(2_048)
-                            // Espelha `DestinationUrlValidator::ALLOWED_SCHEMES`. A regra de
-                            // domínio continua sendo a autoridade; isto é só o feedback rápido.
+                            // Mirrors DestinationUrlValidator::ALLOWED_SCHEMES.
                             ->rule('url:http,https')
                             ->columnSpanFull(),
 
@@ -113,8 +108,7 @@ class ShortLinkForm
     }
 
     /**
-     * Tags já usadas em algum link, para sugerir em vez de deixar o staff
-     * reinventar "comunidade" / "comunidades" / "Comunidade".
+     * Tags already in use, offered as suggestions.
      *
      * @return array<int, string>
      */

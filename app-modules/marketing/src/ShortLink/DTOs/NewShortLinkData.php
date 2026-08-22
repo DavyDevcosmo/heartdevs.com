@@ -10,10 +10,10 @@ use He4rt\Marketing\ShortLink\ValueObjects\TagList;
 use He4rt\Marketing\ShortLink\ValueObjects\UtmParameters;
 
 /**
- * Everything needed to mint a short link, decoupled from where it came from.
+ * Everything needed to create a short link, independent of the caller.
  *
- * `nickname` is the apelido staff typed — never the final slug. Minting the slug
- * is the Action's business, so no caller can hand-pick one and defeat the suffix.
+ * `nickname` is what staff typed, never the final slug. The Action builds the
+ * slug, so no caller can choose one and bypass the random suffix.
  */
 final readonly class NewShortLinkData
 {
@@ -48,7 +48,7 @@ final readonly class NewShortLinkData
     }
 
     /**
-     * Attributes for `ShortLink::create()` minus the slug, which the Action owns.
+     * Attributes for `ShortLink::create()`, without the slug.
      *
      * @return array<string, mixed>
      */

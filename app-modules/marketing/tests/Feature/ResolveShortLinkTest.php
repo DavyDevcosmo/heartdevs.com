@@ -67,7 +67,6 @@ test('expiry is evaluated on read, not frozen into the cache', function (): void
     expect(resolve(ResolveShortLink::class)->execute($link->slug)->status)
         ->toBe(ShortLinkStatus::Active);
 
-    // Nothing invalidates the cache — only the clock moves.
     Date::setTestNow(now()->addMinutes(10));
 
     expect(resolve(ResolveShortLink::class)->execute($link->slug)->status)
@@ -165,8 +164,6 @@ test('the observer drops the cached entry on save, delete and restore', function
 });
 
 test('the module wires the observer, so a write outside the Action still invalidates', function (): void {
-    // Red until MarketingServiceProvider::boot() calls
-    // ShortLink::observe(ShortLinkObserver::class) — see the module report.
     $link = makeResolvableShortLink();
 
     resolve(ResolveShortLink::class)->execute($link->slug);

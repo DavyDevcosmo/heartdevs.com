@@ -52,7 +52,6 @@ test('changing the destination closes the previous interval and opens a new one'
         ->and($previous->valid_until)->not->toBeNull()
         ->and($current->destination_url)->toBe('https://discord.gg/new')
         ->and($current->valid_until)->toBeNull()
-        // No gap and no overlap: the old interval ends exactly where the new one begins.
         ->and($previous->valid_until->equalTo($current->valid_from))->toBeTrue()
         ->and($link->fresh()->destination_url)->toBe('https://discord.gg/new');
 });

@@ -83,8 +83,8 @@ final readonly class TagList implements Countable, IteratorAggregate
     }
 
     /**
-     * Minúsculas, sem espaço nas pontas, sem vazio, sem duplicata e em ordem alfabética —
-     * duas listas com as mesmas tags são sempre idênticas, independente de como chegaram.
+     * Lowercase, trimmed, without empties or duplicates, and sorted. Two lists
+     * with the same tags are always identical, whatever order they arrived in.
      *
      * @param  array<array-key, mixed>  $tags
      * @return list<string>

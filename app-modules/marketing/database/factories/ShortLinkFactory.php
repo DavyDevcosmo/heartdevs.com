@@ -33,13 +33,13 @@ final class ShortLinkFactory extends Factory
         ];
     }
 
-    /** Vencido pela data — `active` continua `true` de propósito. */
+    /** Past its expiry date, but still `active`. */
     public function expired(): static
     {
         return $this->state(['expires_at' => now()->subDay()]);
     }
 
-    /** Desligado na mão, com validade ainda no futuro: `Disabled` ganha de `Expired`. */
+    /** Disabled by hand, with an expiry still in the future. */
     public function disabled(): static
     {
         return $this->state([

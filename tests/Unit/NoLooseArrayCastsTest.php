@@ -35,20 +35,12 @@ use Symfony\Component\Finder\Finder;
 /**
  * O gate do guideline `06-typed-json-casts`.
  *
- * Toda coluna JSON/jsonb com shape conhecido ou semi-estruturado precisa de um
- * cast para value object. Um `'metadata' => 'array'` solto é um ponto cego sem
- * tipo e sem validação: o PHPStan colapsa para `mixed`, payload malformado vira
- * chave sumida em silêncio, e renomear uma chave é find-and-pray.
+ * Reflete sobre todo model concreto do repo, lê o `getCasts()` real já mesclado
+ * e falha em qualquer cast banido fora da allowlist.
  *
- * Este teste reflete sobre todo model concreto do repo, lê o `getCasts()` real
- * já mesclado, e falha em qualquer cast banido que não esteja na allowlist
- * abaixo.
- *
- * A ALLOWLIST É ESCAPE HATCH DOCUMENTADO, NÃO ARQUIVO DE DESPEJO.
- * Cada entrada carrega o motivo. Ela deve tender a vazio — ao encostar num
- * model listado aqui, considere pagar a dívida em vez de passar direto.
- * Adicionar uma linha nova exige justificar por que aquele JSON é
- * genuinamente polimórfico.
+ * A allowlist é escape hatch documentado, não arquivo de despejo: cada entrada
+ * carrega o motivo e deve tender a zero. Uma linha nova exige justificar por
+ * que aquele JSON é genuinamente polimórfico.
  */
 
 /**
@@ -80,9 +72,7 @@ const BANNED_CASTS = [
  * @var array<class-string<Model>, array<string, string>>
  */
 const ALLOWED_LOOSE_CASTS = [
-    // --- Lakes de webhook: o payload é literalmente o corpo de terceiro. ---
-    // Estes são o caso legítimo: a forma muda quando a plataforma quiser, e
-    // tipar seria fingir um contrato que não existe.
+    // Lakes de webhook: o corpo é de terceiro e muda sem aviso.
     DiscordEventLog::class => [
         'payload' => 'Corpo cru do webhook do Discord — polimórfico por evento, fora do nosso controle.',
     ],
@@ -102,7 +92,7 @@ const ALLOWED_LOOSE_CASTS = [
         'features' => 'Lista de feature flags da guild, definida pelo Discord e mutável sem aviso.',
     ],
 
-    // --- Dívida real: shape conhecido, ainda sem VO. Pagar quando encostar. ---
+    // Dívida real: shape conhecido, ainda sem VO.
     Message::class => [
         'metadata' => 'DÍVIDA: shape conhecido. A tabela tem 2,3GB — migrar exige backfill planejado.',
     ],
@@ -244,8 +234,6 @@ it('não permite cast de array solto fora da allowlist', function (): void {
 });
 
 it('mantém a allowlist honesta: nada listado que já foi resolvido', function (): void {
-    // Uma entrada obsoleta faz a allowlist crescer para sempre e mente sobre o
-    // tamanho real da dívida.
     $stale = [];
 
     foreach (ALLOWED_LOOSE_CASTS as $model => $attributes) {

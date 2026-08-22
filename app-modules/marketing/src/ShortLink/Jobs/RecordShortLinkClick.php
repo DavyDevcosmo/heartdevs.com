@@ -10,7 +10,6 @@ use He4rt\Marketing\ShortLink\Models\ShortLink;
 use He4rt\Marketing\ShortLink\Models\ShortLinkClick;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\Attributes\Backoff;
 use Illuminate\Queue\Attributes\Tries;
 use Illuminate\Queue\InteractsWithQueue;
@@ -18,22 +17,20 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Everything expensive about a click, moved off the redirect.
+ * Records one click, off the redirect path.
  *
- * The visitor is already on Discord by the time this runs: User-Agent parsing,
- * the INSERT and the counter bumps all happen here so the 302 answers in
- * milliseconds and a 500-click spike only lengthens the queue, never the response.
+ * User-Agent parsing, the INSERT and the counter updates all happen here, so
+ * the redirect answers in milliseconds and a traffic spike only makes the queue
+ * longer.
  *
- * Preview crawlers (Discord, WhatsApp, Twitter, Slack) can produce 5–10 hits
- * before a human clicks. Their rows are kept — the raw data is the product — but
- * flagged `is_bot`, and only humans move `human_clicks_count`, so the number
- * staff reads in the panel is not inflated by unfurls.
+ * Preview crawlers (Discord, WhatsApp, Twitter, Slack) can produce several hits
+ * before a person clicks. Their rows are kept but flagged `is_bot`, and only
+ * people increment `human_clicks_count`.
  */
 #[Backoff([10, 30, 120])]
 #[Tries(tries: 3)]
 final class RecordShortLinkClick implements ShouldQueue
 {
-    use Dispatchable;
     use InteractsWithQueue;
     use Queueable;
 
@@ -49,10 +46,7 @@ final class RecordShortLinkClick implements ShouldQueue
         ShortLinkClick::query()->create([
             'short_link_id' => $this->context->shortLinkId,
             'clicked_at' => $this->context->clickedAt,
-            // IP and User-Agent are stored raw and without retention — an explicit,
-            // documented project decision. See §8.1 of the spec (LGPD).
-            // Both columns are NOT NULL: a request without an IP or a User-Agent
-            // still produced a click, so it is stored as empty rather than dropped.
+            // Raw personal data, with no retention policy. See ADR-0003.
             'ip_address' => $this->context->ip ?? '',
             'user_agent' => $this->context->userAgent ?? '',
             'referer' => $this->context->referer,
@@ -68,7 +62,6 @@ final class RecordShortLinkClick implements ShouldQueue
             'user_id' => $this->context->userId,
         ]);
 
-        // One UPDATE for both counters instead of two round-trips per click.
         $counters = ['clicks_count' => 1];
 
         if (!$isBot) {

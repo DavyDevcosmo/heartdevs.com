@@ -23,13 +23,9 @@ use Illuminate\Support\Str;
 use function Pest\Livewire\livewire;
 
 /**
- * `ChartWidget::getCachedData()` é protegido — Reflection lê a série sem
- * renderizar o canvas.
- *
- * Reflection e não um closure com `->call()`: o Rector converte
- * `fn () => $this->foo()` em first-class callable (`$this->foo(...)`), que
- * avalia `$this` na hora — e aqui não há objeto de contexto. O `make format`
- * quebrava este teste toda vez.
+ * Lê a série sem renderizar o canvas. Reflection e não um closure com
+ * `->call()`: o Rector converte `fn () => $this->foo()` em first-class callable,
+ * que avalia `$this` fora de contexto e quebra o teste a cada `make format`.
  *
  * @return array<int, int>
  */
@@ -42,8 +38,7 @@ function chartClicks(ClicksOverTimeChart $chart): array
 }
 
 /**
- * O admin do teste, com tipo — `$this->user` seria `mixed` para o PHPStan e
- * contaminaria toda a cadeia de asserções.
+ * O admin do teste, tipado: `$this->user` seria `mixed` para o PHPStan.
  */
 function admin(): User
 {
@@ -92,8 +87,6 @@ test('creating a link delegates to the CreateShortLink action', function (): voi
         ->and($link->utm->source)->toBe('discord')
         ->and($link->utm->medium)->toBe('post')
         ->and($link->created_by)->toBe(admin()->id)
-        // A prova de que a Action rodou: um `ShortLink::create()` direto do painel
-        // nunca abriria o primeiro intervalo de destino.
         ->and($link->destinations()->whereNull('valid_until')->count())->toBe(1);
 });
 
@@ -120,7 +113,6 @@ test('editing the destination delegates to the UpdateShortLink action and versio
     $link->refresh();
 
     expect($link->destination_url)->toBe('https://new.example.com')
-        // O slug é imutável: a URL já colada em algum lugar não pode se mover.
         ->and($link->slug)->toBe($originalSlug)
         ->and($link->destinations()->count())->toBe(2)
         ->and($link->destinations()->whereNull('valid_until')->count())->toBe(1)
@@ -212,17 +204,14 @@ test('the view page titles itself with the short url and shows the destination h
 
     $page = livewire(ViewShortLink::class, ['record' => $link->getKey()])
         ->assertSuccessful()
-        // O título é a URL curta, sem esquema — é o "link em cima dos números".
         ->assertSee(Str::after(ShortLinkResource::shortUrl($link), '://'))
-        // A vigência aberta vem primeiro: ordenado por `valid_from` decrescente.
         ->assertSeeInOrder(['https://new.example.com', 'https://old.example.com']);
 
     expect($page->instance()->getSubheading())->toBe('↳ https://new.example.com');
 });
 
 test('the clicks tile counts humans only until the bots toggle is on', function (): void {
-    // Números grandes de propósito: "7" e "10" apareceriam em qualquer canto do
-    // HTML (paginação, ids, viewBox de ícone) e a asserção mediria ruído.
+    // Números grandes: "7" ou "10" apareceriam em qualquer canto do HTML.
     $link = ShortLink::factory()->withClicks(total: 8_134, human: 7_211)->create();
 
     $humans = (string) Number::format(7_211);
@@ -241,8 +230,6 @@ test('the clicks tile counts humans only until the bots toggle is on', function 
 });
 
 test('flipping the bots toggle changes the island keys, which is what remounts the charts', function (): void {
-    // Sem key dinâmica os gráficos param de responder ao toggle e nada mais acusa:
-    // ilha Livewire só recebe parâmetro no mount (ver o docblock de ViewShortLink).
     $link = ShortLink::factory()->create();
 
     $page = livewire(ViewShortLink::class, ['record' => $link->getKey()])
@@ -252,8 +239,6 @@ test('flipping the bots toggle changes the island keys, which is what remounts t
 
     $humansOnly = array_map($page->instance()->islandKey(...), $islands);
 
-    // As keys vivem no `wire:key` das ilhas renderizadas, não só em memória —
-    // e as quatro estarem lá é a prova de que o layout inteiro montou.
     foreach ($humansOnly as $key) {
         $page->assertSee($key, escape: false);
     }
@@ -286,7 +271,6 @@ test('the disable action delegates to UpdateShortLink without forging a destinat
         ->assertNotified();
 
     expect($link->refresh()->active)->toBeFalse()
-        // Mexer em `active` não é mudança de destino: o histórico não pode crescer.
         ->and($link->destinations()->count())->toBe(1);
 });
 
@@ -329,8 +313,8 @@ test('the analytics widgets render an empty state for a link with no clicks', fu
     livewire(DeviceBreakdownChart::class, ['record' => $link])
         ->assertSuccessful();
 
-    // `assertCountTableRecords()` não serve aqui: ele conta via query Eloquent e
-    // esta é uma tabela de dados customizados. O estado vazio é a asserção real.
+    // `assertCountTableRecords()` conta via query Eloquent e esta tabela usa
+    // dados customizados.
     livewire(TopReferersTable::class, ['record' => $link])
         ->loadTable()
         ->assertSuccessful()
@@ -397,8 +381,6 @@ test('the recent clicks table hides bots by default and shows them with the togg
 });
 
 test('the recent clicks table never exposes the ip address or the user agent', function (): void {
-    // LGPD: as colunas existem no banco, mas não vão para a tela — o projeto
-    // ainda não tem política de privacidade que justifique expô-las.
     $link = ShortLink::factory()->create();
 
     $click = ShortLinkClick::factory()->create([

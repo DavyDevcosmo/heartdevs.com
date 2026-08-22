@@ -26,7 +26,7 @@ final class ShortLinkDestinationFactory extends Factory
         ];
     }
 
-    /** Intervalo já fechado — um destino que o link teve no passado. */
+    /** A closed interval: a destination the link had in the past. */
     public function superseded(): static
     {
         return $this->state([

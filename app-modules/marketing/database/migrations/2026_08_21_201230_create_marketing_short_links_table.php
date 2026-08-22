@@ -13,8 +13,8 @@ return new class extends Migration
         Schema::create('marketing_short_links', static function (Blueprint $table): void {
             $table->uuid('id')->primary();
 
-            // O slug é a identidade pública e permanente do link: único para sempre,
-            // inclusive contra linhas soft-deletadas — nunca é reusado.
+            // Unique forever, including against soft-deleted rows: a slug is
+            // the permanent public identity of a link and is never reused.
             $table->string('slug')->unique();
             $table->string('base_slug')->index()->comment('Apelido escrito pelo staff, sem o sufixo de unicidade.');
 

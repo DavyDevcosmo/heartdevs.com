@@ -70,16 +70,13 @@ class PortalServiceProvider extends ServiceProvider
             );
 
         /*
-         * A borda pública do encurtador (app-modules/marketing). O constraint em
-         * minúsculo é intencional: slugs são canônicos em lowercase, então
-         * `/l/Discord-A3F9K` simplesmente não casa a rota e cai no 404 do
-         * framework — mesma parede que um slug morto, sem custo de resolução.
+         * The public edge of the shortener (app-modules/marketing). Slugs are
+         * canonical in lowercase, so the constraint sends `/l/Discord-A3F9K` to
+         * the framework 404 without a lookup.
          *
-         * O withHead aqui não é sobre indexar: o caminho feliz é um 302 sem
-         * HTML, onde o metadata é inerte. Ele existe pelo caminho triste, o
-         * único que renderiza página — sem isso, os defaults do portal marcariam
-         * cada slug morto como `index, follow`, e o título seria o genérico do
-         * site. `noindex, follow` espelha o default de erro do SiteHead.
+         * The head metadata is for the sad path, the only one that renders a
+         * page. Without it, each dead slug would be `index, follow` under the
+         * portal defaults.
          */
         Route::get('/l/{slug}', ShortLinkRedirectController::class)
             ->where('slug', '[a-z0-9-]+')
@@ -88,12 +85,8 @@ class PortalServiceProvider extends ServiceProvider
                 title: 'Link indisponível',
                 description: 'O link curto que você abriu não está mais disponível.',
                 robots: ['noindex', 'follow'],
-                /*
-                 * O canonical default é a URL corrente, o que escreveria o slug
-                 * dentro do <head> — e faria a resposta de um slug morto diferir
-                 * da de outro. Fixá-lo mantém as quatro páginas mortas byte a
-                 * byte idênticas, que é a propriedade que impede a enumeração.
-                 */
+                // The default canonical is the current URL, which would write the
+                // slug into the head and make each dead page different.
                 canonical: '/',
             );
 

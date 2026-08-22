@@ -11,8 +11,10 @@ use Filament\Support\Contracts\HasLabel;
 use Filament\Support\Icons\Heroicon;
 
 /**
- * Estado derivado de um link curto. Nunca é persistido: sai das colunas
- * `deleted_at`, `active` e `expires_at` via o accessor `ShortLink::$status`.
+ * The state of a short link.
+ *
+ * It is never persisted. The `ShortLink::$status` accessor derives it from the
+ * `deleted_at`, `active` and `expires_at` columns.
  */
 enum ShortLinkStatus: string implements HasColor, HasDescription, HasIcon, HasLabel
 {
@@ -30,8 +32,7 @@ enum ShortLinkStatus: string implements HasColor, HasDescription, HasIcon, HasLa
     }
 
     /**
-     * Escala NÃO-ordenada — são estados, não níveis. Cada caso recebe uma cor
-     * semântica distinta; a rampa light→red não se aplica aqui.
+     * These are states, not levels, so the light-to-red ramp does not apply.
      */
     public function getColor(): string
     {
@@ -60,7 +61,6 @@ enum ShortLinkStatus: string implements HasColor, HasDescription, HasIcon, HasLa
         };
     }
 
-    /** Só links `Active` produzem um 302 e um clique. */
     public function isRedirectable(): bool
     {
         return match ($this) {

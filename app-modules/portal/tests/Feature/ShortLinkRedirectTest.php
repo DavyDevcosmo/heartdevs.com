@@ -12,21 +12,13 @@ use function Pest\Laravel\get;
 beforeEach(function (): void {
     $this->withoutVite();
 
-    /*
-     * O cache do encurtador grava o positivo com `forever` e o negativo com uma
-     * sentinela de 60s. Com CACHE_STORE=array o store vive no processo, então
-     * sem limpar aqui um slug resolvido num teste vazaria para o próximo.
-     */
+    // O cache positivo é eterno e o store `array` vive no processo: sem isto um
+    // slug resolvido num teste vaza para o próximo.
     Cache::flush();
 
     Queue::fake();
 });
 
-/**
- * Os quatro desfechos que não redirecionam. Estão juntos de propósito: a
- * garantia que interessa é que eles sejam indistinguíveis, e isso só dá para
- * afirmar comparando os quatro entre si.
- */
 function portalDeadShortLinkSlug(string $case): string
 {
     return match ($case) {
@@ -46,8 +38,6 @@ it('redireciona com 302 e anexa o UTM configurado no link', function (): void {
         ->create(['destination_url' => 'https://discord.gg/he4rt']);
 
     get('/l/'.$link->slug)
-        // 302 e não 301: um permanente ficaria no cache do browser e o clique
-        // pararia de chegar ao servidor.
         ->assertStatus(302)
         ->assertHeader('Location', 'https://discord.gg/he4rt?utm_source=discord&utm_medium=post');
 });
@@ -57,8 +47,6 @@ it('deixa o UTM que veio no clique ganhar do configurado no link', function (): 
         ->withUtm(['utm_source' => 'discord'])
         ->create(['destination_url' => 'https://he4rt.dev/evento']);
 
-    // Quem clicou vindo do Twitter trouxe intenção mais específica que a
-    // configuração de origem do link.
     get('/l/'.$link->slug.'?utm_source=twitter')
         ->assertStatus(302)
         ->assertHeader('Location', 'https://he4rt.dev/evento?utm_source=twitter');
@@ -75,7 +63,6 @@ it('despacha o registro do clique no caminho feliz', function (): void {
 it('devolve 404 e não registra clique nenhum em desfecho morto', function (string $case): void {
     get('/l/'.portalDeadShortLinkSlug($case))->assertNotFound();
 
-    // Slug morto não é tráfego de campanha: não pode inflar métrica de ninguém.
     Queue::assertNothingPushed();
 })->with(['inexistente', 'desativado', 'vencido', 'soft-deletado']);
 
@@ -86,8 +73,6 @@ it('responde exatamente a mesma página nos quatro desfechos mortos', function (
             ->getContent())
         ->unique();
 
-    // Uma resposta diferente por motivo transformaria /l/{slug} num oráculo de
-    // enumeração: bastaria varrer slugs e ler o corpo para saber quais existem.
     expect($bodies)->toHaveCount(1);
 });
 
@@ -121,7 +106,5 @@ it('passa a valer o destino novo já no clique seguinte à edição', function (
 
     $link->update(['destination_url' => 'https://discord.gg/convite-novo']);
 
-    // O observer esquece a chave no save; o cache positivo é eterno, então sem
-    // ele este segundo clique ainda iria para o convite antigo.
     get('/l/'.$link->slug)->assertHeader('Location', 'https://discord.gg/convite-novo');
 });

@@ -13,12 +13,10 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
- * A borda HTTP do encurtador: traduz a decisão do domínio em resposta.
+ * The HTTP edge of the shortener.
  *
- * Quem decide se o slug pode redirecionar é o `marketing` — este controller não
- * consulta coluna, não checa `active` nem `expires_at` e não conhece cache. Ele
- * só pergunta e obedece, o que mantém o módulo de domínio livre de HTTP e este
- * módulo livre de regra de negócio.
+ * The `marketing` module decides whether a slug can redirect. This controller
+ * reads no column, checks no state and knows nothing about the cache.
  */
 final readonly class ShortLinkRedirectController
 {
@@ -32,43 +30,30 @@ final readonly class ShortLinkRedirectController
         $destination = $resolution->destinationUrl;
         $utm = $resolution->utm;
 
-        /*
-         * `isRedirectable()` é a decisão; as três comparações com null ao lado
-         * existem para o analisador estático, já que uma Resolution
-         * redirecionável sempre carrega id, destino e UTM.
-         */
+        // `isRedirectable()` is the decision. The null checks are for the static
+        // analyser: a redirectable Resolution always carries all three.
         $cannotRedirect = !$resolution->isRedirectable()
             || $id === null
             || $destination === null
             || !$utm instanceof UtmParameters;
 
         if ($cannotRedirect) {
-            /*
-             * Um só desfecho para os quatro casos mortos — inexistente,
-             * desativado, vencido e soft-deletado. Responder diferente por caso
-             * transformaria a rota num oráculo de enumeração de slug.
-             */
+            // One answer for all four dead outcomes: unknown, disabled, expired
+            // and soft deleted. A different answer for each would make the route
+            // a slug enumeration oracle.
             return response()->view('portal::short-link-unavailable', status: 404);
         }
 
-        /*
-         * Só o caminho feliz gera clique: um slug morto não é tráfego de
-         * campanha e não pode inflar a métrica de nenhum link.
-         *
-         * Vai o ClickContext achatado, nunca o Request — sessão, bindings e
-         * uploads não sobrevivem à serialização da fila.
-         */
         dispatch(new RecordShortLinkClick(ClickContext::fromRequest($request, $id)));
 
         /*
-         * 302, nunca 301: um permanente ficaria no cache do browser e mataria
-         * as duas razões do encurtador existir — o clique pararia de chegar
-         * (sem métrica) e a troca de destino não valeria para quem já clicou.
+         * 302, never 301. A permanent redirect stays in the browser cache and
+         * defeats both reasons the shortener exists: the click stops arriving,
+         * and a new destination never reaches whoever already clicked.
          *
-         * A query do clique entra no appendTo porque quem clicou com
-         * `?utm_source=twitter` trouxe intenção mais específica que o UTM
-         * configurado no link. Lida do InputBag e não de `$request->query()`
-         * porque só o bag garante o `array<string, mixed>` que o VO espera.
+         * The incoming query goes into `appendTo` because a visitor who arrived
+         * with `?utm_source=twitter` carries a more specific intent than the UTM
+         * configured on the link.
          */
         return redirect()->away(
             $utm->appendTo($destination, $request->query->all()),

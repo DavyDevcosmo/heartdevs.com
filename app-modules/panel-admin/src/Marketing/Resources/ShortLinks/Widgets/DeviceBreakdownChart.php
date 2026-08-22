@@ -23,14 +23,13 @@ class DeviceBreakdownChart extends ChartWidget
         '#9333ea',
     ];
 
-    /** Injetado por `Filament\Schemas\Components\Livewire::getComponentProperties()`. */
+    /** Set by `Filament\Schemas\Components\Livewire::getComponentProperties()`. */
     public ?ShortLink $record = null;
 
     /**
-     * Renderizado como ilha Livewire (`Filament\Schemas\Components\Livewire`), que
-     * só entrega dado serializável: o filtro da página chega por parâmetro de mount,
-     * não por `pageFilters`. Quem troca o valor é a `key()` dinâmica da ilha, que
-     * remonta o componente com o novo `includeBots`.
+     * Set at mount by the page. A Livewire island only accepts serializable
+     * data, so the filter cannot arrive through `pageFilters`. The island's
+     * dynamic `key()` is what remounts this widget with a new value.
      */
     public bool $includeBots = false;
 
@@ -98,8 +97,8 @@ class DeviceBreakdownChart extends ChartWidget
     }
 
     /**
-     * `$this->filter` é controlável pelo cliente. O `match` devolve um nome de
-     * coluna literal — nunca o valor recebido — então nada forjado chega ao SQL.
+     * `$this->filter` comes from the browser. The `match` returns a literal
+     * column name, never the received value.
      */
     private function dimension(): string
     {
@@ -111,8 +110,7 @@ class DeviceBreakdownChart extends ChartWidget
     }
 
     /**
-     * A expressão inteira é literal (nunca interpolada), que é o que `selectRaw()`
-     * exige e o que garante que a dimensão escolhida no browser não vire SQL.
+     * The whole expression is literal, never interpolated.
      *
      * @return literal-string
      */

@@ -13,6 +13,7 @@ use He4rt\Marketing\ShortLink\Actions\UpdateShortLink as UpdateShortLinkAction;
 use He4rt\Marketing\ShortLink\DTOs\ShortLinkChanges;
 use He4rt\Marketing\ShortLink\Exceptions\InvalidDestinationUrl;
 use He4rt\Marketing\ShortLink\Models\ShortLink;
+use He4rt\PanelAdmin\Marketing\Concerns\ResolvesCurrentUserId;
 use He4rt\PanelAdmin\Marketing\Resources\ShortLinks\ShortLinkResource;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
@@ -22,17 +23,19 @@ use Illuminate\Validation\ValidationException;
  */
 class EditShortLink extends EditRecord
 {
+    use ResolvesCurrentUserId;
+
     protected static string $resource = ShortLinkResource::class;
 
     /**
-     * `utm` e `tags` são Value Objects. Nem `AsUtmParameters`/`AsTagList` implementam
-     * `SerializesCastableAttributes`, nem os VOs são `Arrayable`, então
-     * `attributesToArray()` devolve os objetos crus — que o Livewire não consegue
-     * desidratar. Achatamos aqui, na camada de apresentação, no formato plano que
-     * o `FormPayloadNormalizer` já sabe ler de volta.
+     * Flattens `utm` and `tags` into the shape `FormPayloadNormalizer` reads.
      *
-     * A chave `utm` precisa sair do payload: `FormPayloadNormalizer::utm()` prioriza
-     * `$data['utm']` e ignoraria os campos planos se ela continuasse presente.
+     * Both are Value Objects. The casts do not implement
+     * `SerializesCastableAttributes` and the objects are not `Arrayable`, so
+     * `attributesToArray()` returns objects that Livewire cannot dehydrate.
+     *
+     * The `utm` key has to go: `FormPayloadNormalizer::utm()` prefers it and
+     * would ignore the flat fields.
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
@@ -52,8 +55,9 @@ class EditShortLink extends EditRecord
     }
 
     /**
-     * Quem grava é a Action: ela fecha o intervalo de destino anterior e abre o
-     * novo. Um `$record->update($data)` daqui apagaria o histórico silenciosamente.
+     * The domain Action writes the record: it closes the previous destination
+     * interval and opens the new one. A `$record->update($data)` here would
+     * discard the history.
      *
      * @param  ShortLink  $record
      * @param  array<string, mixed>  $data
@@ -88,17 +92,5 @@ class EditShortLink extends EditRecord
     protected function getRedirectUrl(): string
     {
         return ShortLinkResource::getUrl('view', ['record' => $this->getRecord()]);
-    }
-
-    /**
-     * O `id` do User é um UUID (string); `auth()->id()` continua declarado como
-     * `int|string|null` por causa das PKs auto-incremento que o contrato ainda
-     * admite. Estreitar aqui é o que mantém o DTO honesto.
-     */
-    private function currentUserId(): ?string
-    {
-        $id = auth()->id();
-
-        return is_string($id) ? $id : null;
     }
 }

@@ -17,8 +17,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Uma linha do histórico append-only de destinos de um link curto. Cada linha é
- * um intervalo `[valid_from, valid_until)`; `valid_until = null` é o vigente.
+ * One row of the append-only destination history of a short link.
+ *
+ * Each row is a `[valid_from, valid_until)` interval. A null `valid_until`
+ * marks the current destination.
  *
  * @property string $id
  * @property string $short_link_id

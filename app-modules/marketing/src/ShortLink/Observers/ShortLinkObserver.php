@@ -8,12 +8,10 @@ use He4rt\Marketing\ShortLink\Models\ShortLink;
 use He4rt\Marketing\ShortLink\Support\ShortLinkCache;
 
 /**
- * Keeps the redirect cache honest.
+ * Clears the redirect cache after every edit.
  *
- * The cache is written forever on purpose, so the *only* thing that can make a
- * stale entry is an edit — and this is where every edit is caught, whoever made
- * it (Action, Filament, tinker, seeder). Without it, "I changed the destination
- * and it works right now" would be false.
+ * Positive cache entries are written forever, so an edit is the only thing that
+ * can make one stale. This catches every edit, whatever made it.
  */
 final class ShortLinkObserver
 {
@@ -34,8 +32,7 @@ final class ShortLinkObserver
 
     private function forget(ShortLink $link): void
     {
-        // The original value matters when the slug itself was rewritten in a
-        // migration or fix-up: the stale key is the old one.
+        // A rewritten slug leaves its stale entry under the old key.
         $original = $link->getOriginal('slug');
 
         if (is_string($original) && $original !== '' && $original !== $link->slug) {

@@ -35,7 +35,7 @@ final class ShortLinkClickFactory extends Factory
         ];
     }
 
-    /** Crawler de preview (Discord, WhatsApp, Twitter, Slack) — não conta como humano. */
+    /** A preview crawler (Discord, WhatsApp, Twitter, Slack). */
     public function bot(string $name = 'Discordbot'): static
     {
         return $this->state([

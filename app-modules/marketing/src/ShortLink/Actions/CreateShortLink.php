@@ -13,11 +13,11 @@ use He4rt\Marketing\ShortLink\Support\SlugGenerator;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Mints a short link and opens its first destination interval.
+ * Creates a short link and opens its first destination interval.
  *
- * The history row is not an afterthought written by the panel later: a link that
- * exists without an open `[valid_from, null)` interval would make every future
- * click un-attributable to a destination, so both rows are born in one transaction.
+ * Both rows are written in one transaction. A link without an open
+ * `[valid_from, null)` interval makes every subsequent click impossible to
+ * attribute to a destination.
  */
 final readonly class CreateShortLink
 {
@@ -26,8 +26,6 @@ final readonly class CreateShortLink
      */
     public function execute(NewShortLinkData $data): ShortLink
     {
-        // Guarded here, not in the Filament form: this Action is reachable from
-        // a command, a test or a future bot, and `javascript:` must die in all of them.
         DestinationUrlValidator::assert($data->destinationUrl);
 
         $link = DB::transaction(function () use ($data): ShortLink {
@@ -49,8 +47,6 @@ final readonly class CreateShortLink
             return $link;
         });
 
-        // After commit, so a concurrent redirect cannot repopulate the key with
-        // a row that is still invisible to it.
         ShortLinkCache::forget($link->slug);
 
         return $link;
