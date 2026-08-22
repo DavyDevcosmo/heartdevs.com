@@ -6,6 +6,9 @@ namespace He4rt\Portal\Articles;
 
 use Carbon\CarbonImmutable;
 use He4rt\IntegrationDevTo\Polling\DevToApiClient;
+use He4rt\Portal\Articles\DTOs\Article;
+use He4rt\Portal\Articles\DTOs\ArticleAuthor;
+use He4rt\Portal\Articles\DTOs\ArticleTopic;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -15,9 +18,9 @@ use Throwable;
 /**
  * Read model do acervo de artigos publicados na organização do dev.to.
  *
- * A fonte é a API, não o banco: `devto:sync-articles` só persiste artigos de
- * autores com identidade He4rt vinculada, então a tabela cobre um subconjunto —
- * enquanto esta página precisa creditar todo mundo que escreveu pela org.
+ * A fonte é a API do dev.to. O módulo `contents` já espelha esse acervo em
+ * banco, incluindo autores sem identidade vinculada; migrar esta leitura para
+ * lá é trabalho pendente.
  */
 final class ArticleFeed
 {
@@ -55,15 +58,15 @@ final class ArticleFeed
         }
 
         if ($rejected > 0) {
-            Log::warning('Portal: itens do acervo do dev.to descartados por payload inválido', [
+            Log::warning('Portal: itens do acervo do dev.to descartados por falta de título ou data', [
                 'descartados' => $rejected,
                 'aceitos' => count($articles),
             ]);
         }
 
-        // Payload com itens mas nenhum aproveitável é contrato quebrado, não acervo
-        // vazio. Sem descartar o cache, a janela obsoleta serviria o mesmo lixo por
-        // um dia inteiro — e a revalidação em segundo plano nunca o substituiria.
+        // Payload com itens, nenhum aproveitável: contrato quebrado, não acervo
+        // vazio. Sem descartar o cache, a janela obsoleta serviria o mesmo lixo
+        // por um dia inteiro.
         if ($articles === [] && $payload !== []) {
             Cache::forget(self::CACHE_KEY);
         }
@@ -75,8 +78,8 @@ final class ArticleFeed
 
     /**
      * Ordenados por volume e, no empate, por alcance. As duas métricas divergem
-     * de propósito — quem escreveu uma vez pode ter mais reações que quem escreveu
-     * quatro —, e por isso a coluna de pessoas mostra as duas.
+     * de propósito — quem escreveu uma vez pode ter mais reações que quem
+     * escreveu quatro —, e a coluna de pessoas mostra as duas.
      *
      * @return list<ArticleAuthor>
      */
@@ -125,9 +128,9 @@ final class ArticleFeed
     }
 
     /**
-     * Destaque: o mais reagido dos últimos 12 meses, e não o mais reagido de todos
-     * os tempos — o campeão histórico é um guia de 2023 já usado como CTA em outro
-     * lugar do site, e repeti-lo aqui gastaria a primeira dobra com algo conhecido.
+     * O mais reagido dos últimos 12 meses, não o campeão histórico: o campeão é
+     * um guia de 2023 já usado como CTA em outro lugar do site, e repeti-lo aqui
+     * gastaria a primeira dobra com algo conhecido.
      */
     public function highlight(): ?Article
     {
@@ -142,13 +145,13 @@ final class ArticleFeed
     }
 
     /**
-     * O acervo é de terceiro: uma indisponibilidade do dev.to não pode derrubar
-     * uma página institucional.
+     * O acervo é de terceiro: uma queda do dev.to não pode derrubar uma página
+     * institucional.
      *
-     * `flexible` serve o valor fresco até o TTL e continua servindo o obsoleto por
-     * até um dia enquanto revalida em segundo plano — assim ninguém paga a latência
-     * da revalidação, e uma queda do dev.to depois do primeiro sucesso mantém a
-     * página com conteúdo em vez de cair no estado de indisponível.
+     * `flexible` serve o valor fresco até o TTL e continua servindo o obsoleto
+     * por até um dia enquanto revalida em segundo plano. Ninguém paga a latência
+     * da revalidação, e uma queda depois do primeiro sucesso mantém a página com
+     * conteúdo.
      *
      * @return array<array-key, mixed>
      */
@@ -164,8 +167,8 @@ final class ArticleFeed
                 function (): array {
                     $articles = $this->client->getArticlesByOrg(config()->string('integration-devto.org_slug'));
 
-                    // Estourar aqui impede que uma resposta vazia entre em cache e
-                    // preserva o valor anterior para a janela obsoleta continuar servindo.
+                    // Estourar aqui impede que uma resposta vazia entre em cache
+                    // e preserva o valor anterior para a janela obsoleta servir.
                     throw_if($articles === [], RuntimeException::class, 'dev.to devolveu um acervo vazio');
 
                     return $articles;

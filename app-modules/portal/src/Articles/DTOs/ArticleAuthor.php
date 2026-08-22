@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Portal\Articles;
+namespace He4rt\Portal\Articles\DTOs;
 
 final readonly class ArticleAuthor
 {

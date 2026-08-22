@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use He4rt\Portal\Articles\Article;
 use He4rt\Portal\Articles\ArticleFeed;
 use He4rt\Portal\Articles\ArticlesPage;
+use He4rt\Portal\Articles\DTOs\Article;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 

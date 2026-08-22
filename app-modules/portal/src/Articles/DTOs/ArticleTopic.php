@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace He4rt\Portal\Articles;
+namespace He4rt\Portal\Articles\DTOs;
 
 final readonly class ArticleTopic
 {
@@ -12,8 +12,8 @@ final readonly class ArticleTopic
     ) {}
 
     /**
-     * Fatia do acervo que carrega este tema. É o que revela, na barra de
-     * proporção, que uma tag presente em quase todo artigo rotula em vez de filtrar.
+     * Fatia do acervo sob este tema. Na barra de proporção, é o que revela que
+     * uma tag presente em quase todo artigo rotula em vez de filtrar.
      */
     public function share(int $total): float
     {
