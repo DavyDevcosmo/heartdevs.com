@@ -41,14 +41,9 @@
                 <button
                     type="button"
                     x-on:click="toggleAuthor(@js($author->username))"
-                    x-on:mouseenter="lensEnter('author', @js($author->username))"
-                    x-on:mouseleave="lensLeave()"
                     x-bind:aria-pressed="author === @js($author->username) ? 'true' : 'false'"
-                    x-bind:class="{
-                        'bg-primary/16': author === @js($author->username),
-                        'opacity-30': isDim('author', @js($author->username)),
-                    }"
-                    class="hover:bg-primary/10 text-text-high flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start transition-[background-color,opacity] duration-200"
+                    x-bind:class="{ 'bg-primary/16': author === @js($author->username) }"
+                    class="hover:bg-primary/10 text-text-high flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start transition-colors duration-200"
                 >
                     <x-portal::articles.author-avatar :name="$author->name" :avatar="$author->avatar" size="size-7" />
                     <span class="min-w-0 flex-1 truncate text-xs font-medium">{{ $author->name }}</span>

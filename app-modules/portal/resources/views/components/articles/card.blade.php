@@ -5,10 +5,7 @@
 
 <article
     x-show="isVisible({{ $index }})"
-    x-bind:class="{ 'opacity-30 saturate-50': isDim('article', {{ $index }}) }"
-    x-on:mouseenter="lensEnter('article', {{ $index }})"
-    x-on:mouseleave="lensLeave()"
-    class="border-outline-low bg-elevation-01dp hover:border-primary relative flex flex-col gap-3 rounded-lg border p-4 transition-[border-color,transform,opacity,filter] duration-300 hover:scale-[1.02] motion-reduce:transition-none motion-reduce:hover:scale-100 [.is-list_&]:flex-row [.is-list_&]:items-start [.is-list_&]:gap-4 [.is-list_&]:hover:scale-100"
+    class="border-outline-low bg-elevation-01dp hover:border-primary relative flex flex-col gap-3 rounded-lg border p-4 transition-[border-color,transform] duration-300 hover:scale-[1.02] motion-reduce:transition-none motion-reduce:hover:scale-100 [.is-list_&]:flex-row [.is-list_&]:items-start [.is-list_&]:gap-4 [.is-list_&]:hover:scale-100"
 >
     @if ($article->coverImage)
         <img

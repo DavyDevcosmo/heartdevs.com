@@ -11,9 +11,9 @@ use Livewire\Component;
 /**
  * Página institucional do acervo de artigos.
  *
- * O componente só monta o read model. Recorte por tema e por pessoa, troca de
- * visualização e a lente de relação vivem no Alpine: a lente reage a hover e
- * não sobreviveria a um round-trip por evento.
+ * O componente só monta o read model. Recorte por tema e por pessoa e troca de
+ * visualização vivem no Alpine: são estado de vitrine, não de servidor, e um
+ * round-trip por clique só adicionaria latência.
  */
 #[Layout(name: 'portal::components.layouts.app')]
 final class ArticlesPage extends Component

@@ -22,8 +22,8 @@
             </h1>
 
             <p class="text-text-medium max-w-xl text-base leading-relaxed">
-                Os artigos ao centro, quem escreve à direita, os temas a um clique na barra. Passe o mouse em qualquer
-                entidade para ver o que se relaciona com ela nas outras.
+                Os artigos ao centro, quem escreve à direita, os temas a um clique na barra. Filtre por pessoa ou
+                por tema e leve o recorte no link.
             </p>
 
             <dl class="text-text-medium flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">

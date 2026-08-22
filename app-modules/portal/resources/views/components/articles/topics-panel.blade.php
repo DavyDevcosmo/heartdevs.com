@@ -44,14 +44,9 @@
             <button
                 type="button"
                 x-on:click="toggleTopic(@js($entry->tag)); topicsOpen = false"
-                x-on:mouseenter="lensEnter('topic', @js($entry->tag))"
-                x-on:mouseleave="lensLeave()"
                 x-bind:aria-pressed="topic === @js($entry->tag) ? 'true' : 'false'"
-                x-bind:class="{
-                    'bg-primary/16': topic === @js($entry->tag),
-                    'opacity-30': isDim('topic', @js($entry->tag)),
-                }"
-                class="hover:bg-primary/10 group flex w-full cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-start transition-[background-color,opacity] duration-200"
+                x-bind:class="{ 'bg-primary/16': topic === @js($entry->tag) }"
+                class="hover:bg-primary/10 group flex w-full cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-start transition-colors duration-200"
             >
                 <span class="text-text-high min-w-0 flex-1 truncate font-mono text-xs">#{{ $entry->tag }}</span>
 
