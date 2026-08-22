@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace He4rt\Portal;
 
-use He4rt\Portal\Livewire\ArticlesPage;
-use He4rt\Portal\Livewire\CommunityRetrospectivePage;
-use He4rt\Portal\Livewire\HeroSection;
-use He4rt\Portal\Livewire\Homepage;
-use He4rt\Portal\Livewire\SocialLinksPage;
+use He4rt\Portal\Articles\ArticlesPage;
+use He4rt\Portal\Home\HeroSection;
+use He4rt\Portal\Home\Homepage;
+use He4rt\Portal\Retrospective\CommunityRetrospectivePage;
+use He4rt\Portal\ShortLink\ShortLinkRedirectController;
+use He4rt\Portal\Sitemap\SitemapController;
+use He4rt\Portal\SocialLinks\SocialLinksPage;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Head\HeadServiceProvider;
@@ -66,6 +68,27 @@ class PortalServiceProvider extends ServiceProvider
                  * Fixar o canonical consolida tudo na versão sem parâmetros.
                  */
                 canonical: '/comunidade/retrospectiva',
+            );
+
+        /*
+         * The public edge of the shortener (app-modules/marketing). Slugs are
+         * canonical in lowercase, so the constraint sends `/l/Discord-A3F9K` to
+         * the framework 404 without a lookup.
+         *
+         * The head metadata is for the sad path, the only one that renders a
+         * page. Without it, each dead slug would be `index, follow` under the
+         * portal defaults.
+         */
+        Route::get('/l/{slug}', ShortLinkRedirectController::class)
+            ->where('slug', '[a-z0-9-]+')
+            ->name('short-link.redirect')
+            ->withHead(
+                title: 'Link indisponível',
+                description: 'O link curto que você abriu não está mais disponível.',
+                robots: ['noindex', 'follow'],
+                // The default canonical is the current URL, which would write the
+                // slug into the head and make each dead page different.
+                canonical: '/',
             );
 
         Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');

@@ -5,10 +5,7 @@
 
 <article
     x-show="isVisible({{ $index }})"
-    x-bind:class="{ 'opacity-30 saturate-50': isDim('article', {{ $index }}) }"
-    x-on:mouseenter="lensEnter('article', {{ $index }})"
-    x-on:mouseleave="lensLeave()"
-    class="border-outline-low bg-elevation-01dp hover:border-primary relative flex flex-col gap-3 rounded-lg border p-4 transition-[border-color,transform,opacity,filter] duration-300 hover:scale-[1.02] motion-reduce:transition-none motion-reduce:hover:scale-100 [.is-list_&]:flex-row [.is-list_&]:items-start [.is-list_&]:gap-4 [.is-list_&]:hover:scale-100"
+    class="border-outline-low bg-elevation-01dp hover:border-primary relative flex flex-col gap-3 rounded-lg border p-4 transition-[border-color,transform] duration-300 hover:scale-[1.02] motion-reduce:transition-none motion-reduce:hover:scale-100 [.is-list_&]:flex-row [.is-list_&]:items-start [.is-list_&]:gap-4 [.is-list_&]:hover:scale-100"
 >
     @if ($article->coverImage)
         <img
@@ -46,12 +43,12 @@
             </a>
         </h3>
 
-        {{-- A API entrega a descrição já truncada; o clamp evita que o "…" dela pareça quebra de layout. --}}
+        {{-- A descrição já vem truncada da fonte; o clamp evita que o "…" dela pareça quebra de layout. --}}
         <p class="text-text-medium line-clamp-2 text-xs leading-relaxed">{{ $article->description }}</p>
 
         <div class="text-text-medium mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-[0.7rem]">
             <span class="flex min-w-0 items-center gap-1.5">
-                <img src="{{ $article->authorAvatar }}" alt="" loading="lazy" decoding="async" width="90" height="90" class="size-4 shrink-0 rounded-full" />
+                <x-portal::articles.author-avatar :name="$article->authorName" :avatar="$article->authorAvatar" size="size-4" />
                 <span class="text-text-high truncate font-medium">{{ $article->authorName }}</span>
             </span>
             <span class="ms-auto flex items-center gap-2.5 font-mono tabular-nums">
