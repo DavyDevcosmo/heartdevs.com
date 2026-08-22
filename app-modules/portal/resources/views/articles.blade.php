@@ -13,7 +13,7 @@
 @endphp
 
 <div x-data="articlesFeed(@js($lensItems))" class="pb-20">
-    <x-portal::articles.opening-band :stats="$stats" :highlight="$highlight" />
+    <x-portal::articles.opening-band :stats="$stats" />
 
     <div class="mx-auto grid max-w-[1720px] gap-7 px-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-12">
         <div class="min-w-0">
@@ -31,6 +31,10 @@
                     </x-he4rt::button>
                 </div>
             @else
+            @if ($highlight)
+                <x-portal::articles.featured :article="$highlight" />
+            @endif
+
             <x-portal::articles.toolbar :topics="$topics" :total="count($articles)" />
 
             {{-- A grade é o padrão do servidor; o Alpine só troca para lista. Assim a
