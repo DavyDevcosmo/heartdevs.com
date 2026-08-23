@@ -2,7 +2,8 @@
     'avatarPreviewUrl' => null,
     'coverPreviewUrl' => null,
     'initials' => '',
-    'name' => ''
+    'name' => '',
+    'birthdateForm' => null,
 ])
 
 <div class="relative rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900">
@@ -14,29 +15,26 @@
         @mouseleave="hover = false"
     >
         @if ($coverPreviewUrl)
-            <div
-                class="absolute inset-0 bg-cover bg-center"
-                style="background-image: url('{{ $coverPreviewUrl }}')"
-            ></div>
+            <img src="{{ $coverPreviewUrl }}" alt="" class="absolute inset-0 h-full w-full object-cover" />
         @else
             <div class="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-500 to-indigo-600"></div>
         @endif
 
-        <label
-            for="cover-upload"
+        <button
+            type="button"
+            wire:click="mountAction('editCover')"
             class="absolute inset-0 z-10 flex cursor-pointer items-center justify-center transition-colors duration-200"
             :class="hover ? 'bg-black/40' : 'bg-transparent'"
+            title="{{ __('panel-app::profile.actions.change_cover') }}"
         >
             <span
                 class="flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 text-sm font-medium text-gray-700 shadow-lg backdrop-blur-sm transition-all duration-200 dark:bg-gray-800/90 dark:text-gray-200"
                 :class="hover ? 'opacity-100 scale-100' : 'opacity-0 scale-95'"
             >
                 <x-heroicon-m-camera class="h-4 w-4" />
-                Alterar capa
+                {{ __('panel-app::profile.actions.change_cover') }}
             </span>
-        </label>
-
-        <input id="cover-upload" type="file" accept="image/*" wire:model="coverUpload" class="sr-only" />
+        </button>
 
         @if ($coverPreviewUrl)
             <button
@@ -48,14 +46,6 @@
                 <x-heroicon-m-x-mark class="h-4 w-4" />
             </button>
         @endif
-
-        <div
-            wire:loading
-            wire:target="coverUpload"
-            class="absolute inset-0 z-30 flex items-center justify-center bg-black/50"
-        >
-            <x-filament::loading-indicator class="h-8 w-8 text-white" />
-        </div>
     </div>
 
     {{-- Bottom section: avatar + fields --}}
@@ -82,10 +72,12 @@
                     </div>
                 @endif
 
-                <label
-                    for="avatar-upload"
+                <button
+                    type="button"
+                    wire:click="mountAction('editAvatar')"
                     class="absolute inset-0 z-10 flex cursor-pointer items-center justify-center rounded-full transition-colors duration-200"
                     :class="hover ? 'bg-black/40' : 'bg-transparent'"
+                    title="{{ __('panel-app::profile.actions.change_avatar') }}"
                 >
                     <span
                         class="rounded-full bg-white/90 p-2 shadow-md transition-all duration-200 dark:bg-gray-800/90"
@@ -93,9 +85,7 @@
                     >
                         <x-heroicon-m-camera class="h-5 w-5 text-gray-700 dark:text-gray-200" />
                     </span>
-                </label>
-
-                <input id="avatar-upload" type="file" accept="image/*" wire:model="avatarUpload" class="sr-only" />
+                </button>
 
                 @if ($avatarPreviewUrl)
                     <button
@@ -107,19 +97,11 @@
                         <x-heroicon-m-x-mark class="h-3.5 w-3.5" />
                     </button>
                 @endif
-
-                <div
-                    wire:loading
-                    wire:target="avatarUpload"
-                    class="absolute inset-0 z-30 flex items-center justify-center rounded-full bg-black/50"
-                >
-                    <x-filament::loading-indicator class="h-6 w-6 text-white" />
-                </div>
             </div>
         </div>
 
         {{-- Nickname + Birthdate --}}
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
             <div>
                 <label for="nickname" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     {{ __('panel-app::profile.fields.nickname') }}
@@ -134,15 +116,7 @@
                 />
             </div>
             <div>
-                <label for="birthdate" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ __('panel-app::profile.fields.birthdate') }}
-                </label>
-                <input
-                    id="birthdate"
-                    type="date"
-                    wire:model.blur="data.birthdate"
-                    class="fi-input block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:border-purple-500 focus:ring-1 focus:ring-purple-500 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-purple-500"
-                />
+                {{ $birthdateForm }}
             </div>
         </div>
     </div>

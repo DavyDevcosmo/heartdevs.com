@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Schemas\JsContent;
 use He4rt\Identity\User\Models\User;
 use He4rt\PanelApp\Pages\ProfilePage;
 use He4rt\Profile\Enums\EmploymentType;
@@ -12,13 +14,16 @@ use He4rt\Profile\Enums\SkillProficiency;
 use He4rt\Profile\Enums\StartAvailability;
 use He4rt\Profile\Models\Profile;
 use He4rt\Profile\Models\Skill;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 use function Pest\Livewire\livewire;
 
 beforeEach(function (): void {
     Cache::flush();
+    Storage::fake(config()->string('filesystems.default'));
 
     Http::fake([
         'world.bmbc.cloud/api/countries*' => Http::response([
@@ -88,6 +93,20 @@ test('profile page saves all fields', function (): void {
         ->and($this->profile->seniority_level)->toBe(SeniorityLevel::Mid)
         ->and($this->profile->years_experience)->toBe(5)
         ->and($this->profile->about)->toBe('Dev PHP apaixonado por Laravel');
+});
+
+test('profile page saves birthdate from date picker', function (): void {
+    livewire(ProfilePage::class)
+        ->fillForm([
+            'birthdate' => '1996-02-15',
+        ], 'birthdateForm')
+        ->call('save')
+        ->assertHasNoFormErrors([], 'birthdateForm')
+        ->assertNotified();
+
+    $this->profile->refresh();
+
+    expect($this->profile->birthdate?->format('Y-m-d'))->toBe('1996-02-15');
 });
 
 test('profile page saves social links from repeater', function (): void {
@@ -183,6 +202,21 @@ test('profile page validates about max length', function (): void {
         ])
         ->call('save')
         ->assertHasFormErrors(['about']);
+});
+
+test('profile page shows about character counter in real time', function (): void {
+    livewire(ProfilePage::class)
+        ->fillForm([
+            'about' => 'abc'."\u{1F600}".'def',
+        ])
+        ->assertFormFieldExists('about', function (Textarea $field): bool {
+            expect($field->getHint())->toBeInstanceOf(JsContent::class)
+                ->and($field->getHint()->toHtml())->toContain('Array.from($state')
+                ->toContain('500')
+                ->and($field->getStateBindingModifiers())->toBe(['live', 'blur']);
+
+            return true;
+        });
 });
 
 test('profile page validates headline max length', function (): void {
@@ -282,4 +316,32 @@ test('profile page nulls end_date when currently working here', function (): voi
 
     expect($experience->is_currently_working_here)->toBeTrue()
         ->and($experience->end_date)->toBeNull();
+});
+
+test('profile page uploads avatar through action modal', function (): void {
+    livewire(ProfilePage::class)
+        ->callAction('editAvatar', [
+            'avatar' => UploadedFile::fake()->image('avatar.jpg', 1_200, 1_200),
+        ])
+        ->assertHasNoActionErrors()
+        ->assertNotified();
+
+    $media = $this->user->fresh()->getFirstMedia('avatar');
+
+    expect($media)->not->toBeNull()
+        ->and($media?->collection_name)->toBe('avatar');
+});
+
+test('profile page uploads cover through action modal', function (): void {
+    livewire(ProfilePage::class)
+        ->callAction('editCover', [
+            'cover' => UploadedFile::fake()->image('cover.jpg', 1_800, 600),
+        ])
+        ->assertHasNoActionErrors()
+        ->assertNotified();
+
+    $media = $this->user->fresh()->getFirstMedia('cover');
+
+    expect($media)->not->toBeNull()
+        ->and($media?->collection_name)->toBe('cover');
 });

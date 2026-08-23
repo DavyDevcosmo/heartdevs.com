@@ -22,4 +22,20 @@ export default defineConfig({
     server: {
         cors: true,
     },
+    build: {
+        minify: 'oxc',
+        cssMinify: true,
+        chunkSizeWarningLimit: 1600,
+        reportCompressedSize: false,
+        rolldownOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        // Creates chunks based on the package name
+                        return id.toString().split('node_modules/')[1].split('/')[0].toString();
+                    }
+                },
+            },
+        },
+    },
 });

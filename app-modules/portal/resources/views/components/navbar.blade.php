@@ -1,7 +1,15 @@
 @php
-    // TODO: trocar os hrefs '#' por route(...) quando as páginas existirem.
     $links = [
-        //['label' => 'Home', 'href' => url('/'), 'active' => request()->is('/')],
+        [
+            'label' => 'Artigos',
+            'href' => route('articles', absolute: false),
+            'active' => request()->routeIs('articles'),
+        ],
+        [
+            'label' => 'Redes',
+            'href' => route('social-links', absolute: false),
+            'active' => request()->routeIs('social-links'),
+        ],
     ];
 @endphp
 
@@ -17,13 +25,13 @@
     @scroll.window.passive="onScroll()"
     @keydown.escape.window="open = false"
     x-effect="document.documentElement.style.overflow = open ? 'hidden' : ''"
-    class="hp-navbar sticky top-0 z-50 w-full px-4 flex"
+    class="hp-navbar sticky top-0 z-50 flex w-full"
 >
-    <div class="relative mx-auto max-w-5xl flex-1">
+    <div class="hp-page relative flex-1">
         {{-- glow roxo radial atrás da pill --}}
         <div
             aria-hidden="true"
-            class="hp-navbar-glow pointer-events-none absolute inset-x-0 -top-3 -z-10 mx-auto h-20 max-w-3xl rounded-full blur-2xl"
+            class="hp-navbar-glow pointer-events-none absolute inset-x-0 -top-3 -z-10 mx-auto h-20 max-w-4xl rounded-full blur-2xl"
         ></div>
 
         {{-- partículas sutis (twinkle lento) --}}
@@ -39,7 +47,7 @@
             :class="scrolled
                 ? 'mt-2 bg-elevation-surface/80 py-2 shadow-lg shadow-zinc-950/12 dark:shadow-black/40'
                 : 'mt-4 bg-elevation-surface/55 py-3 shadow-md shadow-zinc-950/8 dark:shadow-black/20'"
-            class="relative flex items-center justify-between gap-4 rounded-full px-4 ring-1 ring-zinc-950/8 backdrop-blur-xl transition-all duration-300 dark:ring-white/10 md:px-6"
+            class="relative flex items-center justify-between gap-4 rounded-2xl px-4 ring-1 ring-zinc-950/8 backdrop-blur-xl transition-all duration-300 dark:ring-white/10 md:px-6"
         >
             <x-portal::logo size="sm" />
 
@@ -67,13 +75,15 @@
 
                 <div class="flex items-center gap-2">
                     <x-he4rt::button
-                        :href="route('social-links', absolute: false)"
+                        href="https://loja.heartdevs.com/he4rt/"
                         size="sm"
                         variant="outline"
-                        icon="heroicon-s-link"
+                        icon="heroicon-s-shopping-bag"
                         iconPosition="leading"
                         iconOnly
-                        aria-label="Redes sociais"
+                        aria-label="Loja"
+                        target="_blank"
+                        rel="noopener"
                     />
                     <x-he4rt::button href="/app" size="sm" variant="outline"> Área do Usuário </x-he4rt::button>
                     <x-he4rt::button
@@ -163,15 +173,17 @@
         </nav>
 
         {{-- CTAs full-width --}}
-        <div class="mt-auto flex flex-col gap-3 border-t border-zinc-950/10 pt-6 dark:border-white/10">
+        <div class="flex flex-col gap-3 border-t border-zinc-950/10 pt-6 dark:border-white/10">
             <x-he4rt::button
-                :href="route('social-links', absolute: false)"
+                href="https://loja.heartdevs.com/he4rt/"
                 variant="outline"
                 block
-                icon="heroicon-s-link"
+                icon="heroicon-s-shopping-bag"
                 iconPosition="leading"
+                target="_blank"
+                rel="noopener"
             >
-                Redes sociais
+                Compre na Loja
             </x-he4rt::button>
             <x-he4rt::button href="/app" variant="outline" block> Área do Usuário </x-he4rt::button>
             <x-he4rt::button

@@ -303,3 +303,90 @@ it('exclusion de pessoa derruba toda a contribuição dela no recorte', function
         ->and(ghMeta($result)['issues'])->toBe(0)
         ->and(collect(ghPeople($result))->pluck('login')->all())->toBe(['maria']);
 });
+
+it('normaliza state closed+merged para merged nos refs de PR', function (): void {
+    ghContribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:1', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => true, 'title' => 'feat: merged', 'url' => 'u1']]);
+    ghContribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:2', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => false, 'title' => 'feat: closed', 'url' => 'u2']]);
+
+    $maria = collect(ghPeople(($this->collect)()))->firstWhere('login', 'maria');
+
+    expect(array_column($maria['pr_refs'], 'state'))->toBe(['merged', 'closed']);
+});
+
+it('corta ações pós-merge (occurred_at > merged_at) de um PR mesclado', function (): void {
+    ghContribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:100', 'occurred_at' => '2026-06-02 09:00:00', 'metadata' => ['state' => 'closed', 'merged' => true, 'merged_at' => '2026-06-03T12:00:00Z']]);
+    ghContribution(['actor_login' => 'joao', 'type' => ContributionType::Review, 'external_ref' => 'review:1', 'target_ref' => 'pr:100', 'occurred_at' => '2026-06-03 09:00:00', 'metadata' => []]);
+    ghContribution(['actor_login' => 'joao', 'type' => ContributionType::Review, 'external_ref' => 'review:2', 'target_ref' => 'pr:100', 'occurred_at' => '2026-06-03 15:00:00', 'metadata' => []]);
+    ghContribution(['actor_login' => 'ana', 'type' => ContributionType::ReviewComment, 'external_ref' => 'review_comment:1', 'target_ref' => 'pr:100', 'occurred_at' => '2026-06-04 10:00:00', 'metadata' => ['kind' => 'pr']]);
+    ghContribution(['actor_login' => 'ana', 'type' => ContributionType::Comment, 'external_ref' => 'comment:1', 'target_ref' => 'pr:100', 'occurred_at' => '2026-06-04 11:00:00', 'metadata' => ['kind' => 'pr']]);
+
+    $result = ($this->collect)();
+    $meta = ghMeta($result);
+
+    expect($meta['total'])->toBe(2)
+        ->and($meta['reviews'])->toBe(1)
+        ->and($meta['review_comments'])->toBe(0)
+        ->and($meta['comments'])->toBe(0);
+
+    $people = ghPeople($result);
+
+    expect(collect($people)->firstWhere('login', 'joao')['total'])->toBe(1)
+        ->and(collect($people)->firstWhere('login', 'ana'))->toBeNull();
+});
+
+it('não corta quando o PR não está mesclado ou ainda não tem merged_at', function (): void {
+    ghContribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:200', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'open', 'merged' => false, 'merged_at' => null]]);
+    ghContribution(['actor_login' => 'joao', 'type' => ContributionType::Review, 'external_ref' => 'review:10', 'target_ref' => 'pr:200', 'occurred_at' => '2026-06-05', 'metadata' => []]);
+    ghContribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:201', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => true]]);
+    ghContribution(['actor_login' => 'ana', 'type' => ContributionType::Review, 'external_ref' => 'review:11', 'target_ref' => 'pr:201', 'occurred_at' => '2026-06-05', 'metadata' => []]);
+
+    $meta = ghMeta(($this->collect)());
+
+    expect($meta['total'])->toBe(4)
+        ->and($meta['reviews'])->toBe(2);
+});
+
+it('descarta PR vazio/de teste (changed_files=0 e não mesclado) de toda a retrospectiva', function (): void {
+    ghContribution(['actor_login' => 'leo', 'repo' => 'he4rt/4noobs', 'type' => ContributionType::Pr, 'external_ref' => 'pr:133', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => false, 'additions' => 0, 'deletions' => 0, 'changed_files' => 0]]);
+    ghContribution(['actor_login' => 'maria', 'repo' => 'he4rt/4noobs', 'type' => ContributionType::Pr, 'external_ref' => 'pr:134', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => false, 'additions' => 10, 'deletions' => 2, 'changed_files' => 3]]);
+
+    $result = ($this->collect)();
+    $meta = ghMeta($result);
+    $people = ghPeople($result);
+
+    expect($meta['people'])->toBe(1)
+        ->and($meta['prs'])->toBe(1)
+        ->and($meta['prs_unmerged'])->toBe(1)
+        ->and($meta['total'])->toBe(1)
+        ->and(collect($people)->firstWhere('login', 'leo'))->toBeNull()
+        ->and($people[0]['login'])->toBe('maria');
+});
+
+it('mantém PR mesclado com 0 arquivos e PR sem changed_files gravado', function (): void {
+    ghContribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:1', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => true, 'changed_files' => 0]]);
+    ghContribution(['actor_login' => 'joao', 'type' => ContributionType::Pr, 'external_ref' => 'pr:2', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => false]]);
+
+    $meta = ghMeta(($this->collect)());
+
+    expect($meta['prs'])->toBe(2)
+        ->and($meta['total'])->toBe(2);
+});
+
+it('não quebra a coleta quando merged_at está malformado (trata como sem merge)', function (): void {
+    ghContribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:300', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'closed', 'merged' => true, 'merged_at' => 'not-a-date']]);
+    ghContribution(['actor_login' => 'joao', 'type' => ContributionType::Review, 'external_ref' => 'review:30', 'target_ref' => 'pr:300', 'occurred_at' => '2026-06-05', 'metadata' => []]);
+
+    $meta = ghMeta(($this->collect)());
+
+    expect($meta['total'])->toBe(2)
+        ->and($meta['reviews'])->toBe(1);
+});
+
+it('não corta PR cujo changed_files é null (não coage para zero)', function (): void {
+    ghContribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:301', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'open', 'merged' => false, 'changed_files' => null]]);
+
+    $meta = ghMeta(($this->collect)());
+
+    expect($meta['prs'])->toBe(1)
+        ->and($meta['total'])->toBe(1);
+});

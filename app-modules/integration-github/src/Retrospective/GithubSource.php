@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace He4rt\IntegrationGithub\Retrospective;
 
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
+use Carbon\Exceptions\InvalidFormatException;
 use He4rt\Community\Retrospective\Contracts\CuratableSource;
 use He4rt\Community\Retrospective\Contracts\RetrospectiveSource;
 use He4rt\Community\Retrospective\Contracts\Slide;
@@ -52,6 +55,10 @@ final class GithubSource implements CuratableSource, RetrospectiveSource
 
     public function collect(Period $period, SourceFilters $filters): SourceResult
     {
+        // Instante do merge por PR (repo + external_ref => merged_at), montado de uma
+        // query própria porque o PR-alvo pode ter mesclado FORA do período do recorte.
+        $mergedAt = $this->mergedAtIndex();
+
         /** @var Collection<int, GithubContribution> $contributions */
         $contributions = GithubContribution::query()
             ->whereBetween('occurred_at', [$period->since, $period->until])
@@ -63,6 +70,8 @@ final class GithubSource implements CuratableSource, RetrospectiveSource
             // Exclusion mexe no dado (ADR-0001): o item sai dos slides e também
             // dos números, então é derrubado aqui, antes de qualquer agregação.
             ->reject(fn (GithubContribution $contribution): bool => $this->isExcluded($contribution, $filters))
+            ->reject(fn (GithubContribution $contribution): bool => $this->isEmptyTestPr($contribution))
+            ->reject(fn (GithubContribution $contribution): bool => $this->isPostMergeNoise($contribution, $mergedAt))
             ->values();
 
         if ($contributions->isEmpty()) {
@@ -300,13 +309,12 @@ final class GithubSource implements CuratableSource, RetrospectiveSource
             ->map(function (GithubContribution $contribution): array {
                 $metadata = $contribution->metadata ?? [];
                 $url = $metadata['url'] ?? null;
-                $state = $metadata['state'] ?? null;
 
                 return [
                     'num' => $this->refNumber($contribution->external_ref),
                     'title' => (string) ($metadata['title'] ?? ''),
                     'url' => is_string($url) ? $url : null,
-                    'state' => is_string($state) ? $state : null,
+                    'state' => $this->prState($metadata),
                 ];
             })
             ->values()
@@ -343,6 +351,20 @@ final class GithubSource implements CuratableSource, RetrospectiveSource
         return (int) ($parts[1] ?? 0);
     }
 
+    /**
+     * @param  array<string, mixed>  $metadata
+     */
+    private function prState(array $metadata): ?string
+    {
+        if (($metadata['merged'] ?? false) === true) {
+            return 'merged';
+        }
+
+        $state = $metadata['state'] ?? null;
+
+        return is_string($state) ? $state : null;
+    }
+
     private function avatar(string $login, ?int $actorId): string
     {
         return $actorId !== null
@@ -357,13 +379,12 @@ final class GithubSource implements CuratableSource, RetrospectiveSource
     {
         $metadata = $contribution->metadata ?? [];
         $url = $metadata['url'] ?? null;
-        $state = $metadata['state'] ?? null;
 
         return [
             'num' => $this->refNumber($contribution->external_ref),
             'title' => (string) ($metadata['title'] ?? ''),
             'url' => is_string($url) ? $url : null,
-            'state' => is_string($state) ? $state : null,
+            'state' => $this->prState($metadata),
             'author_login' => $contribution->actor_login,
             'additions' => (int) ($metadata['additions'] ?? 0),
             'deletions' => (int) ($metadata['deletions'] ?? 0),
@@ -462,6 +483,108 @@ final class GithubSource implements CuratableSource, RetrospectiveSource
         $metadata = $contribution->metadata ?? [];
 
         return ($metadata['merged'] ?? false) === true;
+    }
+
+    /**
+     * Índice do instante do merge, indexado por repo e external_ref do PR
+     * (ex.: ['he4rt/heartdevs.com' => ['pr:304' => CarbonInterface]]). Só PRs com
+     * merged_at gravado entram — antes do backfill --full o índice fica vazio e o
+     * corte pós-merge vira no-op (degradação graciosa).
+     *
+     * @return array<string, array<string, CarbonInterface>>
+     */
+    private function mergedAtIndex(): array
+    {
+        $prs = GithubContribution::query()
+            ->where('type', ContributionType::Pr)
+            ->get();
+
+        $map = [];
+
+        foreach ($prs as $pr) {
+            $mergedAt = $this->prMergedAt($pr);
+
+            if ($mergedAt instanceof CarbonInterface) {
+                $map[$pr->repo][$pr->external_ref] = $mergedAt;
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * Instante do merge de um PR, ou null quando não é PR merged / ainda sem merged_at
+     * gravado. Único ponto que lida com metadata nulo + chave ausente; reusa isMergedPr().
+     */
+    private function prMergedAt(GithubContribution $pr): ?CarbonInterface
+    {
+        if (!$this->isMergedPr($pr)) {
+            return null;
+        }
+
+        $metadata = $pr->metadata ?? [];
+        $mergedAt = $metadata['merged_at'] ?? null;
+
+        if (!is_string($mergedAt)) {
+            return null;
+        }
+
+        // metadata é JSON solto: um merged_at corrompido não pode derrubar a página
+        // inteira ao indexar os PRs — trata como "sem merge" (no-op no corte).
+        try {
+            return CarbonImmutable::parse($mergedAt);
+        } catch (InvalidFormatException) {
+            return null;
+        }
+    }
+
+    /**
+     * Ruído pós-merge: review/review_comment/comment cujo alvo é um PR merged e que
+     * ocorreu DEPOIS do merge. Revisão antes do merge continua contando; corte estrito.
+     *
+     * @param  array<string, array<string, CarbonInterface>>  $mergedAt
+     */
+    private function isPostMergeNoise(GithubContribution $contribution, array $mergedAt): bool
+    {
+        if (!in_array($contribution->type, [ContributionType::Review, ContributionType::ReviewComment, ContributionType::Comment], strict: true)) {
+            return false;
+        }
+
+        if ($contribution->target_ref === null || !str_starts_with($contribution->target_ref, 'pr:')) {
+            return false;
+        }
+
+        $merged = $mergedAt[$contribution->repo][$contribution->target_ref] ?? null;
+
+        return $merged !== null && $contribution->occurred_at->gt($merged);
+    }
+
+    /**
+     * PR vazio/de teste: changed_files gravado como 0 e não mesclado (ex.: PR aberto só
+     * para validar o fluxo fork -> branch -> PR). Não é participação real — sai de meta,
+     * people, repos e highlights. PR mesclado com 0 arquivos (raro) segue contando; PR
+     * fechado COM arquivos continua contando como participação (decisão #10). Só corta
+     * quando changed_files está presente: metadata antigo sem a chave é mantido
+     * (degradação graciosa, igual ao índice de merged_at).
+     */
+    private function isEmptyTestPr(GithubContribution $contribution): bool
+    {
+        if ($contribution->type !== ContributionType::Pr) {
+            return false;
+        }
+
+        $metadata = $contribution->metadata ?? [];
+
+        if (!array_key_exists('changed_files', $metadata)) {
+            return false;
+        }
+
+        $merged = ($metadata['merged'] ?? false) === true;
+        $changedFiles = $metadata['changed_files'] ?? null;
+
+        // Só zero numérico explícito conta como "vazio"; null/false/''/não-numérico
+        // (metadata inconsistente) NÃO viram 0 por coerção e seguem contando.
+        return !$merged && is_numeric($changedFiles) && (int) $changedFiles === 0;
     }
 
     private function isUnmergedClosedPr(GithubContribution $contribution): bool
