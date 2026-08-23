@@ -332,3 +332,22 @@ it('exclusion de pessoa some das mensagens e do board de voz', function (): void
         ->and(dcSlide($result, 'discord.voice_board')['participants'])->toBe(1)
         ->and(dcSlide($result, 'discord.voice_board')['xp'])->toBe(10);
 });
+
+it('não monta painel de voz num recorte sem voz', function (): void {
+    // O painel inteiro depende de os agregados crus lerem ZERO quando não há
+    // linha nenhuma. Lidos como qualquer outra coisa, o portão abriria e o slide
+    // entraria no deck sem participante, sem canal e com um dia de pico que
+    // ninguém viveu.
+    dcIdentity('Alice');
+
+    Message::factory()->create([
+        'external_identity_id' => dcIdentity('Bob')->id,
+        'sent_at' => '2026-06-02 15:00:00',
+    ]);
+
+    $result = ($this->collect)();
+
+    expect(dcSlide($result, 'discord.voice_board'))->toBeEmpty()
+        // O recorte tem dado: é o painel de VOZ que não tem por que existir.
+        ->and(dcSlide($result, 'discord.messages'))->not->toBeEmpty();
+});

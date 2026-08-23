@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace He4rt\Activity\Retrospective;
 
 use Carbon\CarbonImmutable;
+use DateTimeInterface;
 use He4rt\Activity\Message\Enums\MembershipEventKind;
 use He4rt\Activity\Message\Enums\MessageSourceKind;
 use He4rt\Activity\Message\Models\MembershipEvent;
@@ -416,11 +417,24 @@ final class DiscordSource implements CuratableSource, RetrospectiveSource
             ->first();
 
         return [
-            'participants' => (int) ($row->participants ?? 0),
-            'joins' => (int) ($row->joins ?? 0),
-            'xp' => (int) ($row->xp ?? 0),
-            'earners' => (int) ($row->earners ?? 0),
+            'participants' => $this->countOf($row?->participants),
+            'joins' => $this->countOf($row?->joins),
+            'xp' => $this->countOf($row?->xp),
+            'earners' => $this->countOf($row?->earners),
         ];
+    }
+
+    /**
+     * Um agregado cru, tipado. `first()` sobre a query base devolve stdClass, e o
+     * driver não promete tipo nenhum nas propriedades dele: o Postgres manda COUNT
+     * e SUM como string, e um recorte sem linha nenhuma manda null.
+     *
+     * Zero para o que não for número é a leitura honesta de um agregado ausente —
+     * ninguém falou em voz naquele recorte.
+     */
+    private function countOf(mixed $value): int
+    {
+        return is_numeric($value) ? (int) $value : 0;
     }
 
     /**
@@ -442,13 +456,19 @@ final class DiscordSource implements CuratableSource, RetrospectiveSource
             ->orderByRaw('2 DESC')
             ->first();
 
-        if ($row === null || (int) $row->joins === 0) {
+        $joins = $this->countOf($row?->joins);
+        $day = $row?->day;
+
+        // Sem entrada nenhuma não há pico. E dia que não se consegue ler também
+        // não é pico: `parse('')` devolveria AGORA, e o deck anunciaria hoje como
+        // o dia mais movimentado do recorte.
+        if ($joins === 0 || (!is_string($day) && !$day instanceof DateTimeInterface)) {
             return null;
         }
 
         return [
-            'date' => CarbonImmutable::parse((string) $row->day)->format('d/m'),
-            'joins' => (int) $row->joins,
+            'date' => CarbonImmutable::parse($day)->format('d/m'),
+            'joins' => $joins,
         ];
     }
 
