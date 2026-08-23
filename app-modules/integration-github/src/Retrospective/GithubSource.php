@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace He4rt\IntegrationGithub\Retrospective;
 
+use He4rt\Community\Retrospective\Contracts\CuratableSource;
 use He4rt\Community\Retrospective\Contracts\RetrospectiveSource;
 use He4rt\Community\Retrospective\Contracts\Slide;
+use He4rt\Community\Retrospective\DTOs\ExclusionCandidate;
 use He4rt\Community\Retrospective\DTOs\HeadlineMetrics;
 use He4rt\Community\Retrospective\DTOs\Metric;
 use He4rt\Community\Retrospective\DTOs\Period;
+use He4rt\Community\Retrospective\DTOs\SlideDescriptor;
 use He4rt\Community\Retrospective\DTOs\SourceFilters;
 use He4rt\Community\Retrospective\DTOs\SourceResult;
 use He4rt\IntegrationGithub\Enums\ContributionType;
@@ -19,6 +22,8 @@ use He4rt\IntegrationGithub\Retrospective\Slides\GithubHighlightsSlide;
 use He4rt\IntegrationGithub\Retrospective\Slides\GithubPanoramaSlide;
 use He4rt\IntegrationGithub\Retrospective\Slides\GithubRepoSlide;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Fonte GitHub da retrospectiva. Preserva 1:1 o cálculo do antigo read model do
@@ -27,8 +32,14 @@ use Illuminate\Support\Collection;
  * como card se tiverem PR no recorte; atividade só de review/issue/comentário
  * segue contando em meta/people/highlights.
  */
-final class GithubSource implements RetrospectiveSource
+final class GithubSource implements CuratableSource, RetrospectiveSource
 {
+    /**
+     * Teto das varreduras de curadoria: o picker do Deck Builder mostra os itens
+     * e pessoas mais relevantes do recorte, nunca a tabela inteira.
+     */
+    private const int CANDIDATE_LIMIT = 30;
+
     public function key(): string
     {
         return 'github';
@@ -49,6 +60,9 @@ final class GithubSource implements RetrospectiveSource
                 $filters->hideBots,
                 fn (Collection $items): Collection => $items->reject(fn (GithubContribution $contribution): bool => $this->isBot($contribution)),
             )
+            // Exclusion mexe no dado (ADR-0001): o item sai dos slides e também
+            // dos números, então é derrubado aqui, antes de qualquer agregação.
+            ->reject(fn (GithubContribution $contribution): bool => $this->isExcluded($contribution, $filters))
             ->values();
 
         if ($contributions->isEmpty()) {
@@ -90,6 +104,95 @@ final class GithubSource implements RetrospectiveSource
             headline: $this->headline($meta),
             slides: $this->slides($meta, $repos, $highlights, $people),
         );
+    }
+
+    /**
+     * @return list<SlideDescriptor>
+     */
+    public function slideCatalog(): array
+    {
+        return [
+            new SlideDescriptor('github.panorama', 'Panorama', 'Números do recorte inteiro'),
+            new SlideDescriptor('github.repos', 'Repositórios', 'Um card por repositório com PR no recorte'),
+            new SlideDescriptor('github.highlights', 'Destaques', 'Os 4 PRs maiores do recorte'),
+            new SlideDescriptor('github.core', 'O núcleo', 'Quem mais contribuiu'),
+            new SlideDescriptor('github.community', 'A comunidade', 'Aparece só com mais de 5 pessoas'),
+        ];
+    }
+
+    /**
+     * @return list<ExclusionCandidate>
+     */
+    public function exclusionCandidates(Period $period): array
+    {
+        /** @var list<ExclusionCandidate> $candidates */
+        $candidates = Cache::remember(
+            'retrospective.candidates.'.$this->key().'.'.$period->cacheKey(),
+            now()->addMinutes(5),
+            fn (): array => [...$this->itemCandidates($period), ...$this->actorCandidates($period)],
+        );
+
+        return $candidates;
+    }
+
+    /**
+     * PRs e issues do recorte, os maiores primeiro (o que aparece nos cards de
+     * repositório e nos destaques é justamente o que o operador quer poder
+     * esconder). O ref é o próprio external_ref ("pr:142").
+     *
+     * @return list<ExclusionCandidate>
+     */
+    private function itemCandidates(Period $period): array
+    {
+        return array_values(
+            GithubContribution::query()
+                ->whereBetween('occurred_at', [$period->since, $period->until])
+                ->whereIn('type', [ContributionType::Pr, ContributionType::Issue])
+                ->orderByRaw("COALESCE((metadata->>'additions')::int, 0) + COALESCE((metadata->>'deletions')::int, 0) DESC")
+                ->limit(self::CANDIDATE_LIMIT)
+                ->get(['external_ref', 'repo', 'actor_login', 'metadata'])
+                ->map(function (GithubContribution $contribution): ExclusionCandidate {
+                    $metadata = $contribution->metadata ?? [];
+                    $title = (string) ($metadata['title'] ?? '');
+
+                    return ExclusionCandidate::item(
+                        ref: $contribution->external_ref,
+                        label: '#'.$this->refNumber($contribution->external_ref).($title === '' ? '' : ' '.$title),
+                        hint: $contribution->repo.' · '.$contribution->actor_login,
+                    );
+                })
+                ->all(),
+        );
+    }
+
+    /**
+     * @return list<ExclusionCandidate>
+     */
+    private function actorCandidates(Period $period): array
+    {
+        return array_values(
+            GithubContribution::query()
+                ->whereBetween('occurred_at', [$period->since, $period->until])
+                ->groupBy('actor_login')
+                ->orderByRaw('COUNT(*) DESC')
+                ->limit(self::CANDIDATE_LIMIT)
+                ->get(['actor_login', DB::raw('COUNT(*) AS total')])
+                ->map(fn (GithubContribution $row): ExclusionCandidate => ExclusionCandidate::person(
+                    ref: 'actor:'.$row->actor_login,
+                    label: $row->actor_login,
+                    hint: $row->getAttribute('total').' contribuições',
+                ))
+                ->all(),
+        );
+    }
+
+    private function isExcluded(GithubContribution $contribution, SourceFilters $filters): bool
+    {
+        if ($filters->excludes($contribution->external_ref)) {
+            return true;
+        }
+
+        return $filters->excludes('actor:'.$contribution->actor_login);
     }
 
     /**

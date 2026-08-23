@@ -18,6 +18,9 @@ class RetrospectivesTable
     public static function configure(Table $table): Table
     {
         return $table
+            // Publicar despacha um job; sem poll a linha fica em "Publicando" até o
+            // operador recarregar na mão.
+            ->poll('10s')
             ->columns([
                 TextColumn::make('title')
                     ->label('Título')

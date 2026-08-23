@@ -21,4 +21,13 @@ final readonly class Period
     {
         return new self($since, $until);
     }
+
+    /**
+     * Identidade estável do recorte, para cachear varreduras caras por período
+     * (ex.: os candidatos a exclusion que o Deck Builder pede a cada fonte).
+     */
+    public function cacheKey(): string
+    {
+        return $this->since->getTimestamp().'-'.$this->until->getTimestamp();
+    }
 }

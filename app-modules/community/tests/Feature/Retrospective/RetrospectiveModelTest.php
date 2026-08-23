@@ -7,6 +7,7 @@ use He4rt\Community\Retrospective\DTOs\DeckConfig;
 use He4rt\Community\Retrospective\DTOs\HeadlineMetrics;
 use He4rt\Community\Retrospective\DTOs\Metric;
 use He4rt\Community\Retrospective\DTOs\RetrospectiveSnapshot;
+use He4rt\Community\Retrospective\DTOs\SourceFilters;
 use He4rt\Community\Retrospective\DTOs\SourceResult;
 use He4rt\Community\Retrospective\Enums\RetrospectiveStatus;
 use He4rt\Community\Retrospective\Models\Retrospective;
@@ -67,4 +68,66 @@ it('scopePublished traz só as publicadas', function (): void {
     $published = Retrospective::factory()->published()->create();
 
     expect(Retrospective::query()->published()->pluck('id')->all())->toBe([$published->id]);
+});
+
+it('não pede republicação enquanto é rascunho', function (): void {
+    $retrospective = Retrospective::factory()->create([
+        'deck_config' => new DeckConfig(exclusions: ['github' => ['pr:1']]),
+    ]);
+
+    expect($retrospective->needsRepublish())->toBeFalse();
+});
+
+it('não pede republicação quando os filtros batem com o snapshot congelado', function (): void {
+    $retrospective = Retrospective::factory()
+        ->published(new RetrospectiveSnapshot(
+            sources: [],
+            filters: new SourceFilters(hideBots: true, exclusions: ['pr:1']),
+        ))
+        ->create([
+            'hide_bots' => true,
+            'deck_config' => new DeckConfig(exclusions: ['github' => ['pr:1']]),
+        ]);
+
+    expect($retrospective->needsRepublish())->toBeFalse();
+});
+
+it('pede republicação quando a exclusion mudou depois de publicar', function (): void {
+    $retrospective = Retrospective::factory()
+        ->published(new RetrospectiveSnapshot(
+            sources: [],
+            filters: new SourceFilters(hideBots: true, exclusions: ['pr:1']),
+        ))
+        ->create([
+            'hide_bots' => true,
+            'deck_config' => new DeckConfig(exclusions: ['github' => ['pr:1', 'pr:2']]),
+        ]);
+
+    expect($retrospective->needsRepublish())->toBeTrue();
+});
+
+it('pede republicação quando ocultar bots mudou depois de publicar', function (): void {
+    $retrospective = Retrospective::factory()
+        ->published(new RetrospectiveSnapshot(
+            sources: [],
+            filters: new SourceFilters(hideBots: true),
+        ))
+        ->create(['hide_bots' => false, 'deck_config' => new DeckConfig()]);
+
+    expect($retrospective->needsRepublish())->toBeTrue();
+});
+
+it('ignora ordem e on/off: esses re-derivam sem republicar', function (): void {
+    $retrospective = Retrospective::factory()
+        ->published(new RetrospectiveSnapshot(sources: [], filters: new SourceFilters(hideBots: true)))
+        ->create([
+            'hide_bots' => true,
+            'deck_config' => new DeckConfig(
+                order: ['discord', 'github'],
+                hiddenSources: ['discord'],
+                hiddenSlides: ['github.repos'],
+            ),
+        ]);
+
+    expect($retrospective->needsRepublish())->toBeFalse();
 });

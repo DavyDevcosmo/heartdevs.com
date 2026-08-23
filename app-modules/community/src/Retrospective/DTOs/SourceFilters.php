@@ -23,4 +23,24 @@ final readonly class SourceFilters
     {
         return in_array($ref, $this->exclusions, strict: true);
     }
+
+    /**
+     * Refs de um prefixo, já sem ele (prefixo "member:" devolve os ids). Serve à
+     * fonte que filtra em SQL: a lista chega achatada de todas as fontes, e cada
+     * uma reconhece só os prefixos que emite.
+     *
+     * @return list<string>
+     */
+    public function refsWithPrefix(string $prefix): array
+    {
+        $refs = [];
+
+        foreach ($this->exclusions as $ref) {
+            if (str_starts_with($ref, $prefix)) {
+                $refs[] = mb_substr($ref, mb_strlen($prefix));
+            }
+        }
+
+        return $refs;
+    }
 }

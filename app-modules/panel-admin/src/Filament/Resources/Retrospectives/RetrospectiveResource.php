@@ -11,10 +11,10 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use He4rt\Community\Retrospective\Models\Retrospective;
+use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Pages\BuildDeck;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Pages\CreateRetrospective;
-use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Pages\EditRetrospective;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Pages\ListRetrospectives;
-use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Schemas\RetrospectiveForm;
+use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Schemas\NewRetrospectiveForm;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Tables\RetrospectivesTable;
 
 class RetrospectiveResource extends Resource
@@ -39,7 +39,7 @@ class RetrospectiveResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return RetrospectiveForm::configure($schema);
+        return NewRetrospectiveForm::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -52,10 +52,12 @@ class RetrospectiveResource extends Resource
      */
     public static function getPages(): array
     {
+        // O Deck Builder OCUPA a chave `edit`: a chave preserva o clique na tabela e
+        // o getUrl('edit'), a rota `/deck` deixa a URL honesta (ADR-0002).
         return [
             'index' => ListRetrospectives::route('/'),
             'create' => CreateRetrospective::route('/create'),
-            'edit' => EditRetrospective::route('/{record}/edit'),
+            'edit' => BuildDeck::route('/{record}/deck'),
         ];
     }
 }

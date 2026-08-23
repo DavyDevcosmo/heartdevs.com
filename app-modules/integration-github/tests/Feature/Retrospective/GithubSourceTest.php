@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use He4rt\Community\Retrospective\DTOs\Period;
 use He4rt\Community\Retrospective\DTOs\SourceFilters;
 use He4rt\Community\Retrospective\DTOs\SourceResult;
+use He4rt\Community\Retrospective\Enums\ExclusionKind;
 use He4rt\IntegrationGithub\Enums\ContributionType;
 use He4rt\IntegrationGithub\Models\GithubContribution;
 use He4rt\IntegrationGithub\Retrospective\GithubSource;
@@ -243,4 +244,62 @@ it('monta os chips do cover a partir do meta', function (): void {
         ->and($labels)->toContain('Pessoas')
         ->and($labels)->toContain('PRs')
         ->and($labels)->toContain('Linhas');
+});
+
+/**
+ * Curadoria (Fase 3): a fonte se descreve para o Deck Builder e honra as
+ * exclusions no collect — o item excluído sai dos slides E dos números.
+ */
+it('descreve o catálogo de slides sem tocar o dado', function (): void {
+    $catalog = new GithubSource()->slideCatalog();
+
+    expect(collect($catalog)->pluck('kind')->all())
+        ->toBe(['github.panorama', 'github.repos', 'github.highlights', 'github.core', 'github.community'])
+        ->and($catalog[0]->label)->toBe('Panorama');
+});
+
+it('oferece itens e pessoas do recorte como candidatos a exclusion', function (): void {
+    ghContribution(['actor_login' => 'maria', 'repo' => 'he4rt/api', 'type' => ContributionType::Pr, 'external_ref' => 'pr:1', 'occurred_at' => '2026-06-02', 'metadata' => ['title' => 'Ajusta login', 'additions' => 80, 'deletions' => 2]]);
+    ghContribution(['actor_login' => 'maria', 'type' => ContributionType::Review, 'external_ref' => 'review:9', 'occurred_at' => '2026-06-03']);
+    ghContribution(['actor_login' => 'joao', 'type' => ContributionType::Pr, 'external_ref' => 'pr:2', 'occurred_at' => '2026-05-01', 'metadata' => ['additions' => 999]]);
+
+    $candidates = new GithubSource()->exclusionCandidates(Period::of($this->since, $this->until));
+
+    $items = collect($candidates)->filter(fn ($candidate): bool => $candidate->kind === ExclusionKind::Item);
+    $people = collect($candidates)->filter(fn ($candidate): bool => $candidate->kind === ExclusionKind::Person);
+
+    // Fora do recorte não vira candidato; review não é item (só PR/issue).
+    expect($items->pluck('ref')->all())->toBe(['pr:1'])
+        ->and($items->first()->label)->toBe('#1 Ajusta login')
+        ->and($items->first()->hint)->toBe('he4rt/api · maria')
+        ->and($people->pluck('ref')->all())->toBe(['actor:maria']);
+});
+
+it('exclusion de item derruba a contribuição dos slides e dos números', function (): void {
+    ghContribution(['actor_login' => 'maria', 'repo' => 'he4rt/api', 'type' => ContributionType::Pr, 'external_ref' => 'pr:1', 'occurred_at' => '2026-06-02', 'metadata' => ['title' => 'fica', 'additions' => 10, 'deletions' => 0]]);
+    ghContribution(['actor_login' => 'maria', 'repo' => 'he4rt/api', 'type' => ContributionType::Pr, 'external_ref' => 'pr:2', 'occurred_at' => '2026-06-03', 'metadata' => ['title' => 'sai', 'additions' => 500, 'deletions' => 0]]);
+
+    $result = new GithubSource()->collect(
+        Period::of($this->since, $this->until),
+        new SourceFilters(exclusions: ['pr:2']),
+    );
+
+    expect(ghMeta($result)['prs'])->toBe(1)
+        ->and(ghMeta($result)['additions'])->toBe(10)
+        ->and(collect(ghSlide($result, 'github.highlights')['highlights'] ?? [])->pluck('title')->all())->toBe(['fica']);
+});
+
+it('exclusion de pessoa derruba toda a contribuição dela no recorte', function (): void {
+    ghContribution(['actor_login' => 'maria', 'type' => ContributionType::Pr, 'external_ref' => 'pr:1', 'occurred_at' => '2026-06-02', 'metadata' => ['additions' => 10]]);
+    ghContribution(['actor_login' => 'spammer', 'type' => ContributionType::Pr, 'external_ref' => 'pr:2', 'occurred_at' => '2026-06-03', 'metadata' => ['additions' => 900]]);
+    ghContribution(['actor_login' => 'spammer', 'type' => ContributionType::Issue, 'external_ref' => 'issue:7', 'occurred_at' => '2026-06-03']);
+
+    $result = new GithubSource()->collect(
+        Period::of($this->since, $this->until),
+        new SourceFilters(exclusions: ['actor:spammer']),
+    );
+
+    expect(ghMeta($result)['people'])->toBe(1)
+        ->and(ghMeta($result)['issues'])->toBe(0)
+        ->and(collect(ghPeople($result))->pluck('login')->all())->toBe(['maria']);
 });

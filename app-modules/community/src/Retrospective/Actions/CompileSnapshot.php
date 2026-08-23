@@ -44,6 +44,8 @@ final readonly class CompileSnapshot
             }
         }
 
-        return new RetrospectiveSnapshot($results);
+        // Os filtros vão junto: o snapshot precisa saber o que o produziu para o
+        // painel detectar exclusion alterada depois de publicar.
+        return new RetrospectiveSnapshot($results, $filters);
     }
 }

@@ -47,12 +47,29 @@ interface RetrospectiveSource {
 - **Descoberta por tagged services** (tag `retrospective.source`). Adicionar plataforma = nova classe +
   1 linha de tag no módulo dela; o `portal` nunca muda.
 - **Interface mínima, cresce por ISP.** `collect()` é o único método na Fase 1. A curadoria
-  (`slideCatalog()`, `exclusionCandidates()`) entra na Fase 3 como uma interface **segregada**
-  (`CuratableSource`), implementada só por fontes curáveis; o admin checa `instanceof`. Cresce por adição
-  de interface, não por mutação do contrato.
+  (`slideCatalog()`, `exclusionCandidates()`) entra como uma interface **segregada** (`CuratableSource`),
+  implementada só por fontes curáveis; o admin checa `instanceof`. Cresce por adição de interface, não por
+  mutação do contrato. **Implementado na Fase 3** (`GithubSource` e `DiscordSource`), com o
+  `RetrospectiveSource` intacto — ver ADR-0002 do `panel-admin` para o consumidor.
 - **Duas camadas de curadoria.** Filtro que mexe no dado (`hideBots`, exclusions) entra no `collect()`
   via `SourceFilters`, para o headline sair consistente com os slides. Curadoria de apresentação (ordem,
   on/off, título, max itens) fica na orquestração.
+
+### Como a curadoria ficou (Fase 3)
+
+`SourceFilters::excludes()` existia desde a Fase 1 e o `deck_config` já gravava os refs, mas **nenhuma
+fonte chamava o método**: exclusion era campo morto. A Fase 3 fechou o buraco sem inventar capacidade:
+
+- **Cada fonte aplica os refs dentro do `collect()`, antes de qualquer agregação.** O que é excluído sai
+  dos slides **e dos números** — é a leitura literal de "filtro que mexe no dado" acima, não uma nova
+  camada. Consequência editorial: alterar exclusion **exige republicar** (recompila o snapshot); ordem e
+  on/off não, esses re-derivam.
+- **Ref namespaced por prefixo** (`pr:`, `issue:`, `actor:` no GitHub; `message:`, `member:` no Discord).
+  `DeckConfig::allExclusions()` achata tudo numa lista só antes de virar `SourceFilters`, então o prefixo
+  distinto é o que faz cada fonte reconhecer só o que emite, sem disputa de ref nem tabela de tradução.
+- **`slideCatalog()` é estático**, resolvido sem tocar o banco. **`exclusionCandidates()` varre dado**,
+  então é obrigação da implementação escopar pelo `Period`, aplicar `LIMIT` (30 no GitHub, 20 no Discord)
+  e cachear por `(fonte, período)`.
 
 ## Considered options
 

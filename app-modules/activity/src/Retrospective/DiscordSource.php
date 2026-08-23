@@ -15,16 +15,20 @@ use He4rt\Activity\Retrospective\Slides\ReactionsSlide;
 use He4rt\Activity\Retrospective\Slides\TopMessageSlide;
 use He4rt\Activity\Retrospective\Slides\VoiceBoardSlide;
 use He4rt\Activity\Voice\Models\Voice;
+use He4rt\Community\Retrospective\Contracts\CuratableSource;
 use He4rt\Community\Retrospective\Contracts\RetrospectiveSource;
 use He4rt\Community\Retrospective\Contracts\Slide;
+use He4rt\Community\Retrospective\DTOs\ExclusionCandidate;
 use He4rt\Community\Retrospective\DTOs\HeadlineMetrics;
 use He4rt\Community\Retrospective\DTOs\Metric;
 use He4rt\Community\Retrospective\DTOs\Period;
+use He4rt\Community\Retrospective\DTOs\SlideDescriptor;
 use He4rt\Community\Retrospective\DTOs\SourceFilters;
 use He4rt\Community\Retrospective\DTOs\SourceResult;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -35,8 +39,14 @@ use Illuminate\Support\Facades\DB;
  * poucas pessoas do topo de cada ranking. Filtra por sent_at/occurred_at
  * (tempo do evento), nunca created_at.
  */
-final class DiscordSource implements RetrospectiveSource
+final class DiscordSource implements CuratableSource, RetrospectiveSource
 {
+    /**
+     * Teto das varreduras de curadoria: o picker mostra o topo do recorte, nunca
+     * a tabela inteira (messages passa de 2GB em produção).
+     */
+    private const int CANDIDATE_LIMIT = 20;
+
     public function key(): string
     {
         return 'discord';
@@ -54,21 +64,16 @@ final class DiscordSource implements RetrospectiveSource
         $pinned = $this->messages($period, $filters)->where('is_pinned', operator: true)->count();
         $chatters = $this->topChatters($period, $filters);
 
-        $participants = Voice::query()
-            ->whereBetween('occurred_at', [$period->since, $period->until])
+        $participants = $this->voice($period, $filters)
             ->distinct()
             ->count('external_identity_id');
-        $voiceXp = (int) Voice::query()
-            ->whereBetween('occurred_at', [$period->since, $period->until])
-            ->sum('obtained_experience');
-        $channels = $this->topVoiceChannels($period);
+        $voiceXp = (int) $this->voice($period, $filters)->sum('obtained_experience');
+        $channels = $this->topVoiceChannels($period, $filters);
 
-        $joins = MembershipEvent::query()
-            ->whereBetween('occurred_at', [$period->since, $period->until])
+        $joins = $this->membershipEvents($period, $filters)
             ->where('kind', MembershipEventKind::UserJoin->value)
             ->count();
-        $boosts = MembershipEvent::query()
-            ->whereBetween('occurred_at', [$period->since, $period->until])
+        $boosts = $this->membershipEvents($period, $filters)
             ->where('kind', 'like', 'boost%')
             ->count();
 
@@ -94,6 +99,83 @@ final class DiscordSource implements RetrospectiveSource
                 emojis: $emojis,
                 topMessages: $topMessages,
             ),
+        );
+    }
+
+    /**
+     * @return list<SlideDescriptor>
+     */
+    public function slideCatalog(): array
+    {
+        return [
+            new SlideDescriptor('discord.voice_board', 'Voz', 'Pessoas em call, XP e canais mais quentes'),
+            new SlideDescriptor('discord.messages', 'Conversas', 'Volume de mensagens e quem mais falou'),
+            new SlideDescriptor('discord.new_members', 'Novos membros', 'Entradas e boosts no recorte'),
+            new SlideDescriptor('discord.reactions', 'Reações', 'Total e emojis mais usados'),
+            new SlideDescriptor('discord.top_message', 'Destaque', 'As mensagens mais reagidas (mostra conteúdo)'),
+        ];
+    }
+
+    /**
+     * @return list<ExclusionCandidate>
+     */
+    public function exclusionCandidates(Period $period): array
+    {
+        /** @var list<ExclusionCandidate> $candidates */
+        $candidates = Cache::remember(
+            'retrospective.candidates.'.$this->key().'.'.$period->cacheKey(),
+            now()->addMinutes(5),
+            fn (): array => [...$this->messageCandidates($period), ...$this->memberCandidates($period)],
+        );
+
+        return $candidates;
+    }
+
+    /**
+     * As mensagens mais reagidas do recorte: são as que o deck exibe com conteúdo
+     * (slide de destaque), então são as que precisam de curadoria — spam e scam
+     * chegam ao topo por reação.
+     *
+     * @return list<ExclusionCandidate>
+     */
+    private function messageCandidates(Period $period): array
+    {
+        $rows = $this->messages($period, new SourceFilters())
+            ->where('reactions_total', '>', 0)
+            ->orderByDesc('reactions_total')
+            ->limit(self::CANDIDATE_LIMIT)
+            ->get(['id', 'external_identity_id', 'content', 'reactions_total']);
+
+        $names = $this->displayNames($this->identityIds($rows));
+
+        return array_values(
+            $rows->map(fn (Message $row): ExclusionCandidate => ExclusionCandidate::item(
+                ref: 'message:'.$row->id,
+                label: (string) str($row->content)->limit(80),
+                hint: ($names[$row->external_identity_id] ?? 'Anônimo').' · '.$row->reactions_total.' reações',
+            ))->all(),
+        );
+    }
+
+    /**
+     * @return list<ExclusionCandidate>
+     */
+    private function memberCandidates(Period $period): array
+    {
+        $rows = $this->messages($period, new SourceFilters())
+            ->groupBy('external_identity_id')
+            ->orderByRaw('COUNT(*) DESC')
+            ->limit(self::CANDIDATE_LIMIT)
+            ->get(['external_identity_id', DB::raw('COUNT(*) AS messages')]);
+
+        $names = $this->displayNames($this->identityIds($rows));
+
+        return array_values(
+            $rows->map(fn (Message $row): ExclusionCandidate => ExclusionCandidate::person(
+                ref: 'member:'.$row->external_identity_id,
+                label: $names[$row->external_identity_id] ?? 'Anônimo',
+                hint: $row->getAttribute('messages').' mensagens',
+            ))->all(),
         );
     }
 
@@ -168,12 +250,16 @@ final class DiscordSource implements RetrospectiveSource
 
     /**
      * Base de mensagens do recorte. hideBots derruba source_kind='bot' mas mantém
-     * linhas históricas com source_kind nulo.
+     * linhas históricas com source_kind nulo. As exclusions entram aqui (e não na
+     * composição) porque mexem no dado: o que é excluído some dos slides e também
+     * dos números (ADR-0001).
      *
      * @return Builder<Message>
      */
     private function messages(Period $period, SourceFilters $filters): Builder
     {
+        $excludedMessages = $filters->refsWithPrefix('message:');
+
         return Message::query()
             ->whereBetween('sent_at', [$period->since, $period->until])
             ->when(
@@ -182,7 +268,49 @@ final class DiscordSource implements RetrospectiveSource
                     $inner->whereNull('source_kind')
                         ->orWhere('source_kind', '!=', MessageSourceKind::Bot->value);
                 }),
+            )
+            ->when(
+                $excludedMessages !== [],
+                fn (Builder $query): Builder => $query->whereNotIn('id', $excludedMessages),
+            )
+            ->unless(
+                $this->excludedMembers($filters) === [],
+                fn (Builder $query): Builder => $query->whereNotIn('external_identity_id', $this->excludedMembers($filters)),
             );
+    }
+
+    /**
+     * @return Builder<Voice>
+     */
+    private function voice(Period $period, SourceFilters $filters): Builder
+    {
+        return Voice::query()
+            ->whereBetween('occurred_at', [$period->since, $period->until])
+            ->unless(
+                $this->excludedMembers($filters) === [],
+                fn (Builder $query): Builder => $query->whereNotIn('external_identity_id', $this->excludedMembers($filters)),
+            );
+    }
+
+    /**
+     * @return Builder<MembershipEvent>
+     */
+    private function membershipEvents(Period $period, SourceFilters $filters): Builder
+    {
+        return MembershipEvent::query()
+            ->whereBetween('occurred_at', [$period->since, $period->until])
+            ->unless(
+                $this->excludedMembers($filters) === [],
+                fn (Builder $query): Builder => $query->whereNotIn('external_identity_id', $this->excludedMembers($filters)),
+            );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function excludedMembers(SourceFilters $filters): array
+    {
+        return $filters->refsWithPrefix('member:');
     }
 
     /**
@@ -209,11 +337,10 @@ final class DiscordSource implements RetrospectiveSource
     /**
      * @return list<array{name: string, events: int, xp: int}>
      */
-    private function topVoiceChannels(Period $period): array
+    private function topVoiceChannels(Period $period, SourceFilters $filters): array
     {
         return array_values(
-            Voice::query()
-                ->whereBetween('occurred_at', [$period->since, $period->until])
+            $this->voice($period, $filters)
                 ->whereNotNull('channel_name')
                 ->groupBy('channel_name')
                 ->orderByRaw('SUM(obtained_experience) DESC')

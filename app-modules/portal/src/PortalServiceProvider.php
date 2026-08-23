@@ -18,14 +18,21 @@ class PortalServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Route::get('/', Homepage::class);
-        Route::get('/redes', SocialLinksPage::class)->name('social-links');
-        Route::get('/comunidade/retrospectiva', CommunityRetrospectivePage::class)->name('community.retrospective');
-        // Preview do operador: monta uma edição específica (rascunho ao vivo ou
-        // publicada) pelo mesmo render path da pública. O componente aborta com 403
-        // para visitantes (não há rota de login web; o guard fica no mount).
-        Route::get('/comunidade/retrospectiva/{retrospective}/preview', CommunityRetrospectivePage::class)
-            ->name('community.retrospective.preview');
+        // O grupo `web` é obrigatório e explícito: rotas registradas por um módulo não
+        // herdam middleware nenhum (o modular carrega os arquivos de rota sem grupo —
+        // ver identity/routes/authentication-routes.php). Sem `web` não há
+        // StartSession, então Livewire fica sem sessão nem CSRF e o guard do preview
+        // (auth()->check() no mount) reprova TODO mundo com 403.
+        Route::middleware('web')->group(static function (): void {
+            Route::get('/', Homepage::class);
+            Route::get('/redes', SocialLinksPage::class)->name('social-links');
+            Route::get('/comunidade/retrospectiva', CommunityRetrospectivePage::class)->name('community.retrospective');
+            // Preview do operador: monta uma edição específica (rascunho ao vivo ou
+            // publicada) pelo mesmo render path da pública. O componente aborta com 403
+            // para visitantes (não há rota de login web; o guard fica no mount).
+            Route::get('/comunidade/retrospectiva/{retrospective}/preview', CommunityRetrospectivePage::class)
+                ->name('community.retrospective.preview');
+        });
 
         Livewire::component('hero-section', HeroSection::class);
     }
