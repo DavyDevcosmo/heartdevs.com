@@ -29,21 +29,26 @@
  | `content-visibility` deixa o browser pular o que está fora da rolagem horizontal
  | — o filmstrip carrega o deck inteiro, e o operador olha três slides por vez.
  */
+/*
+ | A largura da miniatura é HERDADA, com 208 de piso: quem monta a tira a define
+ | uma vez no container (`--retro-thumb-width`) e todas as células acompanham,
+ | inclusive os rótulos e o cartão de "sem dado". Declará-la aqui dentro tornaria
+ | a miniatura imune ao container, e cada tamanho novo viraria uma classe nova.
+ */
 .retro-thumb {
     /* Sem unidade: `scale()` divide os dois, e calc() não divide comprimentos. */
-    --retro-thumb-width: 208;
     --retro-stage-width: 1280;
     --retro-stage-height: 720;
 
     position: relative;
-    width: calc(var(--retro-thumb-width) * 1px);
+    width: calc(var(--retro-thumb-width, 208) * 1px);
     aspect-ratio: var(--retro-stage-width) / var(--retro-stage-height);
     overflow: hidden;
     border-radius: 0.5rem;
     background: #0b0a10;
     content-visibility: auto;
-    contain-intrinsic-size: auto calc(var(--retro-thumb-width) * 1px) auto
-        calc(var(--retro-thumb-width) * var(--retro-stage-height) / var(--retro-stage-width) * 1px);
+    contain-intrinsic-size: auto calc(var(--retro-thumb-width, 208) * 1px) auto
+        calc(var(--retro-thumb-width, 208) * var(--retro-stage-height) / var(--retro-stage-width) * 1px);
 }
 
 .retro-thumb-stage {
@@ -52,7 +57,7 @@
     left: 0;
     width: calc(var(--retro-stage-width) * 1px);
     height: calc(var(--retro-stage-height) * 1px);
-    transform: scale(calc(var(--retro-thumb-width) / var(--retro-stage-width)));
+    transform: scale(calc(var(--retro-thumb-width, 208) / var(--retro-stage-width)));
     transform-origin: top left;
     /* O clique é do botão que cobre a miniatura, nunca do carrossel lá dentro. */
     pointer-events: none;
