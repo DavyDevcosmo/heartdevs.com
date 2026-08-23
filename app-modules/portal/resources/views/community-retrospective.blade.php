@@ -1,6 +1,5 @@
 @php ($noData = count($sources) === 0)
-{{-- kind -> partial por convenção: "discord.voice_board" => portal::retro.slides.discord.voice-board --}}
-@php ($slidePartial = fn (string $kind): string => 'portal::retro.slides.'.str_replace('_', '-', $kind))
+@use(He4rt\Portal\Retrospective\SlideView)
 <x-portal::retro.deck :stateKey="$stateKey" :bare="$noData">
     @if ($noData)
         <x-portal::retro.slides.empty />
@@ -15,7 +14,7 @@
 
         @foreach ($sources as $source)
             @foreach ($source->slides as $slide)
-                @include($slidePartial($slide->kind()), $slide->toArray())
+                @include(SlideView::kind($slide->kind()), $slide->toArray())
             @endforeach
         @endforeach
 
