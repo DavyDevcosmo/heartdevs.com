@@ -191,7 +191,8 @@
             @php
                 $deck = $this->deck;
                 $groups = $this->filmstrip;
-                $closingIndex = count($this->composedKinds) + 1;
+                $closingIndex = $this->composedOffset() + count($this->composedKinds);
+                $about = \He4rt\Portal\Retrospective\AboutSection::slides();
             @endphp
 
             {{-- A largura das miniaturas é decidida AQUI e herdada por todas as
@@ -232,6 +233,20 @@
                             :coverIntro="$deck['coverIntro']"
                         />
                     </x-panel-admin::retrospective.filmstrip-thumb>
+                </x-panel-admin::retrospective.filmstrip-group>
+
+                {{-- A He4rt: seção fixa do portal. Sem on/off e sem ordem — não é
+                     fonte, é o contexto que o deck dá antes dos números. --}}
+                <x-panel-admin::retrospective.filmstrip-group :label="\He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode::About->getLabel()" :icon="\He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode::About->getIcon()">
+                    @foreach ($about as $position => $slide)
+                        <x-panel-admin::retrospective.filmstrip-thumb
+                            :index="$position + 1"
+                            :label="$slide->label"
+                            :selection="\He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode::About->value . ':' . $slide->key"
+                            :view="$slide->view()"
+                            :props="['sources' => $deck['sources'], 'since' => $deck['since'], 'until' => $deck['until']]"
+                        />
+                    @endforeach
                 </x-panel-admin::retrospective.filmstrip-group>
 
                 @foreach ($groups as $index => $group)

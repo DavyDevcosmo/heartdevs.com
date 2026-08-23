@@ -17,6 +17,7 @@ use Filament\Resources\Pages\Page;
 use Filament\Schemas\Components\Actions as SchemaActions;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
@@ -37,6 +38,8 @@ use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorSelectio
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorViewPath;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\SlideEntry;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\SourceBlock;
+use He4rt\Portal\Retrospective\AboutSection;
+use He4rt\Portal\Retrospective\AboutSlide;
 use He4rt\Portal\Retrospective\DeckPresentation;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
@@ -119,12 +122,23 @@ class BuildDeck extends Page
     }
 
     /**
-     * Quantos slides o deck tem, contando capa e fecho. É o denominador do "4 / 12"
-     * da barra do preview.
+     * Quantos slides o deck tem, contando capa, a seção fixa e o fecho. É o
+     * denominador do "4 / 12" da barra do preview.
      */
     public function slideTotal(): int
     {
-        return count($this->composedKinds) + 2;
+        return $this->composedOffset() + count($this->composedKinds) + 1;
+    }
+
+    /**
+     * Quantos slides o deck desenha ANTES do primeiro slide composto: a capa e a
+     * seção fixa sobre a He4rt. Dono único do deslocamento — índice errado aqui
+     * manda o preview para o slide vizinho a cada clique na tira, e a contagem da
+     * seção mora no portal, que é quem a desenha.
+     */
+    public function composedOffset(): int
+    {
+        return 1 + AboutSection::count();
     }
 
     /**
@@ -138,6 +152,7 @@ class BuildDeck extends Page
 
         return match ($selection->mode) {
             InspectorMode::Cover, InspectorMode::Closing => $selection->mode->getLabel(),
+            InspectorMode::About => $this->aboutLabel($selection->requireTarget()),
             InspectorMode::Source => $this->sourceLabel($selection->requireTarget()),
             InspectorMode::Slide => $this->slideLabelWithSource($selection->requireTarget()),
         };
@@ -234,6 +249,9 @@ class BuildDeck extends Page
 
         match ($selection->mode) {
             InspectorMode::Cover => $this->saveCover($record, $data),
+            // Sem campo, sem escrita. O botão Salvar nem aparece neste modo
+            // (InspectorMode::editable), então só se chega aqui por wire forjada.
+            InspectorMode::About => null,
             InspectorMode::Closing => $this->saveClosing($record, $data),
             InspectorMode::Source => $this->saveSource($record, $selection->requireTarget(), $data),
             InspectorMode::Slide => $this->saveSlide($record, $selection->requireTarget(), $data),
@@ -259,7 +277,8 @@ class BuildDeck extends Page
                                 ->label('Salvar')
                                 ->icon(Heroicon::OutlinedCheck)
                                 ->submit('save')
-                                ->keyBindings(['mod+s']),
+                                ->keyBindings(['mod+s'])
+                                ->visible(fn (): bool => $this->selection()->mode->editable()),
                         ]),
                     ]),
             ])
@@ -365,8 +384,9 @@ class BuildDeck extends Page
 
         return match ($selection->mode) {
             InspectorMode::Cover => 0,
-            // O fecho é o último slide, depois da capa e de todos os compostos.
-            InspectorMode::Closing => count($kinds) + 1,
+            InspectorMode::About => $this->aboutIndex($selection->requireTarget()),
+            // O fecho é o último slide, depois de tudo.
+            InspectorMode::Closing => $this->composedOffset() + count($kinds),
             InspectorMode::Slide => $this->slideIndex($kinds, fn (array $slide): bool => $slide['kind'] === $selection->requireTarget()),
             InspectorMode::Source => $this->slideIndex($kinds, fn (array $slide): bool => $slide['source'] === $selection->requireTarget()),
         };
@@ -424,8 +444,14 @@ class BuildDeck extends Page
             return InspectorSelection::cover();
         }
 
-        // A capa ocupa o 0, então o slide N do deck é o composto N-1.
-        $slide = $kinds[$index - 1] ?? null;
+        $about = AboutSection::slides()[$index - 1] ?? null;
+
+        if ($about !== null) {
+            return new InspectorSelection(InspectorMode::About, $about->key);
+        }
+
+        // A capa e a seção fixa ocupam o começo do deck; o resto são os compostos.
+        $slide = $kinds[$index - $this->composedOffset()] ?? null;
 
         return $slide === null
             ? new InspectorSelection(InspectorMode::Closing)
@@ -463,8 +489,7 @@ class BuildDeck extends Page
     {
         foreach ($kinds as $position => $slide) {
             if ($matches($slide)) {
-                // +1: a capa ocupa o índice 0.
-                return $position + 1;
+                return $position + $this->composedOffset();
             }
         }
 
@@ -482,10 +507,57 @@ class BuildDeck extends Page
 
         return match ($selection->mode) {
             InspectorMode::Cover => $this->coverComponents(),
+            InspectorMode::About => $this->aboutComponents($selection->requireTarget()),
             InspectorMode::Closing => $this->closingComponents(),
             InspectorMode::Source => $this->sourceComponents($selection->requireTarget()),
             InspectorMode::Slide => $this->slideComponents($selection->requireTarget()),
         };
+    }
+
+    /**
+     * O rótulo do slide fixo, prefixado pela seção — sozinho, "Onde acontece" não
+     * diz de onde ele saiu. Chave desconhecida (seleção velha, slide removido do
+     * portal) cai no nome da seção em vez de mentir um rótulo.
+     */
+    private function aboutLabel(string $key): string
+    {
+        $slide = AboutSection::find($key);
+
+        return $slide instanceof AboutSlide
+            ? InspectorMode::About->getLabel().' / '.$slide->label
+            : InspectorMode::About->getLabel();
+    }
+
+    /**
+     * Onde o slide fixo caiu no deck: logo depois da capa, na ordem da seção.
+     */
+    private function aboutIndex(string $key): int
+    {
+        $position = AboutSection::positionOf($key);
+
+        return $position === null ? 0 : $position + 1;
+    }
+
+    /**
+     * Inspector da seção fixa: só diz o que ela é e por que não há campo aqui. O
+     * caminho da view, que é o que o operador precisa para mexer nela, já fica na
+     * barra do preview (InspectorViewPath).
+     *
+     * @return array<int, Section>
+     */
+    private function aboutComponents(string $key): array
+    {
+        $slide = AboutSection::find($key);
+
+        return [
+            Section::make($slide instanceof AboutSlide ? $slide->label : InspectorMode::About->getLabel())
+                ->compact()
+                ->icon(InspectorMode::About->getIcon())
+                ->description(InspectorMode::About->getDescription())
+                ->schema([
+                    Text::make('Quem a He4rt é não muda a cada recorte, então esta seção não vem do snapshot e nenhuma curadoria a desliga. O texto mora no blade acima; os números saem do período da edição.'),
+                ]),
+        ];
     }
 
     /**
@@ -649,6 +721,8 @@ class BuildDeck extends Page
                 'cover_title' => $record->cover_title,
                 'cover_intro' => $record->cover_intro,
             ],
+            // Nada para preencher: a seção fixa não tem campo nenhum.
+            InspectorMode::About => [],
             InspectorMode::Closing => [
                 'closing_text' => $record->closing_text,
             ],

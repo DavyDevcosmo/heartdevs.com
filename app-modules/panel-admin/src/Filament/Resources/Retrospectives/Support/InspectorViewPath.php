@@ -22,6 +22,7 @@ final class InspectorViewPath
     {
         $view = match ($selection->mode) {
             InspectorMode::Cover => SlideView::cover(),
+            InspectorMode::About => SlideView::about($selection->requireTarget()),
             InspectorMode::Closing => SlideView::closing(),
             InspectorMode::Slide => SlideView::kind($selection->requireTarget()),
             InspectorMode::Source => null,

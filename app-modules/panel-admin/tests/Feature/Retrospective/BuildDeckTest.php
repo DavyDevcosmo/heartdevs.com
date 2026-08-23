@@ -20,6 +20,7 @@ use He4rt\IntegrationGithub\Models\GithubContribution;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Pages\BuildDeck;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\RetrospectiveResource;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode;
+use He4rt\Portal\Retrospective\AboutSection;
 use He4rt\Portal\Retrospective\DeckPresentation;
 use Illuminate\Support\Facades\Bus;
 use Tests\Support\Retrospective\PlainRetrospectiveSource;
@@ -362,14 +363,35 @@ test('a seleção leva o preview até o slide correspondente', function (): void
         $component->instance()->deck()['sources'][0]->slides,
     );
 
+    // O primeiro slide composto não é o 1: a capa e a seção fixa sobre a He4rt
+    // vêm antes. O deslocamento sai do builder, não de um número escrito aqui —
+    // acrescentar um slide à seção não pode obrigar a corrigir o teste.
+    $offset = $component->instance()->composedOffset();
+
     $component->call('select', 'slide:'.$kinds[0]);
 
-    expect($component->instance()->previewIndex())->toBe(1);
+    expect($component->instance()->previewIndex())->toBe($offset);
 
-    // O fecho fecha o deck, depois da capa e de todos os slides compostos.
+    // O fecho fecha o deck, depois de tudo.
     $component->call('select', 'closing');
 
-    expect($component->instance()->previewIndex())->toBe(count($kinds) + 1);
+    expect($component->instance()->previewIndex())->toBe(count($kinds) + $offset);
+});
+
+test('a seção fixa sobre a He4rt ocupa os slides logo depois da capa', function (): void {
+    $retrospective = publishedRetrospectiveWithGithub();
+
+    $component = livewire(BuildDeck::class, ['record' => $retrospective->id]);
+
+    foreach (AboutSection::slides() as $position => $slide) {
+        $component->call('select', InspectorMode::About->value.':'.$slide->key);
+
+        expect($component->instance()->previewIndex())->toBe($position + 1);
+    }
+
+    // Sem campo para salvar, mas com o arquivo à mão: é assim que se mexe nela.
+    expect($component->instance()->viewPath())
+        ->toContain('app-modules/portal/resources/views/components/retro/slides/about/');
 });
 
 test('selecionar um slide desligado cai na capa em vez de apontar para o nada', function (): void {
@@ -509,8 +531,16 @@ test('navegar dentro do deck move a seleção da estrutura junto', function (): 
         $component->instance()->deck()['sources'][0]->slides,
     );
 
-    // O deck avisa que parou no primeiro slide depois da capa.
+    $offset = $component->instance()->composedOffset();
+
+    // O slide logo depois da capa é a seção fixa, não o primeiro slide de fonte.
     $component->call('selectByIndex', 1);
+
+    expect($component->instance()->selection()->token())
+        ->toBe(InspectorMode::About->value.':'.AboutSection::slides()[0]->key);
+
+    // O deck avisa que parou no primeiro slide composto.
+    $component->call('selectByIndex', $offset);
 
     expect($component->instance()->selection()->token())->toBe('slide:'.$kinds[0]);
 
@@ -520,7 +550,7 @@ test('navegar dentro do deck move a seleção da estrutura junto', function (): 
     expect($component->instance()->selection()->token())->toBe(InspectorMode::Cover->value);
 
     // Passar do último slide composto é o fecho.
-    $component->call('selectByIndex', count($kinds) + 1);
+    $component->call('selectByIndex', count($kinds) + $offset);
 
     expect($component->instance()->selection()->token())->toBe(InspectorMode::Closing->value);
 });
@@ -528,8 +558,10 @@ test('navegar dentro do deck move a seleção da estrutura junto', function (): 
 test('o inspector acompanha o slide para onde o deck foi', function (): void {
     $retrospective = publishedRetrospectiveWithGithub();
 
-    livewire(BuildDeck::class, ['record' => $retrospective->id])
-        ->call('selectByIndex', 1)
+    $component = livewire(BuildDeck::class, ['record' => $retrospective->id]);
+
+    $component
+        ->call('selectByIndex', $component->instance()->composedOffset())
         // O inspector troca de modo: a capa edita título e período, o slide edita on/off.
         ->assertSee('Exibir no deck')
         ->assertSee('app-modules/portal/resources/views/retro/slides/');

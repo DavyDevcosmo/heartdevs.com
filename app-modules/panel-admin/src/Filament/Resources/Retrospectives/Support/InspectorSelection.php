@@ -11,7 +11,7 @@ use LogicException;
  * string solta com prefixo espalhada pela Page.
  *
  * O token viaja pela wire (`selection`), então `parse()` é a fronteira: qualquer
- * coisa que não seja um dos quatro modos degrada para a capa em vez de explodir.
+ * coisa que não seja um modo conhecido degrada para a capa em vez de explodir.
  */
 final readonly class InspectorSelection
 {
@@ -33,8 +33,8 @@ final readonly class InspectorSelection
 
         return match (true) {
             $mode === InspectorMode::Cover, $mode === InspectorMode::Closing => new self($mode),
-            // Bloco e slide são inúteis sem alvo: sem ele, cai para a capa.
-            ($mode === InspectorMode::Source || $mode === InspectorMode::Slide) && $target !== null && $target !== '' => new self($mode, $target),
+            // Bloco, slide e seção fixa são inúteis sem alvo: sem ele, cai para a capa.
+            (in_array($mode, [InspectorMode::About, InspectorMode::Source, InspectorMode::Slide], strict: true)) && $target !== null && $target !== '' => new self($mode, $target),
             default => self::cover(),
         };
     }
