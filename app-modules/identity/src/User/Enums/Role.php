@@ -49,10 +49,11 @@ enum Role: string implements HasColor, HasIcon, HasLabel
     }
 
     /**
-     * Compliance é hierarquicamente um superconjunto de Staff: quem pode
-     * fazer hard delete também pode editar/soft-deletar.
+     * Quem pode editar/soft-deletar um usuário: Staff e Compliance.
+     * Compliance acumula esse privilégio, mas hard delete e troca de role
+     * continuam exclusivos de Compliance — ver isCompliance().
      */
-    public function isStaff(): bool
+    public function canManageUsers(): bool
     {
         return in_array($this, [self::Staff, self::Compliance], strict: true);
     }

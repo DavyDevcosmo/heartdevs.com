@@ -79,16 +79,6 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
         return in_array($this->username, self::configuredAdminUsernames(), strict: true);
     }
 
-    public function isStaff(): bool
-    {
-        return $this->hasRole(Role::Staff);
-    }
-
-    public function hasRole(Role $role): bool
-    {
-        return $this->role === $role;
-    }
-
     /**
      * @return MorphMany<ExternalIdentity, $this>
      */

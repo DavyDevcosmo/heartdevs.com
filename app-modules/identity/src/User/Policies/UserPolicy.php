@@ -20,12 +20,12 @@ final class UserPolicy
 
     public function update(User $user): bool
     {
-        return $user->role->isStaff();
+        return $user->role->canManageUsers();
     }
 
     public function delete(User $user): bool
     {
-        return $user->role->isStaff();
+        return $user->role->canManageUsers();
     }
 
     public function restore(User $user): bool
