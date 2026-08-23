@@ -12,10 +12,13 @@ use Filament\Panel;
 use He4rt\Gamification\Character\Models\Character;
 use He4rt\Identity\Database\Factories\UserFactory;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
+use He4rt\Identity\User\Enums\UserSituation;
 use He4rt\Identity\User\Observers\UserObserver;
+use He4rt\Profile\Models\Profile;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,8 +41,10 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string|null $remember_token
  * @property CarbonInterface|null $created_at
  * @property CarbonInterface|null $updated_at
+ * @property-read UserSituation $situation
  */
 #[ObservedBy(classes: UserObserver::class)]
+#[UseFactory(factoryClass: UserFactory::class)]
 #[Table(name: 'users')]
 #[Hidden('password', 'remember_token', 'email_verified_at')]
 final class User extends Authenticatable implements FilamentUser, HasMedia, HasName
@@ -72,6 +77,14 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
         return $this->hasOne(Character::class);
     }
 
+    /**
+     * @return HasOne<Profile, $this>
+     */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(Profile::class);
+    }
+
     public function getFilamentName(): string
     {
         return $this->username;
@@ -102,9 +115,12 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
         return sprintf('https://github.com/%s.png', $this->username);
     }
 
-    protected static function newFactory(): UserFactory
+    /**
+     * @return Attribute<UserSituation, never>
+     */
+    protected function situation(): Attribute
     {
-        return UserFactory::new();
+        return Attribute::get($this->resolveSituation(...));
     }
 
     /**
@@ -135,5 +151,17 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
             'banned_at' => 'datetime',
             'first_login_at' => 'datetime',
         ];
+    }
+
+    private function resolveSituation(): UserSituation
+    {
+        $isBanned = $this->banned_at !== null;
+        $isSuspended = $this->suspended_until !== null && $this->suspended_until->isFuture();
+
+        return match (true) {
+            $isBanned => UserSituation::Banned,
+            $isSuspended => UserSituation::Suspended,
+            default => UserSituation::Active,
+        };
     }
 }

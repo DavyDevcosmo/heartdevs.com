@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace He4rt\Contents\Data;
 
-final readonly class TagList
+use Illuminate\Contracts\Support\Arrayable;
+use JsonSerializable;
+
+/**
+ * @implements Arrayable<int, string>
+ */
+final readonly class TagList implements Arrayable, JsonSerializable
 {
     /** @param list<string> $tags */
     public function __construct(
@@ -51,5 +57,13 @@ final readonly class TagList
     public function contains(string $tag): bool
     {
         return in_array($tag, $this->tags, strict: true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->tags;
     }
 }
