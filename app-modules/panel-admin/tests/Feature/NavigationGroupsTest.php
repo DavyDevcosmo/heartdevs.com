@@ -62,10 +62,10 @@ test('o grupo Pessoas reúne as quatro telas da aba', function (): void {
         ]);
 });
 
-test('a navegação padrão expõe o grupo Conteúdo com os artigos', function (): void {
+test('a navegação padrão expõe o grupo Conteúdo com o que a comunidade publica', function (): void {
     $content = adminNavigationGroup(NavGroup::Content->getLabel());
 
-    expect(navigationItemLabels($content))->toBe(['Artigos']);
+    expect(navigationItemLabels($content))->toBe(['Artigos', 'Retrospectivas']);
 });
 
 test('os clusters seguem como itens de topo, fora de grupo', function (): void {

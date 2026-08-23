@@ -7,6 +7,7 @@ namespace He4rt\Portal\SocialLinks;
 final readonly class SocialLink
 {
     public function __construct(
+        public string $key,
         public string $label,
         public string $url,
         public string $icon,

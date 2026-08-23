@@ -14,6 +14,7 @@ use He4rt\PanelAdmin\Filament\Resources\ContentEntries\ContentEntryResource;
 use He4rt\PanelAdmin\Filament\Resources\Events\EventResource;
 use He4rt\PanelAdmin\Filament\Resources\ExternalIdentities\ExternalIdentityResource;
 use He4rt\PanelAdmin\Filament\Resources\Profiles\ProfileResource;
+use He4rt\PanelAdmin\Filament\Resources\Retrospectives\RetrospectiveResource;
 use He4rt\PanelAdmin\Filament\Resources\Skills\SkillResource;
 use He4rt\PanelAdmin\Filament\Resources\Users\UserResource;
 use He4rt\PanelAdmin\Github\GithubCluster;
@@ -54,6 +55,7 @@ class PanelAdminServiceProvider extends ServiceProvider
                     ProfileResource::class,
                     SkillResource::class,
                     ContentEntryResource::class,
+                    RetrospectiveResource::class,
                 ])
                 ->discoverResources(
                     in: __DIR__.'/Moderation/Resources',
@@ -157,6 +159,7 @@ class PanelAdminServiceProvider extends ServiceProvider
                     ->icon(NavGroup::Content->getIcon())
                     ->items([
                         ...ContentEntryResource::getNavigationItems(),
+                        ...RetrospectiveResource::getNavigationItems(),
                     ]),
             ]);
     }

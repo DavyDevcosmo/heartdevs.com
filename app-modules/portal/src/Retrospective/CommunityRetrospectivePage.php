@@ -4,153 +4,51 @@ declare(strict_types=1);
 
 namespace He4rt\Portal\Retrospective;
 
-use Carbon\CarbonImmutable;
-use Carbon\CarbonInterface;
-use He4rt\IntegrationGithub\Enums\ContributionType;
-use He4rt\IntegrationGithub\Models\GithubContribution;
+use He4rt\Community\Retrospective\Models\Retrospective;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 
+/**
+ * Página pública da retrospectiva. O visitante só assiste: monta a edição
+ * publicada mais recente a partir do snapshot congelado, sem filtros e sem tocar
+ * as fontes (ADR-0002). Em modo preview (rota autenticada), monta uma edição
+ * específica — coletando ao vivo se ainda for rascunho — pelo mesmo render path,
+ * então "ver rascunho" bate com o que será publicado.
+ */
 #[Layout(name: 'portal::components.layouts.deck')]
 final class CommunityRetrospectivePage extends Component
 {
-    #[Url]
-    public ?string $since = null;
+    public ?string $retrospectiveId = null;
 
-    #[Url]
-    public ?string $until = null;
+    public bool $preview = false;
 
-    /** @var list<string> */
-    #[Url]
-    public array $repos = [];
-
-    /** @var list<string> */
-    #[Url]
-    public array $types = [];
-
-    #[Url]
-    public ?string $outcome = null;
-
-    #[Url]
-    public ?string $person = null;
-
-    #[Url]
-    public bool $hideBots = true;
-
-    #[Url]
-    public string $sort = 'total';
-
-    #[Url]
-    public bool $byRepo = true;
-
-    #[Url]
-    public bool $showHighlights = true;
-
-    public function toggleType(string $type): void
+    public function mount(?Retrospective $retrospective = null): void
     {
-        $this->types = $this->toggleAware($this->types, $this->allTypes(), $type);
-    }
+        if ($retrospective instanceof Retrospective) {
+            // Preview de uma edição específica é só para operadores autenticados:
+            // rascunhos não podem vazar pela URL pública.
+            abort_unless(auth()->check(), 403);
 
-    public function toggleRepo(string $repo): void
-    {
-        $this->repos = $this->toggleAware($this->repos, $this->allRepos(), $repo);
-    }
-
-    public function setPreset(string $preset): void
-    {
-        $this->since = match ($preset) {
-            'mes' => CarbonImmutable::now()->subMonth()->toDateString(),
-            'tudo' => $this->firstContributionDate(),
-            default => CarbonImmutable::now()->startOfWeek(CarbonInterface::MONDAY)->subWeek()->toDateString(),
-        };
-
-        $this->until = CarbonImmutable::now()->toDateString();
+            $this->retrospectiveId = $retrospective->id;
+            $this->preview = true;
+        }
     }
 
     public function render(): View
     {
-        $since = $this->since !== null && $this->since !== ''
-            ? CarbonImmutable::parse($this->since)->startOfDay()
-            : CarbonImmutable::now()->startOfWeek(CarbonInterface::MONDAY)->subWeek();
-
-        $until = $this->until !== null && $this->until !== ''
-            ? CarbonImmutable::parse($this->until)->endOfDay()
-            : CarbonImmutable::now();
-
-        $filters = RetrospectiveFilters::make($since, $until, $this->repos, $this->types, $this->outcome, $this->person, $this->hideBots, $this->sort);
-        $data = new CommunityRetrospective($filters)->build();
-
-        $repoOptions = collect($this->allRepos())
-            ->mapWithKeys(fn (string $repo): array => [$repo => (string) str($repo)->afterLast('/')])
-            ->all();
-
-        return view('portal::community-retrospective', [
-            'data' => $data,
-            'repoOptions' => $repoOptions,
-            'stateKey' => md5((string) json_encode([
-                $this->since, $this->until, $this->repos, $this->types, $this->outcome,
-                $this->person, $this->hideBots, $this->sort, $this->byRepo, $this->showHighlights,
-            ])),
-        ]);
+        return view(
+            'portal::community-retrospective',
+            DeckPresentation::for($this->resolveEdition(), live: $this->preview),
+        );
     }
 
-    /**
-     * @return list<string>
-     */
-    private function allTypes(): array
+    private function resolveEdition(): ?Retrospective
     {
-        return array_map(fn (ContributionType $type): string => $type->value, ContributionType::cases());
-    }
+        if ($this->retrospectiveId !== null) {
+            return Retrospective::query()->find($this->retrospectiveId);
+        }
 
-    /**
-     * Toggle "ciente de todos": com a lista vazia (= todos), clicar desliga apenas
-     * aquele item; voltar a ter todos selecionados normaliza de volta para vazio.
-     *
-     * @param  list<string>  $selected
-     * @param  list<string>  $all
-     * @return list<string>
-     */
-    private function toggleAware(array $selected, array $all, string $value): array
-    {
-        $current = $selected === [] ? $all : $selected;
-
-        $next = in_array($value, $current, strict: true)
-            ? array_values(array_diff($current, [$value]))
-            : array_values(array_unique([...$current, $value]));
-
-        return count($next) === count($all) ? [] : $next;
-    }
-
-    /**
-     * Data da contribuição mais antiga dentro do escopo atual (repos
-     * selecionados), para o preset "tudo" cobrir o histórico real do que está
-     * sendo apresentado. Sem registros, cai no mesmo default semanal do render().
-     */
-    private function firstContributionDate(): string
-    {
-        $first = GithubContribution::query()
-            ->when($this->repos !== [], fn ($query) => $query->whereIn('repo', $this->repos))
-            ->min('occurred_at');
-
-        return is_string($first) && $first !== ''
-            ? CarbonImmutable::parse($first)->toDateString()
-            : CarbonImmutable::now()->startOfWeek(CarbonInterface::MONDAY)->subWeek()->toDateString();
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function allRepos(): array
-    {
-        /** @var list<string> $repos */
-        $repos = GithubContribution::query()
-            ->distinct()
-            ->orderBy('repo')
-            ->pluck('repo')
-            ->all();
-
-        return $repos;
+        return Retrospective::query()->published()->latest('published_at')->first();
     }
 }
