@@ -66,7 +66,10 @@ class UserForm
             Select::make('role')
                 ->options(Role::class)
                 ->required()
-                ->disabled(fn (): bool => !auth()->user()->role->isCompliance()),
+                ->disabled(fn (): bool => !auth()->user()->role->isCompliance())
+                ->helperText(fn (): ?string => auth()->user()->role->isCompliance()
+                    ? null
+                    : 'Somente Compliance pode alterar a role de um usuário.'),
 
             Toggle::make('is_donator')
                 ->label('Donator'),

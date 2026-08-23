@@ -87,7 +87,7 @@ test('view não quebra para usuário sem character', function (): void {
         ->assertOk();
 });
 
-test('staff edita identidade, perfil e endereço em um único submit', function (): void {
+test('staff edita identidade, perfil e endereço em um único submit, mas não a role', function (): void {
     $staff = User::factory()->staff()->create();
     $target = User::factory()->create();
 
@@ -115,7 +115,7 @@ test('staff edita identidade, perfil e endereço em um único submit', function 
 
     $target->refresh();
 
-    expect($target->role)->toBe(Role::Recruiter)
+    expect($target->role)->toBe(Role::Member)
         ->and($target->is_donator)->toBeTrue()
         ->and($target->profile->nickname)->toBe('devzin')
         ->and($target->profile->seniority_level->value)->toBe('senior')
@@ -125,6 +125,30 @@ test('staff edita identidade, perfil e endereço em um único submit', function 
         ->and($target->profile->preferences->willingToRelocate)->toBeTrue()
         ->and($target->profile->preferences->isOpenToRemote)->toBeTrue()
         ->and($target->address->city)->toBe('Campinas');
+});
+
+test('compliance consegue alterar a role, staff não', function (): void {
+    $target = User::factory()->create();
+
+    $staff = User::factory()->staff()->create();
+    $this->actingAs($staff);
+
+    livewire(EditUser::class, ['record' => $target->id])
+        ->fillForm(['role' => Role::Recruiter->value])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($target->fresh()->role)->toBe(Role::Member);
+
+    $compliance = User::factory()->compliance()->create();
+    $this->actingAs($compliance);
+
+    livewire(EditUser::class, ['record' => $target->id])
+        ->fillForm(['role' => Role::Recruiter->value])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($target->fresh()->role)->toBe(Role::Recruiter);
 });
 
 test('rejeita username duplicado na edição', function (): void {
