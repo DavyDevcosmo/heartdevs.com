@@ -21,17 +21,25 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use He4rt\Community\Retrospective\Contracts\CuratableSource;
+use He4rt\Community\Retrospective\DTOs\RetrospectiveSnapshot;
+use He4rt\Community\Retrospective\DTOs\SourceResult;
 use He4rt\Community\Retrospective\Enums\ExclusionKind;
 use He4rt\Community\Retrospective\Models\Retrospective;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Actions\PublishRetrospectiveAction;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\RetrospectiveResource;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\AvailableSources;
+use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\DeckFilmstrip;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\DeckStructure;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\ExclusionPicker;
+use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\FilmstripGroup;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorSelection;
+use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorViewPath;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\SlideEntry;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\SourceBlock;
+use He4rt\Portal\Retrospective\DeckPresentation;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 
 /**
  * Deck Builder: monta o deck vendo o deck (ADR-0002 do panel-admin). Três colunas
@@ -61,8 +69,20 @@ class BuildDeck extends Page
     public ?array $data = [];
 
     /**
-     * Contador de recargas do iframe. O `updated_at` sozinho não basta: dois
-     * salvamentos no mesmo segundo dariam o mesmo token e o preview não recarregaria.
+     * Os slides compostos na ordem do deck, congelados aqui para as ações de
+     * seleção não pagarem uma coleta ao vivo por clique: mapear índice <-> seleção
+     * só precisa da FORMA do deck, não do dado. Recomputada em mount e a cada
+     * salvamento — os únicos momentos em que a forma pode mudar.
+     *
+     * @var list<array{kind: string, source: string}>
+     */
+    #[Locked]
+    public array $composedKinds = [];
+
+    /**
+     * Versão do preview, que entra na key do deck. O `updated_at` sozinho não basta:
+     * dois salvamentos no mesmo segundo dariam a mesma key e o Livewire morfaria o
+     * deck em vez de recriá-lo, deixando o Alpine com a lista de slides antiga.
      */
     public int $previewVersion = 0;
 
@@ -71,15 +91,17 @@ class BuildDeck extends Page
     protected string $view = 'panel-admin::retrospective.build-deck';
 
     /**
-     * Largura cheia: as três colunas do ADR-0002 (estrutura, iframe do deck,
-     * inspector) não caem bem no 7xl padrão do painel — o preview do meio é um deck
-     * inteiro, não um card. Só esta página; o resto do painel segue no default.
+     * Largura cheia: as três colunas do ADR-0002 (estrutura, deck, inspector) não
+     * caem bem no 7xl padrão do painel — o preview do meio é um deck inteiro, não um
+     * card. Só esta página; o resto do painel segue no default.
      */
     protected Width|string|null $maxContentWidth = Width::Full;
 
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
+
+        $this->composedKinds = $this->composeKinds();
 
         $this->fillInspector();
     }
@@ -112,6 +134,28 @@ class BuildDeck extends Page
         $this->selection = InspectorSelection::parse($selection)->token();
 
         $this->fillInspector();
+
+        $this->showSelectedSlide();
+    }
+
+    /**
+     * Caminho inverso do select(): o operador navegou DENTRO do deck (setas, dots,
+     * teclado) e a estrutura, o inspector e o caminho da view acompanham.
+     *
+     * Não devolve o deck para lugar nenhum — ele já está no slide certo, foi ele
+     * quem avisou. Chamar showSelectedSlide() aqui reabriria o ciclo.
+     */
+    public function selectByIndex(int $index): void
+    {
+        $selection = $this->selectionAtIndex($index);
+
+        if ($selection->token() === $this->selection) {
+            return;
+        }
+
+        $this->selection = $selection->token();
+
+        $this->fillInspector();
     }
 
     /**
@@ -129,6 +173,28 @@ class BuildDeck extends Page
         ]);
 
         $this->refreshPreview();
+    }
+
+    /**
+     * Liga/desliga uma fonte direto na tira, sem passar pelo inspector. Curadoria
+     * de apresentação: re-deriva do snapshot na composição, sem republicar.
+     */
+    public function toggleSource(string $key): void
+    {
+        $record = $this->getRetrospective();
+
+        $record->update([
+            'deck_config' => $record->deck_config->withSourceVisible(
+                $key,
+                !$record->deck_config->showsSource($key),
+            ),
+        ]);
+
+        $this->refreshPreview();
+
+        // O inspector pode estar mostrando ESTA fonte, com o toggle no estado
+        // velho: recarrega para os dois concordarem.
+        $this->fillInspector();
     }
 
     public function save(): void
@@ -190,16 +256,100 @@ class BuildDeck extends Page
     }
 
     /**
-     * Aponta para a MESMA rota de preview que o operador abria em outra aba, que
-     * passa pelo mesmo ComposeDeck da página pública. Preview que mente é pior que
-     * preview nenhum, e a garantia de que não mente é ser literalmente a mesma coisa.
+     * O arquivo blade do que está selecionado, relativo à raiz do projeto. Fica no
+     * cabeçalho do preview para encurtar o caminho entre "não gostei disso" e o
+     * editor aberto no arquivo certo. Null quando a seleção não tem view própria
+     * (bloco de fonte) ou quando o kind não tem partial.
+     */
+    public function viewPath(): ?string
+    {
+        return InspectorViewPath::for($this->selection());
+    }
+
+    /**
+     * As props do deck, montadas pelo MESMO DeckPresentation da página pública —
+     * mesmo ComposeDeck, mesmas partials. Preview que mente é pior que preview
+     * nenhum, e a garantia de que não mente é dividir o caminho de render, não
+     * estar num iframe.
+     *
+     * `live: true` coleta as fontes na hora enquanto a edição é rascunho, então o
+     * operador vê o que SERÁ publicado.
+     *
+     * @return array<string, mixed>
+     */
+    #[Computed]
+    public function deck(): array
+    {
+        $props = DeckPresentation::fromSnapshot($this->getRetrospective(), $this->deckSnapshot);
+
+        // A key carrega a versão: ao salvar, o Livewire recria o deck em vez de
+        // morfá-lo, e o Alpine reinicializa com a nova lista de slides.
+        $props['stateKey'] = $props['stateKey'].'-'.$this->previewVersion;
+
+        return $props;
+    }
+
+    /**
+     * O snapshot desta edição, resolvido UMA vez por render. Em rascunho ele é
+     * coletado ao vivo — dezenas de queries —, e o deck e a tira o dividem.
+     *
+     * Leia-o SEMPRE como propriedade (`$this->deckSnapshot`). O cache do
+     * #[Computed] mora no acesso à propriedade: chamar `deckSnapshot()` invoca o
+     * método e paga a coleta de novo, silenciosamente.
+     */
+    #[Computed]
+    public function deckSnapshot(): RetrospectiveSnapshot
+    {
+        return DeckPresentation::snapshotFor($this->getRetrospective(), live: true);
+    }
+
+    /**
+     * A tira de miniaturas do rodapé. Sai do snapshot CRU, não da composição: o
+     * que está desligado continua na tira, apagado, porque é lá que mora o botão
+     * que o religa.
+     *
+     * @return list<FilmstripGroup>
+     */
+    #[Computed]
+    public function filmstrip(): array
+    {
+        return DeckFilmstrip::groups(
+            $this->deckSnapshot,
+            $this->getRetrospective()->deck_config,
+            $this->composedKinds,
+        );
+    }
+
+    /**
+     * Em que slide o preview deve parar para mostrar o que está selecionado. O deck
+     * renderiza capa, os slides na ordem composta e o fecho — então a posição sai da
+     * própria composição, sem o markup precisar anunciar o kind.
+     */
+    public function previewIndex(): int
+    {
+        $kinds = $this->composedKinds;
+
+        if ($kinds === []) {
+            return 0;
+        }
+
+        $selection = $this->selection();
+
+        return match ($selection->mode) {
+            InspectorMode::Cover => 0,
+            // O fecho é o último slide, depois da capa e de todos os compostos.
+            InspectorMode::Closing => count($kinds) + 1,
+            InspectorMode::Slide => $this->slideIndex($kinds, fn (array $slide): bool => $slide['kind'] === $selection->requireTarget()),
+            InspectorMode::Source => $this->slideIndex($kinds, fn (array $slide): bool => $slide['source'] === $selection->requireTarget()),
+        };
+    }
+
+    /**
+     * Aponta para a rota pública de preview, para abrir o deck em tela cheia noutra aba.
      */
     public function previewUrl(): string
     {
-        $record = $this->getRetrospective();
-
-        return route('community.retrospective.preview', $record)
-            .'?v='.($record->updated_at?->getTimestamp() ?? 0).'-'.$this->previewVersion;
+        return route('community.retrospective.preview', $this->getRetrospective());
     }
 
     public function getRetrospective(): Retrospective
@@ -230,6 +380,69 @@ class BuildDeck extends Page
                 ->record(fn (): Retrospective => $this->getRetrospective())
                 ->successRedirectUrl(RetrospectiveResource::getUrl('index')),
         ];
+    }
+
+    /**
+     * Que seleção corresponde a um slide do deck — o inverso de previewIndex().
+     *
+     * Um kind pode render vários slides (github.repos é um card por repositório),
+     * então índices diferentes caem na mesma seleção: a curadoria é por kind.
+     */
+    private function selectionAtIndex(int $index): InspectorSelection
+    {
+        $kinds = $this->composedKinds;
+
+        if ($index <= 0 || $kinds === []) {
+            return InspectorSelection::cover();
+        }
+
+        // A capa ocupa o 0, então o slide N do deck é o composto N-1.
+        $slide = $kinds[$index - 1] ?? null;
+
+        return $slide === null
+            ? new InspectorSelection(InspectorMode::Closing)
+            : new InspectorSelection(InspectorMode::Slide, $slide['kind']);
+    }
+
+    /**
+     * Os slides compostos, achatados na ordem em que o deck os renderiza. Caro
+     * (passa pelo deck completo): só mount e refreshPreview chamam; o resto lê
+     * a propriedade congelada.
+     *
+     * @return list<array{kind: string, source: string}>
+     */
+    private function composeKinds(): array
+    {
+        $kinds = [];
+
+        /** @var list<SourceResult> $sources */
+        $sources = $this->deck()['sources'];
+
+        foreach ($sources as $source) {
+            foreach ($source->slides as $slide) {
+                $kinds[] = ['kind' => $slide->kind(), 'source' => $source->key];
+            }
+        }
+
+        return $kinds;
+    }
+
+    /**
+     * @param  list<array{kind: string, source: string}>  $kinds
+     * @param  callable(array{kind: string, source: string}): bool  $matches
+     */
+    private function slideIndex(array $kinds, callable $matches): int
+    {
+        foreach ($kinds as $position => $slide) {
+            if ($matches($slide)) {
+                // +1: a capa ocupa o índice 0.
+                return $position + 1;
+            }
+        }
+
+        // Selecionado algo que o deck não está mostrando (desligado, ou sem dado no
+        // recorte): a capa é o fallback honesto.
+        return 0;
     }
 
     /**
@@ -566,13 +779,45 @@ class BuildDeck extends Page
     }
 
     /**
-     * Custo aceito do ADR: o iframe recarrega inteiro em vez de atualizar o slide
+     * Custo aceito do ADR: o deck é recomposto inteiro em vez de atualizar o slide
      * no lugar. Uma coleta ao vivo por salvamento em rascunho, para um operador.
      */
     private function refreshPreview(): void
     {
         $this->getRetrospective()->refresh();
 
+        unset($this->deckSnapshot, $this->deck, $this->filmstrip);
+
+        $this->composedKinds = $this->composeKinds();
+
         $this->previewVersion++;
+
+        // O deck vive num island e não acompanha os renders da página; depois de um
+        // salvamento é o único momento em que ele PRECISA re-renderizar.
+        $this->renderIsland('deck');
+
+        // A tira mostra o mesmo deck em miniatura e vive no mesmo regime de island:
+        // se não for redesenhada aqui, um slide ligado agora continuaria apagado.
+        $this->renderIsland('filmstrip');
+
+        // A key mudou, o deck é recriado e volta para a capa: leva o operador de
+        // volta ao que ele estava editando.
+        $this->showSelectedSlide();
+    }
+
+    /**
+     * Manda o deck embutido parar no slide da seleção atual. Efeito de cliente
+     * depois da resposta: o índice muda a cada render, então mora aqui em vez de
+     * num x-data, que só seria avaliado na primeira vez.
+     *
+     * O rAF espera o Alpine reinicializar quando o deck acabou de ser recriado —
+     * sem ele, o go(0) do init() rodaria depois deste salto.
+     */
+    private function showSelectedSlide(): void
+    {
+        $this->js(sprintf(
+            "requestAnimationFrame(() => window.dispatchEvent(new CustomEvent('retro-goto', { detail: { index: %d } })))",
+            $this->previewIndex(),
+        ));
     }
 }

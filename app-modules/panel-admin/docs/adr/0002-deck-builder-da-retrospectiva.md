@@ -47,12 +47,13 @@ sobrescrever a outra.
 ```
 ┌──────────────────┬───────────────────────────┬───────────────────────┐
 │ [Estrutura]      │ [Preview]                 │ [Inspector]           │
-│ capa             │  iframe da rota de        │  formulário do que    │
-│ blocos de fonte  │  preview da Fase 2        │  está selecionado     │
-│   chips de slide │  (mesmo ComposeDeck)      │  4 modos              │
-│ fecho            │                           │                       │
+│ capa             │  deck embutido no DOM     │  formulário do que    │
+│ blocos de fonte  │  (DeckPresentation ->     │  está selecionado     │
+│   chips de slide │   ComposeDeck -> mesmas   │  4 modos              │
+│ fecho            │   partials do portal)     │                       │
 └──────────────────┴───────────────────────────┴───────────────────────┘
-   seleciona            só leitura                 edita e salva
+   seleciona     ──────►  pula até o slide          edita e salva
+                          selecionado
 ```
 
 O inspector é contextual, com quatro modos, e cada um escreve onde já se escrevia na Fase 2:
@@ -67,14 +68,30 @@ O inspector é contextual, com quatro modos, e cada um escreve onde já se escre
 Nenhuma coluna nova, nenhuma migration: o `DeckConfig` da Fase 2 já tinha `hidden_slides` persistindo
 sem UI que o editasse.
 
-### O preview é um iframe da rota pública de preview
+### O preview divide o render path com a página pública
 
-Nada de reimplementar o deck dentro do painel. O centro aponta para
-`/comunidade/retrospectiva/{id}/preview`, a mesma rota que o operador já abria em outra aba, que passa
-pelo mesmo `ComposeDeck` da página pública. Preview que mente é pior que preview nenhum, e a única
-garantia de que ele não mente é ser literalmente a mesma coisa.
+Nada de reimplementar o deck dentro do painel. Preview que mente é pior que preview nenhum, e a garantia
+de que ele não mente é dividir o caminho de render: mesmo `ComposeDeck`, mesmas partials, mesmas props.
 
-Custo aceito: o iframe recarrega inteiro ao salvar (com `?v={updated_at}` para furar cache), em vez de
+> **Emendado em 2026-08-23 (supersede o iframe).** A decisão original era um `<iframe>` apontando para
+> `/comunidade/retrospectiva/{id}/preview`. O isolamento do iframe cobrava caro: o builder não conseguia
+> falar com o deck (não dá para levar o preview até o slide que o operador acabou de selecionar), e cada
+> salvamento recarregava um documento inteiro.
+>
+> O deck passou a ser embutido no próprio DOM do builder. O que sustentava o medo de divergência foi
+> substituído por garantias mais fortes que a fronteira do iframe:
+>
+> - `DeckPresentation` (no `portal`) é o **único** lugar que monta as props do deck. A página pública, o
+>   preview em tela cheia e o builder passam os três por ele — não há um segundo caminho que possa
+>   divergir.
+> - O CSS do deck é inteiramente escopado sob `.retro` e as partials não usam Tailwind, então importá-lo
+>   no painel não alcança o Filament nem é alcançado por ele. `.retro-embed` só troca o `position: fixed`
+>   (que existe porque no portal o deck **é** a página) por um containing block local.
+>
+> Em troca, o builder ganhou controle real: selecionar um slide na coluna de estrutura leva o preview até
+> ele (`retro-goto`), e o teclado deixa de ser sequestrado quando o foco está num campo do inspector.
+
+Custo aceito: ao salvar, o deck é recomposto e recriado inteiro (a key carrega a versão), em vez de
 atualizar o slide alterado no lugar.
 
 ### Reordenar por botões, não por drag
@@ -120,8 +137,9 @@ recompila o snapshot. Ordem e on/off não, esses re-derivam.
 
 - **Manter o Edit e adicionar o builder como página extra** — rejeitado: duas telas escrevendo o mesmo
   `deck_config`.
-- **Renderizar o deck dentro do painel (sem iframe)** — rejeitado: duplica o render path e abre espaço
-  para o preview divergir do publicado; ainda importaria CSS do portal para dentro do painel.
+- **Renderizar o deck dentro do painel (sem iframe)** — rejeitado no primeiro corte, **aceito na emenda
+  de 2026-08-23**: não duplica o render path enquanto `DeckPresentation` for o único lugar que monta as
+  props, e o CSS do portal é escopado o bastante para conviver com o painel.
 - **Editar cada slide (título, máximo de itens, ordenação interna)** — rejeitado: é capacidade nova,
   contraria o contrato da fase e obrigaria o `ComposeDeck` a conhecer semântica de cada kind.
 - **Drag and drop já no primeiro corte** — adiado: dependência nova para ordenar poucos blocos.
@@ -133,5 +151,7 @@ recompila o snapshot. Ordem e on/off não, esses re-derivam.
 - Candidatos a exclusion ficam até 5 minutos velhos depois de um backfill (cache por período).
 - O picker mostra o topo do recorte, não a tabela inteira. Esconder algo fora desse teto não é possível
   pela UI (o formato persistido aceita qualquer ref, então o caminho existe se um dia for preciso).
-- O iframe recarregando inteiro custa uma coleta ao vivo por salvamento em rascunho. Aceitável para o
-  volume de uso (uma edição por mês, um operador).
+- Recompor o deck a cada salvamento custa uma coleta ao vivo em rascunho. Aceitável para o volume de uso
+  (uma edição por mês, um operador).
+- O painel carrega o CSS do deck nesta página. Enquanto o design system do deck viver sob `.retro`, os
+  dois convivem; um seletor global novo no `retrospective.css` passaria a vazar para o Filament.

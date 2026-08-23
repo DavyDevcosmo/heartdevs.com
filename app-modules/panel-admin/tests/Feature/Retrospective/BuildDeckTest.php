@@ -2,11 +2,16 @@
 
 declare(strict_types=1);
 
+use Carbon\CarbonImmutable;
 use Filament\Facades\Filament;
 use Filament\Support\Enums\Width;
+use He4rt\Community\Retrospective\Actions\CompileSnapshot;
+use He4rt\Community\Retrospective\Contracts\Slide;
 use He4rt\Community\Retrospective\DTOs\DeckConfig;
+use He4rt\Community\Retrospective\DTOs\Period;
 use He4rt\Community\Retrospective\DTOs\RetrospectiveSnapshot;
 use He4rt\Community\Retrospective\DTOs\SourceFilters;
+use He4rt\Community\Retrospective\DTOs\SourceResult;
 use He4rt\Community\Retrospective\Enums\RetrospectiveStatus;
 use He4rt\Community\Retrospective\Jobs\CompileRetrospectiveSnapshot;
 use He4rt\Community\Retrospective\Models\Retrospective;
@@ -15,6 +20,7 @@ use He4rt\IntegrationGithub\Models\GithubContribution;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Pages\BuildDeck;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\RetrospectiveResource;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode;
+use He4rt\Portal\Retrospective\DeckPresentation;
 use Illuminate\Support\Facades\Bus;
 use Tests\Support\Retrospective\PlainRetrospectiveSource;
 
@@ -43,6 +49,33 @@ function retrospectiveWithOrder(array $order = ['github', 'discord'], array $exc
 }
 
 /**
+ * Edição publicada com snapshot real do GitHub congelado dentro. Os testes de
+ * preview precisam de slides de verdade: é a lista composta que define em que
+ * índice cada slide cai no deck.
+ */
+function publishedRetrospectiveWithGithub(): Retrospective
+{
+    $since = CarbonImmutable::parse('2026-06-01 00:00:00');
+    $until = CarbonImmutable::parse('2026-06-30 23:59:59');
+
+    GithubContribution::factory()->create([
+        'actor_login' => 'maria',
+        'external_ref' => 'pr:1',
+        'occurred_at' => '2026-06-02',
+        'metadata' => ['title' => 'Um PR', 'state' => 'open', 'merged' => false, 'additions' => 10],
+    ]);
+
+    $snapshot = resolve(CompileSnapshot::class)->execute(Period::of($since, $until), new SourceFilters());
+
+    return Retrospective::factory()->published($snapshot)->create([
+        'since' => $since,
+        'until' => $until,
+        'cover_title' => 'Retro de Junho',
+        'deck_config' => new DeckConfig(order: ['github', 'discord']),
+    ]);
+}
+
+/**
  * Um PR dentro do recorte da edição, para a varredura de exclusionCandidates()
  * do GithubSource ter o que oferecer no picker.
  */
@@ -65,13 +98,16 @@ test('o builder atende na chave edit com a rota /deck', function (): void {
     test()->get($url)->assertOk();
 });
 
-test('abre com a timeline das fontes e o iframe do preview', function (): void {
+test('abre com a timeline das fontes e o deck embutido no preview', function (): void {
     $retrospective = retrospectiveWithOrder();
 
     livewire(BuildDeck::class, ['record' => $retrospective->id])
         ->assertSee('GitHub')
         ->assertSee('Discord')
         ->assertSee('Repositórios')
+        // O deck vive no mesmo DOM do builder, não num iframe.
+        ->assertSee('retro-embed')
+        ->assertDontSee('<iframe', escape: false)
         ->assertSee(route('community.retrospective.preview', $retrospective), escape: false);
 });
 
@@ -284,21 +320,67 @@ test('apagar pelo builder volta para a lista', function (): void {
     expect(Retrospective::query()->whereKey($retrospective->id)->exists())->toBeFalse();
 });
 
-test('o preview fura cache com a versão do registro', function (): void {
+test('salvar recria o deck em vez de morfá-lo, para o Alpine reler os slides', function (): void {
     $retrospective = Retrospective::factory()->create();
 
     $component = livewire(BuildDeck::class, ['record' => $retrospective->id]);
 
-    $before = $component->instance()->previewUrl();
+    $before = $component->instance()->deck()['stateKey'];
 
     $component
         ->call('select', 'closing')
         ->fillForm(['closing_text' => 'Novo fecho.'])
         ->call('save');
 
-    expect($component->instance()->previewUrl())
-        ->toContain('v=')
-        ->not->toBe($before);
+    expect($component->instance()->deck()['stateKey'])->not->toBe($before);
+});
+
+test('o deck embutido usa o mesmo caminho de render da página pública', function (): void {
+    $retrospective = publishedRetrospectiveWithGithub();
+
+    $fromBuilder = livewire(BuildDeck::class, ['record' => $retrospective->id])
+        ->instance()
+        ->deck();
+
+    $fromPortal = DeckPresentation::for($retrospective);
+
+    expect(array_map(fn ($source): string => $source->key, $fromBuilder['sources']))
+        ->toBe(array_map(fn (SourceResult $source): string => $source->key, $fromPortal['sources']))
+        ->and($fromBuilder['coverTitle'])->toBe($fromPortal['coverTitle']);
+});
+
+test('a seleção leva o preview até o slide correspondente', function (): void {
+    $retrospective = publishedRetrospectiveWithGithub();
+
+    $component = livewire(BuildDeck::class, ['record' => $retrospective->id]);
+
+    // A capa é sempre o slide 0.
+    expect($component->instance()->previewIndex())->toBe(0);
+
+    $kinds = array_map(
+        fn ($slide): string => $slide->kind(),
+        $component->instance()->deck()['sources'][0]->slides,
+    );
+
+    $component->call('select', 'slide:'.$kinds[0]);
+
+    expect($component->instance()->previewIndex())->toBe(1);
+
+    // O fecho fecha o deck, depois da capa e de todos os slides compostos.
+    $component->call('select', 'closing');
+
+    expect($component->instance()->previewIndex())->toBe(count($kinds) + 1);
+});
+
+test('selecionar um slide desligado cai na capa em vez de apontar para o nada', function (): void {
+    $retrospective = publishedRetrospectiveWithGithub();
+
+    $component = livewire(BuildDeck::class, ['record' => $retrospective->id])
+        ->call('select', 'slide:github.panorama')
+        ->fillForm(['visible' => false])
+        ->call('save');
+
+    expect($component->instance()->previewIndex())->toBe(0);
 });
 
 test('o builder mostra o status da edição', function (): void {
@@ -356,7 +438,7 @@ test('o builder acompanha a transição de publicando para publicada', function 
 });
 
 test('o builder ocupa a largura inteira da viewport', function (): void {
-    // Três colunas com iframe de deck no meio não cabem no 7xl padrão do painel.
+    // Três colunas com um deck inteiro no meio não cabem no 7xl padrão do painel.
     $retrospective = Retrospective::factory()->create();
 
     $page = livewire(BuildDeck::class, ['record' => $retrospective->id])->instance();
@@ -374,4 +456,131 @@ test('o inspector não repete um cabeçalho genérico acima da seção do formul
         ->assertSee('Bloco: Discord')
         ->assertDontSee(InspectorMode::Source->getLabel())
         ->assertDontSee(InspectorMode::Source->getDescription());
+});
+
+test('o cabeçalho do preview mostra o arquivo da view do slide selecionado', function (): void {
+    $retrospective = retrospectiveWithOrder();
+
+    livewire(BuildDeck::class, ['record' => $retrospective->id])
+        ->call('select', 'slide:discord.new_members')
+        ->assertSee('app-modules/portal/resources/views/retro/slides/discord/new-members.blade.php');
+});
+
+test('o arquivo acompanha a troca de slide', function (): void {
+    $retrospective = retrospectiveWithOrder();
+
+    $page = livewire(BuildDeck::class, ['record' => $retrospective->id])
+        ->call('select', 'slide:github.repos');
+
+    expect($page->instance()->viewPath())
+        ->toBe('app-modules/portal/resources/views/retro/slides/github/repos.blade.php');
+
+    $page->call('select', InspectorMode::Cover->value);
+
+    expect($page->instance()->viewPath())
+        ->toBe('app-modules/portal/resources/views/components/retro/slides/cover.blade.php');
+});
+
+test('bloco de fonte não anuncia arquivo: quem tem view é o slide', function (): void {
+    $retrospective = retrospectiveWithOrder();
+
+    $page = livewire(BuildDeck::class, ['record' => $retrospective->id])
+        ->call('select', 'source:github');
+
+    expect($page->instance()->viewPath())->toBeNull();
+});
+
+test('kind sem partial não inventa caminho', function (): void {
+    $retrospective = retrospectiveWithOrder();
+
+    $page = livewire(BuildDeck::class, ['record' => $retrospective->id])
+        ->call('select', 'slide:github.kind-que-nao-existe');
+
+    expect($page->instance()->viewPath())->toBeNull();
+});
+
+test('navegar dentro do deck move a seleção da estrutura junto', function (): void {
+    $retrospective = publishedRetrospectiveWithGithub();
+
+    $component = livewire(BuildDeck::class, ['record' => $retrospective->id]);
+
+    $kinds = array_map(
+        fn (Slide $slide): string => $slide->kind(),
+        $component->instance()->deck()['sources'][0]->slides,
+    );
+
+    // O deck avisa que parou no primeiro slide depois da capa.
+    $component->call('selectByIndex', 1);
+
+    expect($component->instance()->selection()->token())->toBe('slide:'.$kinds[0]);
+
+    // Voltar para a capa.
+    $component->call('selectByIndex', 0);
+
+    expect($component->instance()->selection()->token())->toBe(InspectorMode::Cover->value);
+
+    // Passar do último slide composto é o fecho.
+    $component->call('selectByIndex', count($kinds) + 1);
+
+    expect($component->instance()->selection()->token())->toBe(InspectorMode::Closing->value);
+});
+
+test('o inspector acompanha o slide para onde o deck foi', function (): void {
+    $retrospective = publishedRetrospectiveWithGithub();
+
+    livewire(BuildDeck::class, ['record' => $retrospective->id])
+        ->call('selectByIndex', 1)
+        // O inspector troca de modo: a capa edita título e período, o slide edita on/off.
+        ->assertSee('Exibir no deck')
+        ->assertSee('app-modules/portal/resources/views/retro/slides/');
+});
+
+test('ir e voltar entre estrutura e deck estabiliza no mesmo slide', function (): void {
+    $retrospective = publishedRetrospectiveWithGithub();
+
+    $component = livewire(BuildDeck::class, ['record' => $retrospective->id]);
+
+    $kind = $component->instance()->deck()['sources'][0]->slides[0]->kind();
+
+    // Estrutura -> deck: a seleção manda o preview para o índice 1.
+    $component->call('select', 'slide:'.$kind);
+
+    $index = $component->instance()->previewIndex();
+
+    // Deck -> estrutura: o mesmo índice de volta não muda mais nada. É o que impede
+    // as duas pontas de ficarem se empurrando.
+    $component->call('selectByIndex', $index);
+
+    expect($component->instance()->selection()->token())->toBe('slide:'.$kind)
+        ->and($component->instance()->previewIndex())->toBe($index);
+});
+
+test('índice fora do deck cai na capa em vez de explodir', function (): void {
+    $retrospective = publishedRetrospectiveWithGithub();
+
+    $component = livewire(BuildDeck::class, ['record' => $retrospective->id])
+        ->call('selectByIndex', -3);
+
+    expect($component->instance()->selection()->token())->toBe(InspectorMode::Cover->value);
+});
+
+test('nenhuma ação Livewire nasce de dentro dos islands do builder', function (): void {
+    // Um wire:click dentro de um island vira chamada ESCOPADA ao island: o
+    // inspector não atualiza no mesmo roundtrip e cada clique paga o re-render
+    // da tira inteira. Os botões despacham filmstrip-call e o listener mora
+    // fora do island — este teste impede o wire:click de voltar.
+    $views = [
+        base_path('app-modules/panel-admin/resources/views/components/retrospective/filmstrip-thumb.blade.php'),
+        base_path('app-modules/panel-admin/resources/views/components/retrospective/filmstrip-group.blade.php'),
+    ];
+
+    foreach ($views as $view) {
+        expect(file_get_contents($view))->not->toContain('wire:click', basename($view));
+    }
+
+    $builder = file_get_contents(base_path('app-modules/panel-admin/resources/views/retrospective/build-deck.blade.php'));
+
+    preg_match_all('/@island\(.*?\).*?@endisland/s', $builder, $islands);
+
+    expect($islands[0])->not->toBeEmpty()->each->not->toContain('wire:click');
 });

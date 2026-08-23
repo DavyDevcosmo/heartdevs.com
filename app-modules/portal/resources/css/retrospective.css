@@ -4,6 +4,82 @@
  */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
+/*
+ | Deck embutido (Deck Builder do painel). O deck se posiciona `fixed` porque no
+ | portal ele É a página; aqui ele precisa caber numa coluna. O host vira o
+ | containing block e o deck passa a se ancorar nele, sem que nada mais no design
+ | system mude — os filhos já são `absolute; inset: 0`.
+ */
+.retro-embed {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem;
+}
+
+.retro-embed .retro {
+    position: absolute;
+}
+
+/*
+ | Miniatura de UM slide (filmstrip do Deck Builder). O palco renderiza o slide em
+ | tamanho de deck e o `scale` o encolhe. Escalar é o que mantém a miniatura
+ | honesta: as proporções internas continuam as do deck grande, só menores.
+ | Encolher a CAIXA em vez de escalar reflowaria o layout e mostraria outra coisa.
+ |
+ | `content-visibility` deixa o browser pular o que está fora da rolagem horizontal
+ | — o filmstrip carrega o deck inteiro, e o operador olha três slides por vez.
+ */
+.retro-thumb {
+    /* Sem unidade: `scale()` divide os dois, e calc() não divide comprimentos. */
+    --retro-thumb-width: 208;
+    --retro-stage-width: 1280;
+    --retro-stage-height: 720;
+
+    position: relative;
+    width: calc(var(--retro-thumb-width) * 1px);
+    aspect-ratio: var(--retro-stage-width) / var(--retro-stage-height);
+    overflow: hidden;
+    border-radius: 0.5rem;
+    background: #0b0a10;
+    content-visibility: auto;
+    contain-intrinsic-size: auto calc(var(--retro-thumb-width) * 1px) auto
+        calc(var(--retro-thumb-width) * var(--retro-stage-height) / var(--retro-stage-width) * 1px);
+}
+
+.retro-thumb-stage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(var(--retro-stage-width) * 1px);
+    height: calc(var(--retro-stage-height) * 1px);
+    transform: scale(calc(var(--retro-thumb-width) / var(--retro-stage-width)));
+    transform-origin: top left;
+    /* O clique é do botão que cobre a miniatura, nunca do carrossel lá dentro. */
+    pointer-events: none;
+}
+
+.retro-thumb .retro {
+    position: absolute;
+}
+
+/*
+ | O slide da miniatura é o único que existe ali: aparece sempre. `.active` e a
+ | animação de entrada são estado do deck NAVEGÁVEL — numa miniatura parada elas
+ | só deixariam o slide invisível.
+ */
+.retro-thumb .retro .slide {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition: none;
+    overflow: hidden;
+}
+
+.retro-thumb .retro .slide [data-anim] {
+    opacity: 1;
+    animation: none;
+}
+
 .retro {
     --bg: #0b0a10;
     --surface: #15131c;
@@ -29,6 +105,16 @@
 
     position: fixed;
     inset: 0;
+
+    /*
+     | Origem das unidades `cqw` do design system. O deck mede a tipografia pela
+     | LARGURA DELE, não pela do viewport: no portal ele ocupa a tela inteira e as
+     | duas coincidem, mas embutido numa coluna do painel — ou numa miniatura do
+     | filmstrip — só o container diz a verdade. `inline-size` contém apenas o eixo
+     | horizontal: a altura segue livre, e nada aqui depende de contenção vertical.
+     */
+    container-type: inline-size;
+
     background: var(--bg);
     color: var(--text);
     font-family: 'Hanken Grotesk', sans-serif;
@@ -64,7 +150,7 @@
     top: -22%;
     left: 50%;
     transform: translateX(-50%);
-    width: 120vw;
+    width: 120cqw;
     height: 80vh;
     background: radial-gradient(
         ellipse at center,
@@ -95,7 +181,7 @@
     overflow: hidden;
 }
 .retro .logo-bg svg {
-    width: min(78vh, 64vw);
+    width: min(78vh, 64cqw);
     height: auto;
     transform: translateY(-2%);
 }
@@ -209,7 +295,7 @@
     font-family: 'Fraunces', serif;
     font-weight: 600;
     line-height: 0.96;
-    font-size: clamp(2.6rem, 7.5vw, 5.4rem);
+    font-size: clamp(2.6rem, 7.5cqw, 5.4rem);
     letter-spacing: -0.02em;
     margin: 0.2em 0 0;
 }
@@ -223,7 +309,7 @@
     padding-right: 0.05em;
 }
 .retro .lead {
-    font-size: clamp(1.02rem, 1.6vw, 1.26rem);
+    font-size: clamp(1.02rem, 1.6cqw, 1.26rem);
     color: var(--muted);
     max-width: 60ch;
 }
@@ -352,7 +438,7 @@
 .retro .sec {
     font-family: 'Fraunces', serif;
     font-weight: 600;
-    font-size: clamp(1.9rem, 4vw, 2.8rem);
+    font-size: clamp(1.9rem, 4cqw, 2.8rem);
     letter-spacing: -0.01em;
     margin: 0.3em 0 0.2em;
     line-height: 1.04;
@@ -381,7 +467,7 @@
 .retro .stat .v {
     font-family: 'Fraunces', serif;
     font-weight: 600;
-    font-size: clamp(1.8rem, 3.4vw, 2.7rem);
+    font-size: clamp(1.8rem, 3.4cqw, 2.7rem);
     line-height: 1;
     color: var(--text);
 }
@@ -422,7 +508,7 @@
     position: relative;
     /* sai da caixa de 1120px do slide-inner pra usar a largura da tela;
        o cabeçalho continua estreito, só o trilho de cards "vaza" pras bordas */
-    width: min(96vw, 1480px);
+    width: min(96cqw, 1480px);
     margin-left: 50%;
     transform: translateX(-50%);
 }
@@ -650,7 +736,7 @@
 .retro .repo-name {
     font-family: 'Fraunces', serif;
     font-weight: 600;
-    font-size: clamp(1.6rem, 3.2vw, 2.3rem);
+    font-size: clamp(1.6rem, 3.2cqw, 2.3rem);
     line-height: 1.05;
 }
 
@@ -984,7 +1070,7 @@
     right: 0;
     bottom: 0;
     width: 360px;
-    max-width: 88vw;
+    max-width: 88cqw;
     z-index: 10;
     background: linear-gradient(180deg, #161320, #100e17);
     border-left: 1px solid var(--border);
@@ -1207,7 +1293,7 @@
     padding: 40px 34px 56px;
 }
 .retro .slide-inner.is-dense .sec {
-    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    font-size: clamp(1.5rem, 2.6cqw, 2rem);
     margin: 0.2em 0 0;
 }
 
@@ -1229,7 +1315,7 @@
 .retro .vb-total b {
     font-family: 'Fraunces', serif;
     font-weight: 600;
-    font-size: clamp(1.1rem, 1.9vw, 1.6rem);
+    font-size: clamp(1.1rem, 1.9cqw, 1.6rem);
     line-height: 1.1;
     color: var(--brand-soft);
     display: block;

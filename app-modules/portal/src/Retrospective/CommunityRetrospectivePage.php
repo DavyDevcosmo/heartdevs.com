@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace He4rt\Portal\Retrospective;
 
-use Carbon\CarbonImmutable;
-use He4rt\Community\Retrospective\Actions\CompileSnapshot;
-use He4rt\Community\Retrospective\Actions\ComposeDeck;
-use He4rt\Community\Retrospective\DTOs\RetrospectiveSnapshot;
 use He4rt\Community\Retrospective\Models\Retrospective;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
@@ -41,36 +37,10 @@ final class CommunityRetrospectivePage extends Component
 
     public function render(): View
     {
-        $retrospective = $this->resolveEdition();
-
-        if (!$retrospective instanceof Retrospective) {
-            return view('portal::community-retrospective', [
-                'sources' => [],
-                'since' => CarbonImmutable::now(),
-                'until' => CarbonImmutable::now(),
-                'coverTitle' => null,
-                'coverIntro' => null,
-                'closingText' => null,
-                'stateKey' => 'empty',
-            ]);
-        }
-
-        $snapshot = $this->preview && !$retrospective->isPublished()
-            ? resolve(CompileSnapshot::class)->execute($retrospective->period(), $retrospective->filters())
-            : ($retrospective->snapshot ?? new RetrospectiveSnapshot());
-
-        $sources = resolve(ComposeDeck::class)->execute($snapshot, $retrospective->deck_config);
-
-        return view('portal::community-retrospective', [
-            'sources' => $sources,
-            'since' => $retrospective->since,
-            'until' => $retrospective->until,
-            'coverTitle' => $retrospective->cover_title,
-            'coverIntro' => $retrospective->cover_intro,
-            'closingText' => $retrospective->closing_text,
-            // Sem filtros do visitante: o deck só muda quando a edição muda.
-            'stateKey' => $retrospective->id,
-        ]);
+        return view(
+            'portal::community-retrospective',
+            DeckPresentation::for($this->resolveEdition(), live: $this->preview),
+        );
     }
 
     private function resolveEdition(): ?Retrospective

@@ -49,9 +49,14 @@
                         .querySelectorAll('[data-anim]')
                         .forEach((el, k) => (el.style.animationDelay = 110 + Math.min(k, 14) * 60 + 'ms')),
                 );
-                this.go(0);
+                this.go(0, { silent: true });
             },
-            go(i) {
+            // `silent` marca o movimento que veio de FORA (o builder mandando o deck
+            // para um slide). Sem isso o anúncio de volta reabriria o mesmo caminho
+            // e as duas pontas ficariam se empurrando.
+            go(i, { silent = false } = {}) {
+                const previous = this.active;
+
                 this.active = Math.max(0, Math.min(i, this.total - 1));
                 this.slides.forEach((s, k) => {
                     s.classList.toggle('active', k === this.active);
@@ -59,9 +64,22 @@
                     if (k === this.active) s.scrollTop = 0;
                 });
                 this.label = this.slides[this.active] ? this.slides[this.active].dataset.label : '';
+
+                if (!silent && this.active !== previous) {
+                    // Borbulha até o host: no portal ninguém escuta, no builder é o
+                    // que mantém estrutura e inspector acompanhando o deck.
+                    $dispatch('retro-moved', { index: this.active });
+                }
             },
         }"
+        {{-- Navegação por fora do deck: o Deck Builder aponta o preview para o
+             slide que o operador acabou de selecionar na coluna de estrutura. --}}
+        x-on:retro-goto.window="go($event.detail.index, { silent: true })"
         @keydown.window="
+            // Embutido no builder, o deck divide o teclado com o inspector: setas
+            // dentro de um campo movem o cursor, não o deck.
+            if ($event.target.closest('input, textarea, select, [contenteditable]')) return;
+
             if ($event.key === 'ArrowRight') {
                 go(active + 1);
                 $event.preventDefault();
