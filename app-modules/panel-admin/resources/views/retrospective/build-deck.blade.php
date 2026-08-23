@@ -14,41 +14,41 @@
     @vite(['app-modules/portal/resources/css/retrospective.css'])
 
     {{--
-        Status da edição + aviso de drift. Enquanto o job congela o snapshot o poll
-        relê o registro, para "Publicando" virar "Publicada" sem recarregar na mão.
+        Altura fixa: o builder é uma FERRAMENTA, não um documento. Rolar a página
+        para achar a tira ou o inspector é o que o layout anterior cobrava; aqui as
+        três áreas dividem uma viewport e cada uma rola por dentro se precisar.
+
+        O poll do job de publicação mora aqui em cima porque vale para a tela toda.
     --}}
     <div
-        class="flex flex-wrap items-center gap-2"
+        style="--builder-max-width: 1600px"
+        class="grid grid-cols-1 gap-3 px-1 xl:h-[calc(100vh-11rem)] xl:min-h-[34rem] xl:grid-cols-[minmax(0,1fr)_17rem] xl:grid-rows-[minmax(0,1fr)_auto] xl:gap-4 xl:ps-6"
         @if ($status === RetrospectiveStatus::Publishing) wire:poll.3s="refreshStatus" @endif
     >
-        <x-filament::badge :color="$status->getColor()" :icon="$status->getIcon()">
-            {{ $status->getLabel() }}
-        </x-filament::badge>
-
-        <span class="text-xs text-gray-500 dark:text-gray-400">{{ $status->getDescription() }}</span>
-
-        @if ($record->needsRepublish())
-            <x-filament::badge color="warning" icon="heroicon-m-exclamation-triangle">
-                Republique: exclusion mudou depois de publicar
-            </x-filament::badge>
-        @endif
-    </div>
-    {{--
-        Duas colunas: o deck fica com todo o espaço que sobra e o inspector com a
-        largura FIXA de que um formulário precisa — ela não cresce com o monitor.
-        A estrutura saiu daqui para o rodapé: ela é uma sequência, e sequência se
-        lê deitada.
-    --}}
-    <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
         {{--
-            Coluna 1: preview. Passa pelo MESMO ComposeDeck e pelas MESMAS partials
-            da página publicada — a única garantia de que o preview não mente é ser
+            Preview. Passa pelo MESMO ComposeDeck e pelas MESMAS partials da página
+            publicada — a única garantia de que o preview não mente é ser
             literalmente a mesma coisa (ADR-0002).
+
+            `min-h-0` nas duas pontas: sem ele um filho flex se recusa a encolher
+            abaixo do conteúdo e o deck estoura a linha do grid em vez de caber nela.
         --}}
-        <div class="min-w-0">
-            <x-filament::section>
-                <x-slot name="heading">Preview</x-slot>
-                <x-slot name="description">Prévia ao vivo pelo mesmo render path do deck publicado.</x-slot>
+        <div class="flex min-h-0 min-w-0 flex-col gap-2 xl:col-start-1 xl:row-start-1">
+            {{-- Barra fina no lugar do cabeçalho de Section: diz ONDE o operador
+                 está (slide e posição no deck) e qual arquivo desenha isso. Um
+                 título "Preview" sobre um deck em tela cheia não informava nada. --}}
+            <div class="mx-auto flex w-full max-w-[var(--builder-max-width)] shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                <span class="font-semibold text-gray-950 dark:text-white">{{ $this->selectionLabel() }}</span>
+
+                <span class="font-mono text-xs text-gray-400 dark:text-gray-500">
+                    {{ $this->previewIndex() + 1 }} / {{ $this->slideTotal() }}
+                </span>
+
+                @if ($record->needsRepublish())
+                    <x-filament::badge color="warning" icon="heroicon-m-exclamation-triangle" size="xs">
+                        Republique: exclusion mudou depois de publicar
+                    </x-filament::badge>
+                @endif
 
                 {{--
                     O arquivo do que está selecionado, para copiar direto no editor.
@@ -56,10 +56,9 @@
                     certo — a convenção kind -> partial mora no portal (SlideView).
                 --}}
                 @if ($path = $this->viewPath())
-                    <x-slot name="afterHeader">
                         <div
                             x-data="{ copied: false }"
-                            class="flex min-w-0 items-center gap-1.5"
+                            class="flex min-w-0 items-center gap-1.5 xl:ms-auto"
                         >
                             {{-- Renderizado no servidor, não via x-text: o caminho é a
                                  informação, e ela não pode depender do Alpine ter subido. --}}
@@ -92,8 +91,8 @@
                                 label="Caminho copiado"
                             />
                         </div>
-                    </x-slot>
                 @endif
+            </div>
 
                 {{--
                     O deck de verdade, no mesmo DOM do builder: mesmas partials e
@@ -121,72 +120,66 @@
                     servidor re-morfaria o deck a cada navegação — exatamente o que o
                     island existe para impedir. O retro-moved borbulha até aqui.
                 --}}
-                <div x-on:retro-moved="$wire.selectByIndex($event.detail.index)">
-                    @island(name: 'deck')
-                        {{-- No desktop a tira ocupa o rodapé da viewport: o deck cede
-                             essa altura para não ficar com o próprio rodapé coberto. No
-                             mobile a tira rola junto com a página e o deck fica inteiro. --}}
-                        <div class="retro-embed h-[75vh] w-full border border-gray-200 xl:h-[58vh] dark:border-white/10">
-                            @include('portal::community-retrospective', $this->deck)
-                        </div>
-                    @endisland
-                </div>
-            </x-filament::section>
+            <div class="min-h-0 flex-1" x-on:retro-moved="$wire.selectByIndex($event.detail.index)">
+                @island(name: 'deck')
+                    {{-- `h-full` e não uma fração de viewport: quem decide a altura é
+                         a linha do grid, que já desconta a tira e o cabeçalho. Uma
+                         altura em vh voltaria a somar mais do que a tela tem. --}}
+                    <div class="retro-embed mx-auto h-full w-full max-w-[var(--builder-max-width)] border border-gray-200 dark:border-white/10">
+                        @include('portal::community-retrospective', $this->deck)
+                    </div>
+                @endisland
+            </div>
         </div>
+
         {{--
-            Coluna 2: inspector. Contextual, quatro modos, escreve onde a Fase 2
-            escrevia. Sem cabeçalho próprio: a Section de cada modo já nomeia o alvo
-            ("Bloco: Discord") e carrega o ícone do modo — um título genérico em cima
-            só repetia isso de forma mais vaga.
+            Coluna direita: o estado da edição em cima e o inspector embaixo, os dois
+            no mesmo trilho. É a coluna que responde "o que estou editando e o que
+            acontece quando eu publicar" — e ela rola por dentro, sem levar a página
+            junto.
         --}}
-        <div class="min-w-0">
+        <div class="flex min-h-0 min-w-0 flex-col gap-3 overflow-y-auto xl:col-start-2 xl:row-span-2">
+            <div class="shrink-0">
+                <div class="text-xs font-semibold tracking-wide text-gray-400 uppercase dark:text-gray-500">
+                    Publicação
+                </div>
+
+                <div class="mt-1 flex items-center gap-2">
+                    <x-filament::badge :color="$status->getColor()" :icon="$status->getIcon()" size="xs">
+                        {{ $status->getLabel() }}
+                    </x-filament::badge>
+                </div>
+
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $status->getDescription() }}</p>
+            </div>
+
+            {{--
+                Inspector: contextual, quatro modos, escreve onde a Fase 2 escrevia.
+                Sem cabeçalho próprio — a Section de cada modo já nomeia o alvo
+                ("Bloco: Discord") e carrega o ícone do modo.
+            --}}
             {{ $this->form }}
         </div>
-    </div>
-
-    {{--
-        A tira: a estrutura do deck deitada no rodapé, em miniaturas do slide de
-        verdade. Embaixo e não à esquerda porque um deck é uma SEQUÊNCIA — uma
-        lista vertical em coluna estreita nunca mostrou isso — e porque a coluna
-        cobrava do preview a largura que ele mais precisa.
-
-        Sai do catálogo, não da composição: fonte desligada e slide oculto
-        continuam aqui, apagados. É nesta tira que mora o botão que os religa; se
-        sumissem junto com a composição, não haveria caminho de volta.
-    --}}
-    {{--
-        Grudada no rodapé a partir do desktop. A tira é o mapa do deck: rolar até
-        o fim da página para trocar de slide devolveria a fricção que tirá-la da
-        lateral resolveu. No mobile ela volta a ser conteúdo normal — não sobra
-        altura para gastar um pedaço fixo da tela.
-
-        `sticky` depende de nenhum ancestral cortar o overflow; o wrapper de página
-        do Filament não corta.
-    --}}
-    <x-filament::section class="xl:sticky xl:bottom-0 xl:z-20 xl:shadow-lg">
-        <x-slot name="heading">Estrutura</x-slot>
-        <x-slot name="description">
-            Clique numa miniatura para inspecionar. O interruptor liga e desliga a fonte inteira; as setas mudam a ordem no deck.
-        </x-slot>
 
         {{--
-            Island, pelo mesmo motivo do deck: digitar no inspector re-renderiza a
-            página, e sem o island cada tecla remontaria o deck inteiro em
-            miniatura. A tira só re-renderiza quando algo foi salvo.
+            A tira: a estrutura do deck deitada no rodapé, em miniaturas do slide de
+            verdade. Embaixo e não à esquerda porque um deck é uma SEQUÊNCIA — uma
+            lista vertical em coluna estreita nunca mostrou isso — e porque a coluna
+            cobrava do preview a largura que ele mais precisa.
 
-            Por isso o destaque do slide atual é do CLIENTE, não do servidor: o
-            island não acompanha a seleção, mas os dois eventos que o deck já
-            fala — `retro-goto` (o servidor mandou o deck pular) e `retro-moved`
-            (o operador navegou por dentro) — dizem tudo o que a tira precisa.
+            Sai do catálogo, não da composição: fonte desligada e slide oculto
+            continuam aqui, apagados. É nesta tira que mora o botão que os religa; se
+            sumissem junto com a composição, não haveria caminho de volta.
+
+            Sem Section em volta: título, descrição e padding da Section custavam
+            mais altura do que as próprias miniaturas, e numa tela de altura fixa
+            essa altura sai do deck.
         --}}
-        {{--
-            O listener fica FORA do island pelo mesmo motivo do deck: uma ação
-            disparada de um elemento de dentro vira uma chamada escopada ao island —
-            o inspector não atualizaria no mesmo roundtrip e cada clique pagaria o
-            re-render da tira inteira. Os botões só despacham filmstrip-call; o
-            evento borbulha até aqui e a chamada nasce fora do escopo do island.
-        --}}
-        <div x-on:filmstrip-call="$wire.$call($event.detail.method, ...$event.detail.args)">
+        <div class="min-w-0 shrink-0 xl:col-start-1 xl:row-start-2">
+        <div
+            class="mx-auto min-w-0 max-w-[var(--builder-max-width)]"
+            x-on:filmstrip-call="$wire.$call($event.detail.method, ...$event.detail.args)"
+        >
         @island(name: 'filmstrip')
             {{-- Nome de classe completo, sem import: o corpo da island compila para
                  um arquivo próprio, onde nem o import do topo da view nem um
@@ -201,8 +194,12 @@
                 $closingIndex = count($this->composedKinds) + 1;
             @endphp
 
+            {{-- A largura das miniaturas é decidida AQUI e herdada por todas as
+                 células: numa tela de altura fixa a tira é o que sobra depois do
+                 deck, então esse número é orçamento de layout, não estilo de célula. --}}
             <div
-                class="flex items-start gap-3 overflow-x-auto pb-2"
+                class="flex items-start gap-2 overflow-x-auto pb-1"
+                style="--retro-thumb-width: 164"
                 x-data="{
                     active: @js($this->previewIndex()),
                     focus(index) {
@@ -257,7 +254,10 @@
                             {{-- Fonte registrada que não rendeu nada no recorte. O bloco
                                  fica, com o motivo à mostra: some da tira só o que nunca
                                  existiu. --}}
-                            <div class="flex h-[117px] w-52 shrink-0 items-center justify-center rounded-lg border border-dashed border-gray-300 px-3 text-center text-xs text-gray-400 dark:border-white/10 dark:text-gray-500">
+                            <div
+                                class="flex aspect-video shrink-0 items-center justify-center rounded-lg border border-dashed border-gray-300 px-2 text-center text-[0.7rem] leading-tight text-gray-400 dark:border-white/10 dark:text-gray-500"
+                                style="width: calc(var(--retro-thumb-width, 208) * 1px)"
+                            >
                                 Sem dado neste recorte
                             </div>
                         @endforelse
@@ -281,6 +281,7 @@
                 </x-panel-admin::retrospective.filmstrip-group>
             </div>
         @endisland
+            </div>
         </div>
-    </x-filament::section>
+    </div>
 </x-filament-panels::page>

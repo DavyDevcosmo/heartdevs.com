@@ -97,6 +97,13 @@ class BuildDeck extends Page
      */
     protected Width|string|null $maxContentWidth = Width::Full;
 
+    /**
+     * Memo do snapshot desta requisição. Privada: o Livewire só serializa
+     * propriedades públicas, então ela nasce vazia a cada roundtrip — que é
+     * exatamente a vida útil que um snapshot ao vivo pode ter.
+     */
+    private ?RetrospectiveSnapshot $deckSnapshot = null;
+
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
@@ -111,9 +118,29 @@ class BuildDeck extends Page
         return $this->getRetrospective()->title;
     }
 
-    public function getSubheading(): string
+    /**
+     * Quantos slides o deck tem, contando capa e fecho. É o denominador do "4 / 12"
+     * da barra do preview.
+     */
+    public function slideTotal(): int
     {
-        return 'Monte o deck vendo o deck. Ordem e on/off re-derivam do snapshot; exclusion exige republicar.';
+        return count($this->composedKinds) + 2;
+    }
+
+    /**
+     * O que está selecionado, em palavras, para a barra fina acima do preview.
+     * Slide vem prefixado pela fonte ("GitHub / Destaques"): sozinho, um rótulo
+     * como "Panorama" não diz de quem ele é.
+     */
+    public function selectionLabel(): string
+    {
+        $selection = $this->selection();
+
+        return match ($selection->mode) {
+            InspectorMode::Cover, InspectorMode::Closing => $selection->mode->getLabel(),
+            InspectorMode::Source => $this->sourceLabel($selection->requireTarget()),
+            InspectorMode::Slide => $this->slideLabelWithSource($selection->requireTarget()),
+        };
     }
 
     /**
@@ -280,7 +307,7 @@ class BuildDeck extends Page
     #[Computed]
     public function deck(): array
     {
-        $props = DeckPresentation::fromSnapshot($this->getRetrospective(), $this->deckSnapshot);
+        $props = DeckPresentation::fromSnapshot($this->getRetrospective(), $this->deckSnapshot());
 
         // A key carrega a versão: ao salvar, o Livewire recria o deck em vez de
         // morfá-lo, e o Alpine reinicializa com a nova lista de slides.
@@ -293,14 +320,15 @@ class BuildDeck extends Page
      * O snapshot desta edição, resolvido UMA vez por render. Em rascunho ele é
      * coletado ao vivo — dezenas de queries —, e o deck e a tira o dividem.
      *
-     * Leia-o SEMPRE como propriedade (`$this->deckSnapshot`). O cache do
-     * #[Computed] mora no acesso à propriedade: chamar `deckSnapshot()` invoca o
-     * método e paga a coleta de novo, silenciosamente.
+     * Memoizado numa propriedade privada, e não com #[Computed]: o cache do
+     * #[Computed] só existe no acesso mágico `$this->deckSnapshot`, que é intipável
+     * (a análise estática não vê a propriedade e o retorno vira mixed). Aqui o
+     * memo é explícito, o tipo sobrevive, e não há a armadilha de chamar o método
+     * e pagar a coleta de novo em silêncio.
      */
-    #[Computed]
     public function deckSnapshot(): RetrospectiveSnapshot
     {
-        return DeckPresentation::snapshotFor($this->getRetrospective(), live: true);
+        return $this->deckSnapshot ??= DeckPresentation::snapshotFor($this->getRetrospective(), live: true);
     }
 
     /**
@@ -314,7 +342,7 @@ class BuildDeck extends Page
     public function filmstrip(): array
     {
         return DeckFilmstrip::groups(
-            $this->deckSnapshot,
+            $this->deckSnapshot(),
             $this->getRetrospective()->deck_config,
             $this->composedKinds,
         );
@@ -467,6 +495,7 @@ class BuildDeck extends Page
     {
         return [
             Section::make('Capa')
+                ->compact()
                 ->icon(InspectorMode::Cover->getIcon())
                 ->description('Só texto editorial e recorte; números, avatares e período exibido são computados à parte.')
                 ->schema([
@@ -509,6 +538,7 @@ class BuildDeck extends Page
     {
         return [
             Section::make('Fecho')
+                ->compact()
                 ->icon(InspectorMode::Closing->getIcon())
                 ->description('A última palavra do deck.')
                 ->schema([
@@ -530,6 +560,7 @@ class BuildDeck extends Page
     {
         $sections = [
             Section::make('Bloco: '.$this->sourceLabel($key))
+                ->compact()
                 ->icon(InspectorMode::Source->getIcon())
                 ->description('Desligar re-deriva do snapshot na composição, sem republicar.')
                 ->schema([
@@ -547,6 +578,7 @@ class BuildDeck extends Page
         $picker = $this->picker($source);
 
         $sections[] = Section::make('Exclusions')
+            ->compact()
             ->icon(Heroicon::OutlinedEyeSlash)
             ->description('Esconde um item ou pessoa desta fonte. Mexe no DADO: sai dos slides e também dos números, então exige republicar para valer.')
             ->schema([
@@ -583,6 +615,7 @@ class BuildDeck extends Page
             // O kind pode não estar em catálogo nenhum (token velho vindo da wire);
             // nesse caso o próprio kind serve de rótulo.
             Section::make('Slide: '.($entry->label ?? $kind))
+                ->compact()
                 ->icon(InspectorMode::Slide->getIcon())
                 ->description($entry->hint ?? InspectorMode::Slide->getDescription())
                 ->schema([
@@ -765,6 +798,24 @@ class BuildDeck extends Page
         return AvailableSources::map()[$key] ?? $key;
     }
 
+    /**
+     * "Fonte / Slide". A fonte sai do composedKinds — é lá que mora o par
+     * (kind, source) do deck renderizado —, e um kind fora da composição degrada
+     * para o rótulo sozinho em vez de inventar uma fonte.
+     */
+    private function slideLabelWithSource(string $kind): string
+    {
+        $label = $this->slideEntry($kind)->label ?? $kind;
+
+        foreach ($this->composedKinds as $slide) {
+            if ($slide['kind'] === $kind) {
+                return $this->sourceLabel($slide['source']).' / '.$label;
+            }
+        }
+
+        return $label;
+    }
+
     private function slideEntry(string $kind): ?SlideEntry
     {
         foreach ($this->blocks() as $block) {
@@ -786,7 +837,9 @@ class BuildDeck extends Page
     {
         $this->getRetrospective()->refresh();
 
-        unset($this->deckSnapshot, $this->deck, $this->filmstrip);
+        $this->deckSnapshot = null;
+
+        unset($this->deck, $this->filmstrip);
 
         $this->composedKinds = $this->composeKinds();
 

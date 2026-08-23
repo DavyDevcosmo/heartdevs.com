@@ -20,7 +20,10 @@
             {{-- Kind do catálogo que não rendeu nada neste recorte: não há slide
                  para desenhar, mas o cartão fica. É ele que mostra que o slide
                  existe e que dá acesso ao on/off do kind. --}}
-            <div class="flex h-[117px] w-52 items-center justify-center rounded-lg border border-dashed border-gray-300 px-3 text-center text-xs text-gray-400 dark:border-white/10 dark:text-gray-500">
+            <div
+                class="flex aspect-video items-center justify-center rounded-lg border border-dashed border-gray-300 px-2 text-center text-[0.7rem] leading-tight text-gray-400 dark:border-white/10 dark:text-gray-500"
+                style="width: calc(var(--retro-thumb-width, 208) * 1px)"
+            >
                 Sem dado neste recorte
             </div>
         @else
@@ -50,8 +53,9 @@
     </div>
 
     <div
+        style="width: calc(var(--retro-thumb-width, 208) * 1px)"
         @class([
-            'mt-1.5 w-52 truncate text-xs font-medium',
+            'mt-1 truncate text-[0.7rem] font-medium',
             'text-gray-400 line-through dark:text-gray-600' => $muted,
             'text-gray-600 dark:text-gray-300' => ! $muted,
         ])

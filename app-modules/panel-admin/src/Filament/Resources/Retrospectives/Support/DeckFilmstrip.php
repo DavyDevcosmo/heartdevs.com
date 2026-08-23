@@ -102,7 +102,12 @@ final class DeckFilmstrip
             // vazia devolve null pelo mesmo caminho: a miniatura existe, mas não
             // leva a lugar nenhum.
             $queue = $block->key.'|'.$kind;
-            $index = blank($indices[$queue]) ? null : array_shift($indices[$queue]);
+            // isset() e não blank()/empty(): a chave costuma NÃO existir (todo kind
+            // oculto cai aqui), e blank() avalia o índice antes de testá-lo, o que
+            // dispara "Undefined array key" a cada slide desligado.
+            $index = isset($indices[$queue]) && $indices[$queue] !== []
+                ? array_shift($indices[$queue])
+                : null;
 
             $rendered[$kind] = true;
 
