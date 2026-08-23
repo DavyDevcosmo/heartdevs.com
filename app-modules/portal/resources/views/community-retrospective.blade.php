@@ -1,4 +1,5 @@
 @php ($noData = count($sources) === 0)
+@use(He4rt\Portal\Retrospective\AboutSection)
 @use(He4rt\Portal\Retrospective\SlideView)
 <x-portal::retro.deck :stateKey="$stateKey" :bare="$noData">
     @if ($noData)
@@ -11,6 +12,13 @@
             :coverTitle="$coverTitle ?? null"
             :coverIntro="$coverIntro ?? null"
         />
+
+        {{-- Quem a He4rt é, antes dos números de quem ela fez. Seção fixa: não
+             vem do snapshot nem passa pelo ComposeDeck, então nenhuma curadoria
+             a desliga — ela é o contexto que faz o resto significar algo. --}}
+        @foreach (AboutSection::slides() as $about)
+            @include($about->view(), ['sources' => $sources, 'since' => $since, 'until' => $until])
+        @endforeach
 
         @foreach ($sources as $source)
             @foreach ($source->slides as $slide)

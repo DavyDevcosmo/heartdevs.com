@@ -85,6 +85,20 @@
     animation: none;
 }
 
+/*
+ | Mesmo motivo, para o que não é `[data-anim]`: traço que só aparece ao ser
+ | desenhado e ponto que só aparece ao estourar ficariam INVISÍVEIS na miniatura,
+ | onde nada anima. Aqui eles nascem no estado final.
+ */
+.retro-thumb .retro .ecg path,
+.retro-thumb .retro .tl-ecg path {
+    stroke-dashoffset: 0;
+}
+
+.retro-thumb .retro .tl-dot {
+    opacity: 1;
+}
+
 .retro {
     --bg: #0b0a10;
     --surface: #15131c;
@@ -1530,5 +1544,291 @@
 @media (max-width: 900px) {
     .retro .vb-cols {
         grid-template-columns: 1fr;
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ | Seção "A He4rt" — apresentação fixa da comunidade, logo depois da capa.
+ ────────────────────────────────────────────────────────────────────────────── */
+
+/*
+ | Linha do tempo desenhada como batimento: cada marco É um pico da onda, não um
+ | ponto sobre uma régua. O deck já abre com um ECG na capa e fecha falando em
+ | coração batendo — a história da comunidade usa a mesma linha.
+ |
+ | Três camadas empilhadas na MESMA coluna (ano em cima, texto embaixo) e a onda
+ | por cima, absoluta. Ano e texto juntos na coluna é o que deixa a tira quebrar
+ | em telas estreitas sem descolar um do outro: some a onda, some o vão, e a
+ | timeline vira lista.
+ */
+.retro .tl {
+    position: relative;
+    margin-top: 34px;
+}
+.retro .tl-line {
+    position: absolute;
+    top: 24px;
+    left: 0;
+    right: 0;
+    /* Casada com a altura do viewBox: mapeamento 1:1 no eixo vertical é o que
+       deixa o ponto (HTML) pousar no ápice do pico (SVG) por um `top` em px. */
+    height: 104px;
+    pointer-events: none;
+}
+.retro .tl-ecg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.retro .tl-ecg path {
+    fill: none;
+    stroke: var(--brand);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 7px rgba(120, 43, 241, 0.75));
+    stroke-dasharray: 4200;
+    stroke-dashoffset: 4200;
+}
+.retro .slide.active .tl-ecg path {
+    animation: retro-draw 2s 0.35s ease-out forwards;
+}
+
+/*
+ | O ponto é HTML, não <circle>: o SVG estica na horizontal (preserveAspectRatio
+ | none) para a onda acompanhar a largura, e um círculo lá dentro viraria elipse.
+ */
+.retro .tl-dot {
+    position: absolute;
+    top: 18px;
+    width: 11px;
+    height: 11px;
+    margin-left: -5.5px;
+    border-radius: 50%;
+    opacity: 0;
+    background: var(--brand-2);
+    box-shadow:
+        0 0 0 4px rgba(196, 75, 255, 0.14),
+        0 0 16px rgba(196, 75, 255, 0.85);
+}
+.retro .slide.active .tl-dot {
+    animation: retro-pop 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(0.7s + var(--tl-i, 0) * 0.16s);
+}
+/* O marco mais recente continua pulsando: a comunidade não parou naquele ano. */
+.retro .slide.active .tl-dot.is-now::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 1px solid var(--brand-2);
+    animation: retro-ping 2.4s ease-out infinite;
+    animation-delay: 1.8s;
+}
+@keyframes retro-pop {
+    from {
+        opacity: 0;
+        transform: scale(0.2);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes retro-ping {
+    0% {
+        opacity: 0.9;
+        transform: scale(1);
+    }
+    70%,
+    100% {
+        opacity: 0;
+        transform: scale(2.6);
+    }
+}
+
+.retro .tl-cols {
+    display: flex;
+    align-items: flex-start;
+}
+.retro .tl-col {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 9px;
+    text-align: center;
+}
+.retro .tl-year {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.84rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--brand-soft);
+}
+.retro .tl-text {
+    /* Vão da onda: o texto começa depois da banda do batimento. */
+    margin: 112px 0 0;
+    font-size: 0.79rem;
+    line-height: 1.46;
+    color: var(--muted);
+}
+
+/*
+ | Órbitas — frequência dos encontros. O raio É o dado: quanto mais interna a
+ | órbita, mais vezes aquilo acontece. A volta também: a de dentro gira rápido,
+ | a de fora quase não sai do lugar.
+ */
+.retro .orb {
+    position: relative;
+    width: 100%;
+    max-width: 330px;
+    aspect-ratio: 1;
+    margin: 0 auto;
+}
+.retro .orb-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px dashed rgba(182, 155, 255, 0.26);
+    border-radius: 50%;
+}
+.retro .orb-arm {
+    position: absolute;
+    inset: 0;
+}
+.retro .slide.active .orb-arm {
+    animation: orb-spin var(--orb-dur, 18s) linear infinite;
+}
+@keyframes orb-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+.retro .orb-dot {
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    margin-left: -6px;
+    border-radius: 50%;
+    background: var(--orb-color, var(--brand-2));
+    box-shadow: 0 0 16px var(--orb-color, var(--brand-2));
+}
+.retro .orb-label {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -28px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--faint);
+}
+
+.retro .rit-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 330px) minmax(0, 1fr);
+    gap: 56px;
+    align-items: center;
+    margin-top: 38px;
+}
+.retro .rit {
+    display: grid;
+    gap: 22px;
+}
+.retro .rit-item {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr);
+    gap: 14px;
+}
+.retro .rit-bullet {
+    width: 10px;
+    height: 10px;
+    margin-top: 10px;
+    border-radius: 50%;
+    background: var(--rit-color, var(--brand-2));
+    box-shadow: 0 0 12px var(--rit-color, var(--brand-2));
+}
+.retro .rit-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.retro .rit-title {
+    font-size: 1.16rem;
+    font-weight: 700;
+}
+.retro .rit-when {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.63rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--faint);
+}
+.retro .rit-desc {
+    margin: 5px 0 0;
+    font-size: 0.94rem;
+    line-height: 1.5;
+    color: var(--muted);
+}
+
+/* Canais — cartão compacto com ícone, nome e domínio. */
+.retro .chan {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    text-decoration: none;
+    color: inherit;
+}
+.retro .chan-ic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex: none;
+    border-radius: 11px;
+    background: var(--surface-2);
+    color: var(--brand-soft);
+}
+.retro .chan-ic svg {
+    width: 19px;
+    height: 19px;
+}
+.retro .chan-name {
+    display: block;
+    font-weight: 700;
+}
+.retro .chan-host {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.71rem;
+    color: var(--muted);
+}
+
+@media (max-width: 900px) {
+    /* Sem largura para a onda, a timeline vira lista — ano e texto já andam
+       juntos na mesma coluna, então basta soltar a quebra e fechar o vão. */
+    .retro .tl-line {
+        display: none;
+    }
+    .retro .tl-cols {
+        flex-wrap: wrap;
+        gap: 18px 0;
+    }
+    .retro .tl-col {
+        flex: 1 1 45%;
+    }
+    .retro .tl-text {
+        margin-top: 8px;
+    }
+    .retro .rit-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 34px;
     }
 }

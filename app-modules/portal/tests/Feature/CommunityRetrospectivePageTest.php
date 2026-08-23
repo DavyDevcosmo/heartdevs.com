@@ -112,3 +112,54 @@ it('preview nega acesso a visitante não autenticado', function (): void {
     test()->get(route('community.retrospective.preview', $retrospective))
         ->assertForbidden();
 });
+
+it('apresenta a He4rt entre a capa e os números', function (): void {
+    GithubContribution::factory()->create([
+        'actor_login' => 'maria', 'actor_id' => 42, 'type' => ContributionType::Pr,
+        'external_ref' => 'pr:1', 'occurred_at' => '2026-06-02', 'metadata' => ['state' => 'open', 'merged' => false],
+    ]);
+
+    publishRetrospective();
+
+    test()->get('/comunidade/retrospectiva')
+        ->assertOk()
+        // Linha do tempo: os marcos e a onda gerada a partir deles.
+        ->assertSee('A He4rt bate desde 2018')
+        ->assertSee('4noobs')
+        ->assertSee('class="tl-ecg"', escape: false)
+        // Iniciativas, com a órbita ligada à lista pela cor.
+        ->assertSee('Reunião Semanal')
+        ->assertSee('Spaces')
+        ->assertSee('frequência de encontro')
+        // Canais: vêm do config, e o que este recorte mediu leva selo.
+        ->assertSee('github.com')
+        ->assertSee('medido aqui');
+});
+
+it('não anuncia marco que ainda não tinha acontecido no recorte', function (): void {
+    // Um recorte de 2021 retrata uma He4rt de 2021: o meetup de 2022 e o
+    // LaravelDaySP de 2026 não podem aparecer numa retrospectiva daquele ano.
+    $since = CarbonImmutable::parse('2021-01-01 00:00:00');
+    $until = CarbonImmutable::parse('2021-12-31 23:59:59');
+
+    GithubContribution::factory()->create([
+        'actor_login' => 'maria', 'actor_id' => 42, 'type' => ContributionType::Pr,
+        'external_ref' => 'pr:1', 'occurred_at' => '2021-06-02', 'metadata' => ['state' => 'open', 'merged' => false],
+    ]);
+
+    $snapshot = resolve(CompileSnapshot::class)->execute(
+        Period::of($since, $until),
+        new SourceFilters(),
+    );
+
+    Retrospective::factory()->published($snapshot)->create([
+        'since' => $since,
+        'until' => $until,
+    ]);
+
+    test()->get('/comunidade/retrospectiva')
+        ->assertOk()
+        ->assertSee('He4rt Conf')
+        ->assertDontSee('Primeiro meetup presencial')
+        ->assertDontSee('LaravelDaySP');
+});

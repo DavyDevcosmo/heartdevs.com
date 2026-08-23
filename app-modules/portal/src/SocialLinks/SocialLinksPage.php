@@ -19,12 +19,13 @@ final class SocialLinksPage extends Component
     {
         $links = [];
 
-        foreach (config()->array('he4rt.social_media') as $link) {
-            if (!is_array($link)) {
+        foreach (config()->array('he4rt.social_media') as $key => $link) {
+            if (!is_array($link) || !is_string($key)) {
                 continue;
             }
 
             $links[] = new SocialLink(
+                key: $key,
                 label: self::field($link, 'label'),
                 url: self::field($link, 'url'),
                 icon: self::field($link, 'icon'),

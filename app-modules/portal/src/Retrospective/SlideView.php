@@ -33,6 +33,16 @@ final class SlideView
     }
 
     /**
+     * Os slides da seção fixa sobre a He4rt (AboutSection). Mesma convenção dos
+     * kinds — chave vira caminho —, num diretório próprio: eles não vêm de fonte
+     * nenhuma, e misturá-los com `retro/slides/` sugeriria que vêm.
+     */
+    public static function about(string $key): string
+    {
+        return 'portal::components.retro.slides.about.'.str_replace('_', '-', $key);
+    }
+
+    /**
      * Caminho do arquivo relativo à raiz do projeto, pronto para abrir no editor.
      *
      * Resolvido pelo finder do Blade, não montado com string: um kind sem partial
