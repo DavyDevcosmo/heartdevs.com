@@ -1195,3 +1195,249 @@
         transition: none !important;
     }
 }
+
+/* voice board — painel denso de voz (canais, pessoas e horas) */
+
+/*
+ | O painel de voz é o slide mais cheio do deck: quatro blocos empilhados. Encolhe
+ | o respiro padrão do slide e o título para o conteúdo caber na tela sem rolagem,
+ | inclusive dentro do preview do Deck Builder, que é menor que a tela cheia.
+ */
+.retro .slide-inner.is-dense {
+    padding: 40px 34px 56px;
+}
+.retro .slide-inner.is-dense .sec {
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    margin: 0.2em 0 0;
+}
+
+.retro .vb-totals {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-top: 16px;
+}
+.retro .vb-total {
+    background: var(--surface);
+    padding: 10px 12px;
+    text-align: center;
+}
+.retro .vb-total b {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(1.1rem, 1.9vw, 1.6rem);
+    line-height: 1.1;
+    color: var(--brand-soft);
+    display: block;
+}
+.retro .vb-total span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.56rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-top: 4px;
+}
+
+.retro .vb-cols {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+.retro .vb-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    min-width: 0;
+}
+.retro .vb-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    display: block;
+}
+
+/* arenas */
+.retro .vb-arenas {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+.retro .vb-arena-head {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    min-width: 0;
+}
+.retro .vb-arena-name {
+    font-weight: 600;
+    font-size: 0.84rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+}
+.retro .vb-arena-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--faint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.retro .vb-arena-joins {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+    margin-left: auto;
+    white-space: nowrap;
+    padding-left: 6px;
+}
+.retro .vb-arena-joins b {
+    color: var(--text);
+    font-size: 0.78rem;
+}
+.retro .vb-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.54rem;
+    letter-spacing: 0.06em;
+    color: var(--brand-soft);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.retro .vb-track {
+    height: 4px;
+    border-radius: 99px;
+    background: var(--surface-2);
+    overflow: hidden;
+    margin-top: 4px;
+}
+.retro .vb-fill {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--brand), var(--brand-2));
+}
+.retro .vb-note {
+    font-size: 0.62rem;
+    color: var(--faint);
+    margin: 9px 0 0;
+}
+
+/* ranking de pessoas */
+.retro .vb-rank {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.retro .vb-rank-row,
+.retro .vb-rank-legend {
+    display: grid;
+    grid-template-columns: 1.8rem minmax(0, 1fr) 3.6rem 2.6rem 2.2rem;
+    align-items: center;
+    gap: 6px;
+}
+.retro .vb-rank-row {
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+}
+.retro .vb-rank-row:last-child {
+    border-bottom: 0;
+}
+.retro .vb-rank-n {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.64rem;
+    color: var(--faint);
+}
+.retro .vb-rank-row:nth-child(-n + 3) .vb-rank-n {
+    color: var(--brand-soft);
+}
+.retro .vb-rank-name {
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.retro .vb-rank-xp,
+.retro .vb-rank-meta {
+    font-family: 'JetBrains Mono', monospace;
+    text-align: right;
+}
+.retro .vb-rank-xp {
+    font-size: 0.76rem;
+    color: var(--brand-soft);
+}
+.retro .vb-rank-meta {
+    font-size: 0.62rem;
+    color: var(--faint);
+}
+.retro .vb-rank-legend {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.52rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    text-align: right;
+    margin: 8px 0 2px;
+}
+
+/* histograma por hora */
+.retro .vb-hours {
+    margin-top: 10px;
+}
+.retro .vb-hours-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+.retro .vb-bars {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    align-items: end;
+    gap: 3px;
+    height: 44px;
+    margin-top: 8px;
+}
+.retro .vb-bar {
+    background: var(--brand);
+    border-radius: 2px 2px 0 0;
+    opacity: 0.55;
+}
+.retro .vb-bar.is-peak {
+    background: var(--brand-2);
+    opacity: 1;
+}
+.retro .vb-hours-axis {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.56rem;
+    color: var(--faint);
+    margin-top: 5px;
+}
+.retro .vb-hours-peak {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--brand-soft);
+}
+
+@media (max-width: 900px) {
+    .retro .vb-cols {
+        grid-template-columns: 1fr;
+    }
+}

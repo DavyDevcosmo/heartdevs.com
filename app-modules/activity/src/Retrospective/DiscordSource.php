@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\Activity\Retrospective;
 
+use Carbon\CarbonImmutable;
 use He4rt\Activity\Message\Enums\MembershipEventKind;
 use He4rt\Activity\Message\Enums\MessageSourceKind;
 use He4rt\Activity\Message\Models\MembershipEvent;
@@ -47,6 +48,16 @@ final class DiscordSource implements CuratableSource, RetrospectiveSource
      */
     private const int CANDIDATE_LIMIT = 20;
 
+    /**
+     * Uma linha de voz é um evento de presença (joined/left); "entrada" é só o
+     * joined. Contar tudo dobraria o número, porque toda entrada vira uma saída.
+     */
+    private const string JOINS = "COUNT(*) FILTER (WHERE state = 'joined')";
+
+    private const int CHANNEL_LIMIT = 6;
+
+    private const int PEOPLE_LIMIT = 8;
+
     public function key(): string
     {
         return 'discord';
@@ -64,11 +75,12 @@ final class DiscordSource implements CuratableSource, RetrospectiveSource
         $pinned = $this->messages($period, $filters)->where('is_pinned', operator: true)->count();
         $chatters = $this->topChatters($period, $filters);
 
-        $participants = $this->voice($period, $filters)
-            ->distinct()
-            ->count('external_identity_id');
-        $voiceXp = (int) $this->voice($period, $filters)->sum('obtained_experience');
+        $voiceTotals = $this->voiceTotals($period, $filters);
+        $participants = $voiceTotals['participants'];
         $channels = $this->topVoiceChannels($period, $filters);
+        $voicePeople = $this->topVoicePeople($period, $filters);
+        $voiceHours = $this->voiceByHour($period, $filters);
+        $voicePeak = $this->peakVoiceDay($period, $filters);
 
         $joins = $this->membershipEvents($period, $filters)
             ->where('kind', MembershipEventKind::UserJoin->value)
@@ -86,9 +98,11 @@ final class DiscordSource implements CuratableSource, RetrospectiveSource
             label: $this->label(),
             headline: $this->headline($totalMessages, $participants, $joins, $totalReactions),
             slides: $this->slides(
-                participants: $participants,
-                voiceXp: $voiceXp,
+                voiceTotals: $voiceTotals,
                 channels: $channels,
+                voicePeople: $voicePeople,
+                voiceHours: $voiceHours,
+                voicePeak: $voicePeak,
                 totalMessages: $totalMessages,
                 withReactions: $withReactions,
                 pinned: $pinned,
@@ -203,16 +217,22 @@ final class DiscordSource implements CuratableSource, RetrospectiveSource
     }
 
     /**
-     * @param  list<array{name: string, events: int, xp: int}>  $channels
+     * @param  array{participants: int, joins: int, xp: int, earners: int}  $voiceTotals
+     * @param  list<array{name: string, joins: int, people: int, xp: int, rooms: int}>  $channels
+     * @param  list<array{name: string, xp: int, joins: int, channels: int}>  $voicePeople
+     * @param  list<array{hour: int, joins: int}>  $voiceHours
+     * @param  array{date: string, joins: int}|null  $voicePeak
      * @param  list<array{name: string, messages: int}>  $chatters
      * @param  list<array{name: string, count: int, custom: bool}>  $emojis
      * @param  list<array{content: string, author: string, reactions: int}>  $topMessages
      * @return list<Slide>
      */
     private function slides(
-        int $participants,
-        int $voiceXp,
+        array $voiceTotals,
         array $channels,
+        array $voicePeople,
+        array $voiceHours,
+        ?array $voicePeak,
         int $totalMessages,
         int $withReactions,
         int $pinned,
@@ -225,8 +245,17 @@ final class DiscordSource implements CuratableSource, RetrospectiveSource
     ): array {
         $slides = [];
 
-        if ($participants > 0) {
-            $slides[] = new VoiceBoardSlide($participants, $voiceXp, $channels);
+        if ($voiceTotals['participants'] > 0) {
+            $slides[] = new VoiceBoardSlide(
+                participants: $voiceTotals['participants'],
+                joins: $voiceTotals['joins'],
+                xp: $voiceTotals['xp'],
+                earners: $voiceTotals['earners'],
+                peak: $voicePeak,
+                channels: $channels,
+                people: $voicePeople,
+                hours: $voiceHours,
+            );
         }
 
         if ($totalMessages > 0) {
@@ -335,7 +364,14 @@ final class DiscordSource implements CuratableSource, RetrospectiveSource
     }
 
     /**
-     * @return list<array{name: string, events: int, xp: int}>
+     * As arenas do recorte: canais ordenados por entrada, com quanta gente passou,
+     * quanto XP saiu dali e quantas SALAS o nome representa.
+     *
+     * Salas temporárias nascem e morrem com o mesmo nome (channel_id muda,
+     * channel_name não), então agrupar por nome é o que junta "Trabalho" numa
+     * linha só — e o COUNT DISTINCT do id é o que conta quantas foram.
+     *
+     * @return list<array{name: string, joins: int, people: int, xp: int, rooms: int}>
      */
     private function topVoiceChannels(Period $period, SourceFilters $filters): array
     {
@@ -343,20 +379,140 @@ final class DiscordSource implements CuratableSource, RetrospectiveSource
             $this->voice($period, $filters)
                 ->whereNotNull('channel_name')
                 ->groupBy('channel_name')
-                ->orderByRaw('SUM(obtained_experience) DESC')
-                ->limit(6)
+                ->orderByRaw(self::JOINS.' DESC')
+                ->limit(self::CHANNEL_LIMIT)
                 ->get([
                     'channel_name',
-                    DB::raw('COUNT(*) AS events'),
+                    DB::raw(self::JOINS.' AS joins'),
+                    DB::raw('COUNT(DISTINCT external_identity_id) AS people'),
+                    DB::raw('COUNT(DISTINCT channel_id) AS rooms'),
                     DB::raw('COALESCE(SUM(obtained_experience), 0) AS xp'),
                 ])
                 ->map(fn (Voice $row): array => [
                     'name' => $row->channel_name,
-                    'events' => (int) $row->getAttribute('events'),
+                    'joins' => (int) $row->getAttribute('joins'),
+                    'people' => (int) $row->getAttribute('people'),
                     'xp' => (int) $row->getAttribute('xp'),
+                    'rooms' => (int) $row->getAttribute('rooms'),
                 ])
                 ->all(),
         );
+    }
+
+    /**
+     * Números do topo do painel numa passada só: a tabela é grande e cada
+     * agregado a mais seria outra varredura do mesmo recorte.
+     *
+     * @return array{participants: int, joins: int, xp: int, earners: int}
+     */
+    private function voiceTotals(Period $period, SourceFilters $filters): array
+    {
+        $row = $this->voice($period, $filters)
+            ->toBase()
+            ->selectRaw('COUNT(DISTINCT external_identity_id) AS participants')
+            ->selectRaw(self::JOINS.' AS joins')
+            ->selectRaw('COALESCE(SUM(obtained_experience), 0) AS xp')
+            ->selectRaw('COUNT(DISTINCT external_identity_id) FILTER (WHERE obtained_experience > 0) AS earners')
+            ->first();
+
+        return [
+            'participants' => (int) ($row->participants ?? 0),
+            'joins' => (int) ($row->joins ?? 0),
+            'xp' => (int) ($row->xp ?? 0),
+            'earners' => (int) ($row->earners ?? 0),
+        ];
+    }
+
+    /**
+     * O dia mais movimentado do recorte. A data é agrupada no fuso de exibição:
+     * agrupar em UTC jogaria a madrugada de Brasília para o dia seguinte.
+     *
+     * @return array{date: string, joins: int}|null
+     */
+    private function peakVoiceDay(Period $period, SourceFilters $filters): ?array
+    {
+        $row = $this->voice($period, $filters)
+            ->toBase()
+            ->selectRaw('(occurred_at AT TIME ZONE ?)::date AS day', [$this->displayTimezone()])
+            ->selectRaw(self::JOINS.' AS joins')
+            // Agrupa e ordena por POSIÇÃO: repetir a expressão no GROUP BY criaria um
+            // segundo placeholder, e o Postgres não assume que dois parâmetros
+            // carregam o mesmo valor — passaria a exigir occurred_at no GROUP BY.
+            ->groupByRaw('1')
+            ->orderByRaw('2 DESC')
+            ->first();
+
+        if ($row === null || (int) $row->joins === 0) {
+            return null;
+        }
+
+        return [
+            'date' => CarbonImmutable::parse((string) $row->day)->format('d/m'),
+            'joins' => (int) $row->joins,
+        ];
+    }
+
+    /**
+     * Quem mais viveu no voice: XP, entradas e em quantos canais distintos a
+     * pessoa apareceu. Só o topo resolve nome (uma query a mais para 12 linhas).
+     *
+     * @return list<array{name: string, xp: int, joins: int, channels: int}>
+     */
+    private function topVoicePeople(Period $period, SourceFilters $filters): array
+    {
+        $rows = $this->voice($period, $filters)
+            ->groupBy('external_identity_id')
+            ->orderByRaw('COALESCE(SUM(obtained_experience), 0) DESC')
+            ->limit(self::PEOPLE_LIMIT)
+            ->get([
+                'external_identity_id',
+                DB::raw('COALESCE(SUM(obtained_experience), 0) AS xp'),
+                DB::raw(self::JOINS.' AS joins'),
+                DB::raw('COUNT(DISTINCT channel_name) AS channels'),
+            ]);
+
+        $names = $this->displayNames(
+            array_values($rows->map(fn (Voice $row): string => $row->external_identity_id)->all()),
+        );
+
+        return array_values(
+            $rows->map(fn (Voice $row): array => [
+                'name' => $names[$row->external_identity_id] ?? 'Anônimo',
+                'xp' => (int) $row->getAttribute('xp'),
+                'joins' => (int) $row->getAttribute('joins'),
+                'channels' => (int) $row->getAttribute('channels'),
+            ])->all(),
+        );
+    }
+
+    /**
+     * Entradas por hora do dia, no fuso de exibição, com as 24 posições sempre
+     * presentes — a view desenha um histograma, e hora sem movimento é uma barra
+     * zerada, não uma barra ausente.
+     *
+     * @return list<array{hour: int, joins: int}>
+     */
+    private function voiceByHour(Period $period, SourceFilters $filters): array
+    {
+        $counts = $this->voice($period, $filters)
+            ->toBase()
+            ->selectRaw('EXTRACT(HOUR FROM occurred_at AT TIME ZONE ?)::int AS hour', [$this->displayTimezone()])
+            ->selectRaw(self::JOINS.' AS joins')
+            // Ver peakVoiceDay(): agrupar pela posição evita o segundo placeholder.
+            ->groupByRaw('1')
+            ->pluck('joins', 'hour');
+
+        return array_map(
+            static fn (int $hour): array => ['hour' => $hour, 'joins' => (int) ($counts[$hour] ?? 0)],
+            range(0, 23),
+        );
+    }
+
+    private function displayTimezone(): string
+    {
+        $timezone = config('app.display_timezone');
+
+        return is_string($timezone) ? $timezone : 'UTC';
     }
 
     private function totalReactions(Period $period, SourceFilters $filters): int

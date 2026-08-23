@@ -140,7 +140,87 @@ it('agrega o board de voz por participantes, XP e canais', function (): void {
 
     expect($voice['participants'])->toBe(2)
         ->and($voice['xp'])->toBe(35)
-        ->and($voice['channels'][0])->toMatchArray(['name' => 'geral', 'events' => 2, 'xp' => 30]);
+        ->and($voice['channels'][0])->toMatchArray(['name' => 'geral', 'joins' => 2, 'people' => 1, 'xp' => 30]);
+});
+
+it('conta entradas em call sem somar as saídas', function (): void {
+    $alice = dcIdentity('Alice');
+
+    Voice::factory()->joined()->create(['external_identity_id' => $alice->id, 'channel_name' => 'geral', 'occurred_at' => '2026-06-02']);
+    Voice::factory()->left()->create(['external_identity_id' => $alice->id, 'channel_name' => 'geral', 'occurred_at' => '2026-06-02']);
+
+    $voice = dcSlide(($this->collect)(), 'discord.voice_board');
+
+    expect($voice['joins'])->toBe(1)
+        ->and($voice['channels'][0]['joins'])->toBe(1);
+});
+
+it('agrupa salas temporárias de mesmo nome e diz quantas foram', function (): void {
+    $alice = dcIdentity('Alice');
+
+    foreach (['sala-1', 'sala-2', 'sala-3'] as $roomId) {
+        Voice::factory()->create([
+            'external_identity_id' => $alice->id,
+            'channel_name' => 'Trabalho',
+            'channel_id' => $roomId,
+            'occurred_at' => '2026-06-02',
+        ]);
+    }
+
+    $voice = dcSlide(($this->collect)(), 'discord.voice_board');
+
+    expect($voice['channels'])->toHaveCount(1)
+        ->and($voice['channels'][0])->toMatchArray(['name' => 'Trabalho', 'rooms' => 3, 'joins' => 3]);
+});
+
+it('separa quem tirou XP de quem só passou pela call', function (): void {
+    $comXp = dcIdentity('ComXp');
+    $semXp = dcIdentity('SemXp');
+
+    Voice::factory()->create(['external_identity_id' => $comXp->id, 'channel_name' => 'geral', 'obtained_experience' => 40, 'occurred_at' => '2026-06-02']);
+    Voice::factory()->create(['external_identity_id' => $semXp->id, 'channel_name' => 'ausente', 'obtained_experience' => 0, 'occurred_at' => '2026-06-02']);
+
+    $voice = dcSlide(($this->collect)(), 'discord.voice_board');
+
+    expect($voice['participants'])->toBe(2)
+        ->and($voice['earners'])->toBe(1);
+});
+
+it('rankeia quem mais viveu no voice por XP, com entradas e canais distintos', function (): void {
+    $alice = dcIdentity('Alice');
+    $bob = dcIdentity('Bob');
+
+    Voice::factory()->create(['external_identity_id' => $alice->id, 'channel_name' => 'geral', 'obtained_experience' => 30, 'occurred_at' => '2026-06-02']);
+    Voice::factory()->create(['external_identity_id' => $alice->id, 'channel_name' => 'estudos', 'obtained_experience' => 30, 'occurred_at' => '2026-06-03']);
+    Voice::factory()->create(['external_identity_id' => $bob->id, 'channel_name' => 'geral', 'obtained_experience' => 10, 'occurred_at' => '2026-06-02']);
+
+    $voice = dcSlide(($this->collect)(), 'discord.voice_board');
+
+    expect($voice['people'][0])->toMatchArray(['name' => 'Alice', 'xp' => 60, 'joins' => 2, 'channels' => 2])
+        ->and($voice['people'][1])->toMatchArray(['name' => 'Bob', 'xp' => 10, 'channels' => 1]);
+});
+
+it('devolve as 24 horas do histograma, inclusive as vazias', function (): void {
+    $alice = dcIdentity('Alice');
+
+    Voice::factory()->create(['external_identity_id' => $alice->id, 'channel_name' => 'geral', 'occurred_at' => '2026-06-02']);
+
+    $voice = dcSlide(($this->collect)(), 'discord.voice_board');
+
+    expect($voice['hours'])->toHaveCount(24)
+        ->and(array_column($voice['hours'], 'hour'))->toBe(range(0, 23))
+        ->and(array_sum(array_column($voice['hours'], 'joins')))->toBe(1);
+});
+
+it('aponta o dia mais movimentado do recorte', function (): void {
+    $alice = dcIdentity('Alice');
+
+    Voice::factory()->create(['external_identity_id' => $alice->id, 'channel_name' => 'geral', 'occurred_at' => '2026-06-02 15:00:00']);
+    Voice::factory()->count(3)->create(['external_identity_id' => $alice->id, 'channel_name' => 'geral', 'occurred_at' => '2026-06-04 15:00:00']);
+
+    $voice = dcSlide(($this->collect)(), 'discord.voice_board');
+
+    expect($voice['peak'])->toMatchArray(['date' => '04/06', 'joins' => 3]);
 });
 
 it('conta novos membros e boosts pelo occurred_at', function (): void {
