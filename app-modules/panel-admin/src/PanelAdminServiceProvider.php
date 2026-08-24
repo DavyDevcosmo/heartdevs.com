@@ -13,6 +13,7 @@ use He4rt\PanelAdmin\Enums\NavigationGroup as NavGroup;
 use He4rt\PanelAdmin\Filament\Resources\ContentEntries\ContentEntryResource;
 use He4rt\PanelAdmin\Filament\Resources\Events\EventResource;
 use He4rt\PanelAdmin\Filament\Resources\ExternalIdentities\ExternalIdentityResource;
+use He4rt\PanelAdmin\Filament\Resources\Interactions\InteractionResource;
 use He4rt\PanelAdmin\Filament\Resources\Profiles\ProfileResource;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\RetrospectiveResource;
 use He4rt\PanelAdmin\Filament\Resources\Skills\SkillResource;
@@ -55,6 +56,7 @@ class PanelAdminServiceProvider extends ServiceProvider
                     ProfileResource::class,
                     SkillResource::class,
                     ContentEntryResource::class,
+                    InteractionResource::class,
                     RetrospectiveResource::class,
                 ])
                 ->discoverResources(
@@ -159,6 +161,7 @@ class PanelAdminServiceProvider extends ServiceProvider
                     ->icon(NavGroup::Content->getIcon())
                     ->items([
                         ...ContentEntryResource::getNavigationItems(),
+                        ...InteractionResource::getNavigationItems(),
                         ...RetrospectiveResource::getNavigationItems(),
                     ]),
             ]);

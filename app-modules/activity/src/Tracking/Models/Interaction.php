@@ -6,12 +6,12 @@ namespace He4rt\Activity\Tracking\Models;
 
 use Carbon\CarbonInterface;
 use He4rt\Activity\Database\Factories\InteractionFactory;
-use He4rt\Activity\Tracking\Enums\ActivityStatus;
 use He4rt\Activity\Tracking\Enums\ActivityType;
-use He4rt\Activity\Tracking\Enums\ValueTier;
-use He4rt\Gamification\Character\Models\Character;
-use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
+use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
+use He4rt\Identity\User\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,22 +20,23 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * @property string $id
- * @property string $character_id
+ * @property string $external_identity_id
+ * @property string $user_id
  * @property ActivityType $type
- * @property IdentityProvider $provider
- * @property ValueTier $value_tier
- * @property int $coins_min
- * @property int $coins_max
- * @property int|null $coins_awarded
- * @property int|null $xp_awarded
- * @property ActivityStatus $status
  * @property string|null $source_type
  * @property string|null $source_id
  * @property string|null $external_ref
  * @property array<string, mixed>|null $metadata
  * @property CarbonInterface $occurred_at
- * @property CarbonInterface|null $reviewed_at
+ * @property CarbonInterface|null $hidden_at
+ * @property string|null $hidden_by
+ * @property CarbonInterface|null $created_at
+ * @property CarbonInterface|null $updated_at
+ * @property-read ExternalIdentity $externalIdentity
+ * @property-read User $user
+ * @property-read User|null $hiddenByUser
  */
+#[UseFactory(factoryClass: InteractionFactory::class)]
 #[Table(name: 'interactions')]
 final class Interaction extends Model
 {
@@ -44,11 +45,27 @@ final class Interaction extends Model
     use HasUuids;
 
     /**
-     * @return BelongsTo<Character, $this>
+     * @return BelongsTo<ExternalIdentity, $this>
      */
-    public function character(): BelongsTo
+    public function externalIdentity(): BelongsTo
     {
-        return $this->belongsTo(Character::class);
+        return $this->belongsTo(ExternalIdentity::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function hiddenByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'hidden_by');
     }
 
     /**
@@ -59,25 +76,34 @@ final class Interaction extends Model
         return $this->morphTo();
     }
 
-    protected static function newFactory(): InteractionFactory
+    public function isVisible(): bool
     {
-        return InteractionFactory::new();
+        return $this->hidden_at === null;
+    }
+
+    /**
+     * @param  Builder<$this>  $query
+     */
+    protected function scopeVisible(Builder $query): void
+    {
+        $query->whereNull('hidden_at');
+    }
+
+    /**
+     * @param  Builder<$this>  $query
+     */
+    protected function scopeHidden(Builder $query): void
+    {
+        $query->whereNotNull('hidden_at');
     }
 
     protected function casts(): array
     {
         return [
             'type' => ActivityType::class,
-            'provider' => IdentityProvider::class,
-            'value_tier' => ValueTier::class,
-            'status' => ActivityStatus::class,
-            'coins_min' => 'integer',
-            'coins_max' => 'integer',
-            'coins_awarded' => 'integer',
-            'xp_awarded' => 'integer',
             'metadata' => 'array',
             'occurred_at' => 'datetime',
-            'reviewed_at' => 'datetime',
+            'hidden_at' => 'datetime',
         ];
     }
 }

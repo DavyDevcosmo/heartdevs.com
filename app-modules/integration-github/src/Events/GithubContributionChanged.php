@@ -9,11 +9,11 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Seam de criação: emitida quando uma contribuição inédita é registrada, tanto pelo
- * webhook quanto pelo backfill. O Tracking a escuta para resolver a identidade
- * conectada do contribuidor e registrar a contribuição canônica.
+ * Seam de transição: emitida quando uma contribuição já registrada muda de estado
+ * de um jeito que cria um fato novo. Hoje a única transição é o merge de um PR —
+ * a linha do lake é a mesma, mas passa a representar também "PR incorporado".
  */
-final readonly class GithubContributionRecorded
+final readonly class GithubContributionChanged
 {
     use Dispatchable;
     use SerializesModels;

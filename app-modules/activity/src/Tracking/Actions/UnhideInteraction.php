@@ -4,20 +4,15 @@ declare(strict_types=1);
 
 namespace He4rt\Activity\Tracking\Actions;
 
-use He4rt\Activity\Tracking\Enums\ActivityStatus;
 use He4rt\Activity\Tracking\Models\Interaction;
 
-final class RejectInteraction
+final readonly class UnhideInteraction
 {
     public function handle(Interaction $interaction): Interaction
     {
-        if ($interaction->status !== ActivityStatus::Pending) {
-            return $interaction;
-        }
-
         $interaction->update([
-            'status' => ActivityStatus::Rejected,
-            'reviewed_at' => now(),
+            'hidden_at' => null,
+            'hidden_by' => null,
         ]);
 
         return $interaction->fresh();

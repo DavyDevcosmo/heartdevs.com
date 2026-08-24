@@ -9,6 +9,7 @@ use Carbon\CarbonInterface;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
+use He4rt\Activity\Tracking\Concerns\HasInteractions;
 use He4rt\Gamification\Character\Models\Character;
 use He4rt\Identity\Database\Factories\UserFactory;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
@@ -52,6 +53,7 @@ final class User extends Authenticatable implements FilamentUser, HasMedia, HasN
     use HasAddress;
     /** @use HasFactory<UserFactory> */
     use HasFactory;
+    use HasInteractions;
     use HasUuids;
     use InteractsWithMedia;
     use Notifiable;

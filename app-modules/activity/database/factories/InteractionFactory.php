@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace He4rt\Activity\Database\Factories;
 
-use He4rt\Activity\Tracking\Enums\ActivityStatus;
 use He4rt\Activity\Tracking\Enums\ActivityType;
-use He4rt\Activity\Tracking\Enums\ValueTier;
 use He4rt\Activity\Tracking\Models\Interaction;
-use He4rt\Gamification\Character\Models\Character;
 use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
+use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
+use He4rt\Identity\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -21,47 +20,41 @@ final class InteractionFactory extends Factory
 
     public function definition(): array
     {
+        $identity = ExternalIdentity::factory()
+            ->for(User::factory(), 'model')
+            ->state(['provider' => IdentityProvider::DevTo]);
+
         return [
-            'character_id' => Character::factory(),
+            'external_identity_id' => $identity,
+            'user_id' => fn (array $attributes): string => ExternalIdentity::query()
+                ->findOrFail($attributes['external_identity_id'])
+                ->model_id,
             'type' => ActivityType::Article,
-            'provider' => IdentityProvider::DevTo,
-            'value_tier' => ValueTier::High,
-            'coins_min' => 100,
-            'coins_max' => 300,
-            'status' => ActivityStatus::Pending,
+            'external_ref' => fn (): string => 'devto:article:'.fake()->unique()->randomNumber(7),
             'occurred_at' => now(),
         ];
     }
 
-    public function autoApproved(): self
+    public function forIdentity(ExternalIdentity $identity): self
     {
         return $this->state([
-            'status' => ActivityStatus::AutoApproved,
-            'type' => ActivityType::Engagement,
-            'value_tier' => ValueTier::Low,
-            'coins_min' => 1,
-            'coins_max' => 3,
+            'external_identity_id' => $identity->id,
+            'user_id' => $identity->model_id,
         ]);
     }
 
-    public function approved(): self
+    public function ofType(ActivityType $type): self
     {
         return $this->state([
-            'status' => ActivityStatus::Approved,
-            'reviewed_at' => now(),
+            'type' => $type,
+            'external_ref' => 'github:'.$type->value.':he4rt/heartdevs.com:'.fake()->unique()->randomNumber(6),
         ]);
     }
 
-    public function withEngagement(int $reactions = 0, int $comments = 0, int $bookmarks = 0): self
+    public function hidden(): self
     {
         return $this->state([
-            'metadata' => [
-                'engagement_snapshot' => [
-                    'reactions' => $reactions,
-                    'comments' => $comments,
-                    'bookmarks' => $bookmarks,
-                ],
-            ],
+            'hidden_at' => now(),
         ]);
     }
 }
