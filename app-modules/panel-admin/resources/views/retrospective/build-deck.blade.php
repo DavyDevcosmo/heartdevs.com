@@ -191,7 +191,8 @@
             @php
                 $deck = $this->deck;
                 $groups = $this->filmstrip;
-                $closingIndex = $this->composedOffset() + count($this->composedKinds);
+                $closingIndex = $this->closingIndex();
+                $promotions = $this->promotionStrip();
                 $about = \He4rt\Portal\Retrospective\AboutSection::slides();
             @endphp
 
@@ -278,6 +279,21 @@
                         @endforelse
                     </x-panel-admin::retrospective.filmstrip-group>
                 @endforeach
+
+                {{-- O ritual da tag: posição fixa antes do fecho, então o bloco não
+                     tem setas de ordem — só o on/off de cada slide, no inspector. --}}
+                <x-panel-admin::retrospective.filmstrip-group :label="\He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode::Promotion->getLabel()" :icon="\He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode::Promotion->getIcon()">
+                    @foreach ($promotions as $slide)
+                        <x-panel-admin::retrospective.filmstrip-thumb
+                            :index="$slide->index"
+                            :label="$slide->label"
+                            :muted="! $slide->visible || $slide->view === null"
+                            :selection="\He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode::Promotion->value . ':' . $slide->kind"
+                            :view="$slide->view"
+                            :props="$slide->props"
+                        />
+                    @endforeach
+                </x-panel-admin::retrospective.filmstrip-group>
 
                 {{-- Fecho: sempre o último slide do deck. --}}
                 <x-panel-admin::retrospective.filmstrip-group :label="\He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode::Closing->getLabel()" :icon="\He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode::Closing->getIcon()">

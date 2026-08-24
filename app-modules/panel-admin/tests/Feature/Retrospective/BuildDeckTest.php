@@ -8,20 +8,29 @@ use Filament\Support\Enums\Width;
 use He4rt\Community\Retrospective\Actions\CompileSnapshot;
 use He4rt\Community\Retrospective\Contracts\Slide;
 use He4rt\Community\Retrospective\DTOs\DeckConfig;
+use He4rt\Community\Retrospective\DTOs\Metric;
 use He4rt\Community\Retrospective\DTOs\Period;
+use He4rt\Community\Retrospective\DTOs\PromotionCard;
+use He4rt\Community\Retrospective\DTOs\PromotionEntry;
+use He4rt\Community\Retrospective\DTOs\PromotionMetricGroup;
 use He4rt\Community\Retrospective\DTOs\RetrospectiveSnapshot;
 use He4rt\Community\Retrospective\DTOs\SourceFilters;
 use He4rt\Community\Retrospective\DTOs\SourceResult;
+use He4rt\Community\Retrospective\Enums\PromotionStage;
 use He4rt\Community\Retrospective\Enums\RetrospectiveStatus;
 use He4rt\Community\Retrospective\Jobs\CompileRetrospectiveSnapshot;
 use He4rt\Community\Retrospective\Models\Retrospective;
+use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
+use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use He4rt\Identity\User\Models\User;
 use He4rt\IntegrationGithub\Models\GithubContribution;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Pages\BuildDeck;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\RetrospectiveResource;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode;
+use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\PromotablePeople;
 use He4rt\Portal\Retrospective\AboutSection;
 use He4rt\Portal\Retrospective\DeckPresentation;
+use He4rt\Portal\Retrospective\PromotionSection;
 use Illuminate\Support\Facades\Bus;
 use Tests\Support\Retrospective\PlainRetrospectiveSource;
 
@@ -615,4 +624,195 @@ test('nenhuma ação Livewire nasce de dentro dos islands do builder', function 
     preg_match_all('/@island\(.*?\).*?@endisland/s', $builder, $islands);
 
     expect($islands[0])->not->toBeEmpty()->each->not->toContain('wire:click');
+});
+
+/**
+ * Snapshot com o ritual da tag dentro, já medido. Monta os cartões à mão em vez
+ * de passar pelo ComposePromotions: o que estes testes verificam é o
+ * POSICIONAMENTO e a curadoria, não a medição — que tem teste próprio no
+ * community.
+ */
+function publishedRetrospectiveWithPromotions(): Retrospective
+{
+    $since = CarbonImmutable::parse('2026-06-01 00:00:00');
+    $until = CarbonImmutable::parse('2026-06-30 23:59:59');
+
+    // Com uma fonte de verdade dentro: sem nenhuma o portal desenha só o slide
+    // "sem dado", e um deck vazio não teria índice para o ritual ocupar.
+    GithubContribution::factory()->create([
+        'actor_login' => 'maria',
+        'external_ref' => 'pr:1',
+        'occurred_at' => '2026-06-02',
+        'metadata' => ['title' => 'Um PR', 'state' => 'open', 'merged' => false, 'additions' => 10],
+    ]);
+
+    $people = User::factory()->count(3)->create();
+
+    $card = fn (string $id, PromotionStage $stage): PromotionCard => new PromotionCard(
+        userId: $id,
+        name: 'Fulana '.$id,
+        username: 'fulana'.$id,
+        avatar: 'https://example.test/'.$id.'.png',
+        stage: $stage,
+        reason: 'segurou o #ajuda',
+        groups: [new PromotionMetricGroup('discord', 'Discord', [new Metric('Mensagens', 8_132)])],
+    );
+
+    $collected = resolve(CompileSnapshot::class)->execute(Period::of($since, $until), new SourceFilters());
+
+    $snapshot = new RetrospectiveSnapshot(
+        sources: $collected->sources,
+        filters: new SourceFilters(),
+        promotions: [
+            $card($people[0]->id, PromotionStage::Spotlight),
+            $card($people[1]->id, PromotionStage::Promoted),
+            $card($people[2]->id, PromotionStage::Promoted),
+        ],
+    );
+
+    return Retrospective::factory()->published($snapshot)->create([
+        'since' => $since,
+        'until' => $until,
+        'deck_config' => new DeckConfig(
+            order: ['github', 'discord'],
+            promotions: [
+                new PromotionEntry($people[0]->id, PromotionStage::Spotlight, 'segurou o #ajuda'),
+                new PromotionEntry($people[1]->id, PromotionStage::Promoted, 'segurou o #ajuda'),
+                new PromotionEntry($people[2]->id, PromotionStage::Promoted, 'segurou o #ajuda'),
+            ],
+        ),
+    ]);
+}
+
+it('seleciona um slide do ritual pela tira, mesmo sem ninguém escolhido ainda', function (): void {
+    $retrospective = retrospectiveWithOrder();
+
+    $page = livewire(BuildDeck::class, ['record' => $retrospective->getKey()])
+        ->call('select', InspectorMode::Promotion->value.':'.PromotionSection::SPOTLIGHT)
+        ->assertSet('selection', 'promotion:'.PromotionSection::SPOTLIGHT)
+        ->assertHasNoErrors();
+
+    // Sem gente escolhida o slide não existe no deck: não há para onde levar o
+    // preview, e é isso que impede a tira de rolar de volta para a capa quando o
+    // operador clica na miniatura vazia para preenchê-la.
+    expect($page->instance()->previewTarget())->toBeNull()
+        ->and($page->instance()->selectionLabel())->toContain('Destaques');
+});
+
+it('não mexe no preview ao selecionar um slide que o deck não desenha', function (): void {
+    $retrospective = publishedRetrospectiveWithGithub();
+
+    $page = livewire(BuildDeck::class, ['record' => $retrospective->getKey()]);
+
+    // Kind existente no catálogo do GitHub, mas sem dado neste recorte.
+    $page->call('select', InspectorMode::Slide->value.':discord.voice_board');
+
+    expect($page->instance()->previewTarget())->toBeNull();
+
+    $page->assertNotDispatched('retro-goto');
+});
+
+it('escreve as pessoas do estágio do slide selecionado, sem tocar o outro estágio', function (): void {
+    $retrospective = retrospectiveWithOrder();
+    $user = User::factory()->create(['username' => 'fulana']);
+
+    livewire(BuildDeck::class, ['record' => $retrospective->getKey()])
+        ->call('select', InspectorMode::Promotion->value.':'.PromotionSection::TAG)
+        ->fillForm([
+            'visible' => true,
+            'people' => [['user_id' => $user->id, 'reason' => 'revisou PR de todo mundo']],
+        ])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $config = $retrospective->fresh()->deck_config;
+
+    expect($config->promotionsFor(PromotionStage::Promoted))->toHaveCount(1)
+        ->and($config->promotionsFor(PromotionStage::Promoted)[0]->userId)->toBe($user->id)
+        ->and($config->promotionsFor(PromotionStage::Promoted)[0]->reason)->toBe('revisou PR de todo mundo')
+        ->and($config->promotionsFor(PromotionStage::Spotlight))->toBeEmpty();
+});
+
+it('põe o ritual entre os slides das fontes e o fecho', function (): void {
+    $retrospective = publishedRetrospectiveWithPromotions();
+
+    $page = livewire(BuildDeck::class, ['record' => $retrospective->getKey()]);
+    $instance = $page->instance();
+
+    $offset = $instance->composedOffset() + count($instance->composedKinds);
+
+    expect($instance->promotionOffset())->toBe($offset)
+        ->and($instance->promotionKinds)->toBe([PromotionSection::SPOTLIGHT, PromotionSection::TAG])
+        ->and($instance->closingIndex())->toBe($offset + 2)
+        ->and($instance->slideTotal())->toBe($offset + 3);
+
+    $page->call('select', InspectorMode::Promotion->value.':'.PromotionSection::TAG);
+
+    expect($page->instance()->previewIndex())->toBe($offset + 1);
+});
+
+it('navegar até o slide do ritual dentro do deck seleciona o ritual, não o fecho', function (): void {
+    $retrospective = publishedRetrospectiveWithPromotions();
+
+    $page = livewire(BuildDeck::class, ['record' => $retrospective->getKey()]);
+    $offset = $page->instance()->promotionOffset();
+
+    $page->call('selectByIndex', $offset)
+        ->assertSet('selection', 'promotion:'.PromotionSection::SPOTLIGHT)
+        ->call('selectByIndex', $offset + 1)
+        ->assertSet('selection', 'promotion:'.PromotionSection::TAG)
+        ->call('selectByIndex', $offset + 2)
+        ->assertSet('selection', InspectorMode::Closing->value);
+});
+
+it('a tira numera as miniaturas com o MESMO deslocamento do deck', function (): void {
+    $retrospective = publishedRetrospectiveWithGithub();
+
+    $instance = livewire(BuildDeck::class, ['record' => $retrospective->getKey()])->instance();
+
+    $indices = [];
+
+    foreach ($instance->filmstrip() as $group) {
+        foreach ($group->slides as $slide) {
+            if ($slide->index !== null) {
+                $indices[] = $slide->index;
+            }
+        }
+    }
+
+    // A primeira miniatura navegável cai logo depois da capa e da seção fixa —
+    // não em 1. Quando isto quebrou, clicar num slide acendia o vizinho três
+    // posições à frente.
+    expect($indices)->not->toBeEmpty()
+        ->and(min($indices))->toBe($instance->composedOffset())
+        ->and($indices)->toBe(array_unique($indices));
+});
+
+test('person search only offers who has a linked account', function (): void {
+    $linked = User::factory()->create(['name' => 'Ada Lovelace', 'username' => 'ada']);
+    $loose = User::factory()->create(['name' => 'Ada Sem Conta', 'username' => 'ada-solta']);
+
+    ExternalIdentity::factory()->create([
+        'model_type' => (new User)->getMorphClass(),
+        'model_id' => $linked->id,
+        'provider' => IdentityProvider::Discord,
+        'disconnected_at' => null,
+    ]);
+
+    ExternalIdentity::factory()->create([
+        'model_type' => (new User)->getMorphClass(),
+        'model_id' => $loose->id,
+        'provider' => IdentityProvider::Discord,
+        'disconnected_at' => now(),
+    ]);
+
+    $results = PromotablePeople::search('ada');
+
+    expect($results)->toHaveKey($linked->id)
+        ->and($results[$linked->id])->toBe('Ada Lovelace (@ada)')
+        ->and($results)->not->toHaveKey($loose->id);
+});
+
+test('person label ignores an id that is not a uuid', function (): void {
+    expect(PromotablePeople::labelFor('u2'))->toBeNull();
 });
