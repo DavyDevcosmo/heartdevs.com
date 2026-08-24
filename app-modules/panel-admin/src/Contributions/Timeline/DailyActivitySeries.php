@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
+use stdClass;
 
 /**
  * Séries diárias das três fontes da linha do tempo, uma query agregada por fonte.
@@ -107,15 +108,15 @@ final readonly class DailyActivitySeries
         $query->whereRaw("actor_login NOT LIKE '%[bot]'")
             ->whereRaw("metadata->>'is_bot' IS DISTINCT FROM 'true'");
 
-        return $this->keyByDay($query->get(), fn (object $row): GithubDay => new GithubDay(
-            total: $this->int($row->total),
-            prs: $this->int($row->prs),
-            reviews: $this->int($row->reviews),
-            commits: $this->int($row->commits),
-            issues: $this->int($row->issues),
-            comments: $this->int($row->comments),
-            reviewComments: $this->int($row->review_comments),
-            people: $this->int($row->people),
+        return $this->keyByDay($query->get(), fn (array $row): GithubDay => new GithubDay(
+            total: $this->int($row['total'] ?? null),
+            prs: $this->int($row['prs'] ?? null),
+            reviews: $this->int($row['reviews'] ?? null),
+            commits: $this->int($row['commits'] ?? null),
+            issues: $this->int($row['issues'] ?? null),
+            comments: $this->int($row['comments'] ?? null),
+            reviewComments: $this->int($row['review_comments'] ?? null),
+            people: $this->int($row['people'] ?? null),
         ));
     }
 
@@ -131,10 +132,10 @@ final readonly class DailyActivitySeries
             // Mensagem sem `source_kind` é anterior à coluna: conta como gente.
             ->whereRaw('(source_kind IS NULL OR source_kind <> ?)', [MessageSourceKind::Bot->value]);
 
-        return $this->keyByDay($query->get(), fn (object $row): MessageDay => new MessageDay(
-            messages: $this->int($row->messages),
-            people: $this->int($row->people),
-            xp: $this->int($row->xp),
+        return $this->keyByDay($query->get(), fn (array $row): MessageDay => new MessageDay(
+            messages: $this->int($row['messages'] ?? null),
+            people: $this->int($row['people'] ?? null),
+            xp: $this->int($row['xp'] ?? null),
         ));
     }
 
@@ -150,10 +151,10 @@ final readonly class DailyActivitySeries
             ->selectRaw('COUNT(DISTINCT external_identity_id) AS people')
             ->selectRaw('COALESCE(SUM(obtained_experience), 0) AS xp');
 
-        return $this->keyByDay($query->get(), fn (object $row): VoiceDay => new VoiceDay(
-            sessions: $this->int($row->sessions),
-            people: $this->int($row->people),
-            xp: $this->int($row->xp),
+        return $this->keyByDay($query->get(), fn (array $row): VoiceDay => new VoiceDay(
+            sessions: $this->int($row['sessions'] ?? null),
+            people: $this->int($row['people'] ?? null),
+            xp: $this->int($row['xp'] ?? null),
         ));
     }
 
@@ -164,6 +165,7 @@ final readonly class DailyActivitySeries
      * carregam o mesmo valor.
      *
      * @param  Builder<covariant Model>  $query
+     * @param  literal-string  $column
      */
     private function daily(Builder $query, string $column, CarbonImmutable $since, CarbonImmutable $until, string $timezone): QueryBuilder
     {
@@ -174,10 +176,13 @@ final readonly class DailyActivitySeries
     }
 
     /**
+     * A linha crua do Postgres vira array antes de ser lida: `stdClass` não tem
+     * forma declarada, então cada coluna seria um acesso a propriedade indefinida.
+     *
      * @template TValue
      *
-     * @param  Collection<int, object>  $rows
-     * @param  callable(object): TValue  $make
+     * @param  Collection<int, stdClass>  $rows
+     * @param  callable(array<array-key, mixed>): TValue  $make
      * @return array<string, TValue>
      */
     private function keyByDay(Collection $rows, callable $make): array
@@ -185,7 +190,14 @@ final readonly class DailyActivitySeries
         $keyed = [];
 
         foreach ($rows as $row) {
-            $keyed[CarbonImmutable::parse((string) $row->day)->toDateString()] = $make($row);
+            $columns = get_object_vars($row);
+            $day = $columns['day'] ?? null;
+
+            if (!is_string($day)) {
+                continue;
+            }
+
+            $keyed[CarbonImmutable::parse($day)->toDateString()] = $make($columns);
         }
 
         return $keyed;
@@ -258,6 +270,10 @@ final readonly class DailyActivitySeries
         );
     }
 
+    /**
+     * @param  literal-string  $key
+     * @return literal-string
+     */
     private function column(string $key): string
     {
         return match ($key) {

@@ -50,12 +50,28 @@ class ListInteractions extends ListRecords
      */
     private function typeCounts(): array
     {
-        return $this->typeCounts ??= Interaction::query()
+        if ($this->typeCounts !== null) {
+            return $this->typeCounts;
+        }
+
+        $rows = Interaction::query()
             ->toBase()
             ->selectRaw('type, COUNT(*) AS total')
             ->groupBy('type')
-            ->pluck('total', 'type')
-            ->map(static fn (mixed $total): int => (int) $total)
-            ->all();
+            ->get();
+
+        $counts = [];
+
+        foreach ($rows as $row) {
+            $columns = (array) $row;
+            $type = $columns['type'] ?? null;
+            $total = $columns['total'] ?? null;
+
+            if (is_string($type)) {
+                $counts[$type] = is_numeric($total) ? (int) $total : 0;
+            }
+        }
+
+        return $this->typeCounts = $counts;
     }
 }
