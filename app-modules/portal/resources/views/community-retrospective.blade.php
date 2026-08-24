@@ -26,6 +26,13 @@
             @endforeach
         @endforeach
 
+        {{-- O ritual da tag, entre os números e o fecho. Posição fixa: tudo que
+             veio antes é a prova do que se afirma aqui, então este bloco não é
+             arrastável — só ligável e desligável (PromotionSection). --}}
+        @foreach ($promotions as $promotion)
+            @include($promotion->view(), ['cards' => $promotion->cards])
+        @endforeach
+
         <x-portal::retro.slides.closing
             :sources="$sources"
             :since="$since"

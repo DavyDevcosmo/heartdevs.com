@@ -1811,6 +1811,151 @@
     color: var(--muted);
 }
 
+/* ── ritual da tag He4rt ────────────────────────────────────────────────────
+ |
+ | Revelação por passo. O deck marca `.shown` em cada `[data-reveal]` conforme
+ | quem apresenta avança, então a transição mora aqui e a decisão de QUANDO mora
+ | no JS do deck — nenhum dos dois precisa conhecer o conteúdo do outro.
+ */
+.retro .slide [data-reveal] {
+    opacity: 0;
+    transform: translateY(12px);
+    transition:
+        opacity 0.5s ease,
+        transform 0.5s ease;
+}
+.retro .slide [data-reveal].shown {
+    opacity: 1;
+    transform: none;
+}
+
+/* A lista de destaques não tem teto (decisão editorial: ninguém fica de fora),
+   então ela — e não a página — é quem rola. */
+.retro .promo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 14px;
+    margin-top: 22px;
+    max-height: 58cqh;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.retro .promo-card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    padding: 14px 16px;
+    text-align: left;
+}
+
+.retro .promo-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.retro .promo-avatar {
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow:
+        0 0 0 2px var(--surface),
+        0 0 0 4px rgba(120, 43, 241, 0.45);
+}
+.retro .promo-avatar.big {
+    box-shadow:
+        0 0 0 3px var(--surface),
+        0 0 0 6px var(--brand);
+}
+
+.retro .promo-name {
+    font-weight: 700;
+    font-size: 1.05rem;
+    line-height: 1.2;
+}
+.retro .promo-name.big {
+    font-family: 'Fraunces', serif;
+    font-size: 2.4rem;
+    margin-top: 14px;
+}
+
+.retro .promo-handle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+
+/* Uma faixa por fonte. O nome da plataforma fica colado nos números de propósito:
+   é o que impede a leitura de somar mensagem com PR (ADR-0001). */
+.retro .promo-source {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+}
+
+.retro .promo-source-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+}
+
+.retro .promo-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+}
+
+.retro .promo-metric {
+    font-size: 0.84rem;
+    color: var(--muted);
+}
+.retro .promo-metric b {
+    color: var(--text);
+    font-size: 1.02rem;
+    font-weight: 700;
+}
+
+.retro .promo-reason {
+    margin: 12px 0 0;
+    font-size: 0.92rem;
+    color: var(--brand-soft);
+    font-style: italic;
+}
+.retro .promo-reason.big {
+    font-size: 1.25rem;
+    max-width: 46ch;
+    margin-inline: auto;
+}
+
+/* O palco da entrega: as pessoas entram lado a lado quando cabem e empilham
+   quando não cabem — duas é o caso real, mais que isso continua legível. */
+.retro .promo-stage {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 34px;
+    margin-top: 30px;
+}
+
+.retro .promo-hero {
+    flex: 1 1 320px;
+    max-width: 460px;
+}
+
+.retro .promo-hero-metrics {
+    margin-top: 14px;
+}
+.retro .promo-hero .promo-source {
+    justify-content: center;
+}
+
 @media (max-width: 900px) {
     /* Sem largura para a onda, a timeline vira lista — ano e texto já andam
        juntos na mesma coluna, então basta soltar a quebra e fechar o vão. */
