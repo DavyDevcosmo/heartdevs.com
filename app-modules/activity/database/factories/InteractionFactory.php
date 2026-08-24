@@ -19,6 +19,13 @@ final class InteractionFactory extends Factory
 {
     protected $model = Interaction::class;
 
+    /**
+     * `fake()->unique()` devolve um gerador novo a cada chamada, então não garante
+     * nada entre duas interações. O external_ref tem índice único: o contador é o
+     * que impede a colisão.
+     */
+    private static int $sequence = 0;
+
     public function definition(): array
     {
         $identity = ExternalIdentity::factory()
@@ -32,7 +39,7 @@ final class InteractionFactory extends Factory
                 ->model_id,
             'type' => ActivityType::Article,
             'attributed_by' => AttributionMethod::Owned,
-            'external_ref' => fn (): string => 'devto:article:'.fake()->unique()->randomNumber(7),
+            'external_ref' => fn (): string => 'devto:article:'.$this->nextSequence(),
             'occurred_at' => now(),
         ];
     }
@@ -49,7 +56,9 @@ final class InteractionFactory extends Factory
     {
         return $this->state([
             'type' => $type,
-            'external_ref' => 'github:'.$type->value.':he4rt/heartdevs.com:'.fake()->unique()->randomNumber(6),
+            // Closure, não valor: um state literal é avaliado uma vez e repetiria
+            // o mesmo ref em toda a leva de um ->count().
+            'external_ref' => fn (): string => 'github:'.$type->value.':he4rt/heartdevs.com:'.$this->nextSequence(),
         ]);
     }
 
@@ -58,5 +67,10 @@ final class InteractionFactory extends Factory
         return $this->state([
             'hidden_at' => now(),
         ]);
+    }
+
+    private function nextSequence(): int
+    {
+        return ++self::$sequence;
     }
 }

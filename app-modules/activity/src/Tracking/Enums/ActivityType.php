@@ -41,6 +41,9 @@ enum ActivityType: string implements HasColor, HasDescription, HasLabel
         };
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getColor(): array
     {
         return match ($this) {
