@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use He4rt\Activity\Tracking\Enums\ActivityType;
+use He4rt\Activity\Tracking\Enums\AttributionMethod;
 use He4rt\Activity\Tracking\Models\Interaction;
 use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use He4rt\Identity\User\Models\User;
-use He4rt\IntegrationGithub\Contributions\ResolveContributorIdentity;
 use He4rt\IntegrationGithub\Contributions\TrackGithubContribution;
 use He4rt\IntegrationGithub\Enums\ContributionType;
 use He4rt\IntegrationGithub\Events\GithubContributionChanged;
@@ -46,8 +46,7 @@ test('PR aberto vira pr_opened com ref namespaced pelo repo', function (): void 
         ->and($interaction->external_identity_id)->toBe($identity->id)
         ->and($interaction->source_type)->toBe('github_contribution')
         ->and($interaction->source_id)->toBe($contribution->id)
-        ->and($interaction->metadata['matched_by'])->toBe(ResolveContributorIdentity::MATCHED_BY_ACTOR_ID)
-        ->and($interaction->metadata['repo'])->toBe('he4rt/heartdevs.com');
+        ->and($interaction->attributed_by)->toBe(AttributionMethod::ExternalId);
 });
 
 test('transição de merge vira pr_merged com a data do merge', function (): void {

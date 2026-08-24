@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use He4rt\Activity\Tracking\Actions\TrackActivity;
 use He4rt\Activity\Tracking\DTOs\TrackActivityDTO;
 use He4rt\Activity\Tracking\Enums\ActivityType;
+use He4rt\Activity\Tracking\Enums\AttributionMethod;
 use He4rt\Activity\Tracking\Events\InteractionTracked;
 use He4rt\Activity\Tracking\Models\Interaction;
 use He4rt\Economy\Models\Transaction;
@@ -37,6 +38,7 @@ test('registro cria a interação e deriva o dono da identidade', function (): v
     $interaction = resolve(TrackActivity::class)->handle(new TrackActivityDTO(
         externalIdentityId: $identity->id,
         type: ActivityType::PrMerged,
+        attributedBy: AttributionMethod::ExternalId,
         occurredAt: CarbonImmutable::parse('2026-08-01 10:00:00'),
         externalRef: 'github:pr_merged:he4rt/api:474',
     ));
@@ -55,6 +57,7 @@ test('registro não credita carteira nem incrementa xp', function (): void {
     resolve(TrackActivity::class)->handle(new TrackActivityDTO(
         externalIdentityId: $identity->id,
         type: ActivityType::Commit,
+        attributedBy: AttributionMethod::ExternalId,
         occurredAt: CarbonImmutable::now(),
         externalRef: 'github:commit:he4rt/api:abc123',
     ));
@@ -71,6 +74,7 @@ test('registro repetido do mesmo external_ref é no-op', function (): void {
     $dto = new TrackActivityDTO(
         externalIdentityId: $identity->id,
         type: ActivityType::Review,
+        attributedBy: AttributionMethod::ExternalId,
         occurredAt: CarbonImmutable::now(),
         externalRef: 'github:review:he4rt/api:8471023',
     );
@@ -91,6 +95,7 @@ test('abertura e merge do mesmo PR coexistem como fatos distintos', function ():
         resolve(TrackActivity::class)->handle(new TrackActivityDTO(
             externalIdentityId: $identity->id,
             type: $type,
+            attributedBy: AttributionMethod::ExternalId,
             occurredAt: CarbonImmutable::now(),
             externalRef: 'github:'.$type->value.':he4rt/api:474',
         ));

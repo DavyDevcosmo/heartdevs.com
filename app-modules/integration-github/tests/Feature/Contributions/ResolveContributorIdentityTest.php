@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use He4rt\Activity\Tracking\Enums\AttributionMethod;
 use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use He4rt\Identity\User\Models\User;
@@ -36,7 +37,7 @@ test('casa exatamente pelo actor_id', function (): void {
     $resolved = resolve(ResolveContributorIdentity::class)->handle($contribution);
 
     expect($resolved['identity']->id)->toBe($identity->id)
-        ->and($resolved['matched_by'])->toBe(ResolveContributorIdentity::MATCHED_BY_ACTOR_ID);
+        ->and($resolved['attributed_by'])->toBe(AttributionMethod::ExternalId);
 });
 
 test('commit sem actor_id casa pelo login, ignorando caixa', function (): void {
@@ -51,7 +52,7 @@ test('commit sem actor_id casa pelo login, ignorando caixa', function (): void {
     $resolved = resolve(ResolveContributorIdentity::class)->handle($contribution);
 
     expect($resolved['identity']->id)->toBe($identity->id)
-        ->and($resolved['matched_by'])->toBe(ResolveContributorIdentity::MATCHED_BY_LOGIN);
+        ->and($resolved['attributed_by'])->toBe(AttributionMethod::Handle);
 });
 
 test('login ambíguo é descartado em vez de adivinhado', function (): void {

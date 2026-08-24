@@ -77,6 +77,9 @@ a economia aposentada e todo caso de enum sem produtor.
 | 12  | Enum podado: só casos com produtor                              | Caso sem produtor é promessa que o próximo leitor lê como feature. Foi o que gerou esta spec.                                                                                            |
 | 13  | `unique (external_ref)` global e auto-descritivo                | Três caminhos escrevem o mesmo fato e precisam convergir numa linha só.                                                                                                                  |
 | 14  | O backfill do lake passa a emitir                               | Fecha o caminho mudo (ver _Achados_).                                                                                                                                                    |
+| 15  | A origem responde pelo detalhe (`ContributionDetail`)           | Título, contexto e link viviam copiados no `metadata`; a cópia envelhecia sozinha e a tela do admin lia `metadata.repo`, vazio em toda linha de conteúdo.                                |
+| 16  | `metadata` morre e vira coluna `attributed_by`                  | Tirando as três cópias sobrava uma chave enumerada. Coluna é consultável e indexável; jsonb com um valor dentro é cerimônia — e some do allowlist do `NoLooseArrayCastsTest`.            |
+| 17  | `matched_by` vira `AttributionMethod`, vocabulário do domínio   | `actor_id`/`login` são detalhe do GitHub e `activity` não importa integration. O enum ordena por risco e dá nome ao caso do dev.to (`Owned`), que antes aparecia como travessão.         |
 
 ### Refinamento do formato de `external_ref`
 

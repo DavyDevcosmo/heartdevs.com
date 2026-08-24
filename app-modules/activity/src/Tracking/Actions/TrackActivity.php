@@ -22,9 +22,9 @@ final readonly class TrackActivity
                 // Derivado da identidade, nunca recebido: o DTO não pode divergir do dono real.
                 'user_id' => $identity->model_id,
                 'type' => $dto->type,
+                'attributed_by' => $dto->attributedBy,
                 'source_type' => $dto->sourceType,
                 'source_id' => $dto->sourceId,
-                'metadata' => $dto->metadata,
                 'occurred_at' => $dto->occurredAt,
             ],
         );

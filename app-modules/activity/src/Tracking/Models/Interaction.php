@@ -6,7 +6,9 @@ namespace He4rt\Activity\Tracking\Models;
 
 use Carbon\CarbonInterface;
 use He4rt\Activity\Database\Factories\InteractionFactory;
+use He4rt\Activity\Tracking\Contracts\ContributionDetail;
 use He4rt\Activity\Tracking\Enums\ActivityType;
+use He4rt\Activity\Tracking\Enums\AttributionMethod;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use He4rt\Identity\User\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -23,10 +25,10 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string $external_identity_id
  * @property string $user_id
  * @property ActivityType $type
+ * @property AttributionMethod $attributed_by
  * @property string|null $source_type
  * @property string|null $source_id
  * @property string|null $external_ref
- * @property array<string, mixed>|null $metadata
  * @property CarbonInterface $occurred_at
  * @property CarbonInterface|null $hidden_at
  * @property string|null $hidden_by
@@ -35,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property-read ExternalIdentity $externalIdentity
  * @property-read User $user
  * @property-read User|null $hiddenByUser
+ * @property-read Model|null $source
  */
 #[UseFactory(factoryClass: InteractionFactory::class)]
 #[Table(name: 'interactions')]
@@ -76,6 +79,19 @@ final class Interaction extends Model
         return $this->morphTo();
     }
 
+    /**
+     * Título, contexto e link vivem na origem, não aqui. O morph aponta para uma
+     * string livre, então a origem pode não honrar o contrato — uma fonte antiga,
+     * um registro apagado — e nesse caso a contribuição fica sem detalhe em vez
+     * de derrubar quem a lê.
+     */
+    public function detail(): ?ContributionDetail
+    {
+        $source = $this->source;
+
+        return $source instanceof ContributionDetail ? $source : null;
+    }
+
     public function isVisible(): bool
     {
         return $this->hidden_at === null;
@@ -101,7 +117,7 @@ final class Interaction extends Model
     {
         return [
             'type' => ActivityType::class,
-            'metadata' => 'array',
+            'attributed_by' => AttributionMethod::class,
             'occurred_at' => 'datetime',
             'hidden_at' => 'datetime',
         ];

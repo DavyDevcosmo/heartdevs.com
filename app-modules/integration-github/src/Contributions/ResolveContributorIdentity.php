@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace He4rt\IntegrationGithub\Contributions;
 
+use He4rt\Activity\Tracking\Enums\AttributionMethod;
 use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use He4rt\IntegrationGithub\Models\GithubContribution;
@@ -19,12 +20,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 final class ResolveContributorIdentity
 {
-    public const string MATCHED_BY_ACTOR_ID = 'actor_id';
-
-    public const string MATCHED_BY_LOGIN = 'login';
-
     /**
-     * @return array{identity: ExternalIdentity, matched_by: string}|null
+     * @return array{identity: ExternalIdentity, attributed_by: AttributionMethod}|null
      */
     public function handle(GithubContribution $contribution): ?array
     {
@@ -35,7 +32,7 @@ final class ResolveContributorIdentity
             : null;
 
         if ($byActorId instanceof ExternalIdentity) {
-            return ['identity' => $byActorId, 'matched_by' => self::MATCHED_BY_ACTOR_ID];
+            return ['identity' => $byActorId, 'attributed_by' => AttributionMethod::ExternalId];
         }
 
         $login = mb_strtolower(mb_trim($contribution->actor_login));
@@ -53,7 +50,7 @@ final class ResolveContributorIdentity
             return null;
         }
 
-        return ['identity' => $candidates->first(), 'matched_by' => self::MATCHED_BY_LOGIN];
+        return ['identity' => $candidates->first(), 'attributed_by' => AttributionMethod::Handle];
     }
 
     /**

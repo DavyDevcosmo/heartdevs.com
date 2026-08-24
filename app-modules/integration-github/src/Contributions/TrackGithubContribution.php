@@ -60,16 +60,11 @@ final readonly class TrackGithubContribution
         return $this->trackActivity->handle(new TrackActivityDTO(
             externalIdentityId: $resolved['identity']->id,
             type: $type,
+            attributedBy: $resolved['attributed_by'],
             occurredAt: $this->occurredAt($contribution, $type),
             externalRef: $this->externalRef($contribution, $type),
             sourceType: 'github_contribution',
             sourceId: $contribution->id,
-            metadata: [
-                'matched_by' => $resolved['matched_by'],
-                'repo' => $contribution->repo,
-                'lake_ref' => $contribution->external_ref,
-                'url' => $contribution->metadata['url'] ?? null,
-            ],
         ));
     }
 

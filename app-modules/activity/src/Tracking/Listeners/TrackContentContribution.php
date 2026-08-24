@@ -7,6 +7,7 @@ namespace He4rt\Activity\Tracking\Listeners;
 use He4rt\Activity\Tracking\Actions\TrackActivity;
 use He4rt\Activity\Tracking\DTOs\TrackActivityDTO;
 use He4rt\Activity\Tracking\Enums\ActivityType;
+use He4rt\Activity\Tracking\Enums\AttributionMethod;
 use He4rt\Contents\Articles\Events\ArticlePublished;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 
@@ -39,6 +40,7 @@ final readonly class TrackContentContribution
         $this->trackActivity->handle(new TrackActivityDTO(
             externalIdentityId: $identity->id,
             type: ActivityType::Article,
+            attributedBy: AttributionMethod::Owned,
             occurredAt: $entry->published_at->toDateTimeImmutable(),
             externalRef: sprintf('%s:article:%s', $entry->provider->value, $entry->external_id),
             sourceType: 'content_entry',

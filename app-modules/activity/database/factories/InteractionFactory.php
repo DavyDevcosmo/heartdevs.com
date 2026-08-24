@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace He4rt\Activity\Database\Factories;
 
 use He4rt\Activity\Tracking\Enums\ActivityType;
+use He4rt\Activity\Tracking\Enums\AttributionMethod;
 use He4rt\Activity\Tracking\Models\Interaction;
 use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
@@ -30,6 +31,7 @@ final class InteractionFactory extends Factory
                 ->findOrFail($attributes['external_identity_id'])
                 ->model_id,
             'type' => ActivityType::Article,
+            'attributed_by' => AttributionMethod::Owned,
             'external_ref' => fn (): string => 'devto:article:'.fake()->unique()->randomNumber(7),
             'occurred_at' => now(),
         ];

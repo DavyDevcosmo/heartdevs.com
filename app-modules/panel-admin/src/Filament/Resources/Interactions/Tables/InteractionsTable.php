@@ -10,9 +10,9 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use He4rt\Activity\Tracking\Enums\ActivityType;
+use He4rt\Activity\Tracking\Enums\AttributionMethod;
 use He4rt\Activity\Tracking\Models\Interaction;
 use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
-use He4rt\IntegrationGithub\Contributions\ResolveContributorIdentity;
 use He4rt\PanelAdmin\Contributions\Actions\HideInteractionAction;
 use He4rt\PanelAdmin\Contributions\Actions\UnhideInteractionAction;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,36 +23,38 @@ final class InteractionsTable
     {
         return $table
             ->defaultSort('occurred_at', 'desc')
+            // A coluna Contribuição lê a origem por linha: sem eager load é um N+1 por página.
+            ->modifyQueryUsing(static fn (Builder $query): Builder => $query->with([
+                'source',
+                'user',
+                'hiddenByUser',
+                'externalIdentity',
+            ]))
             ->columns([
                 TextColumn::make('user.name')
                     ->label('Pessoa')
-                    ->description(static fn (Interaction $record): string => $record->user->username)
+                    ->description(static fn (Interaction $record): ?string => $record->user->name === $record->user->username
+                        ? null
+                        : $record->user->username)
                     ->searchable(['users.name', 'users.username']),
 
                 TextColumn::make('type')
                     ->label('Tipo')
-                    ->badge(),
-
-                TextColumn::make('metadata.repo')
-                    ->label('Repositório')
-                    ->placeholder('—')
-                    ->limit(32),
-
-                TextColumn::make('externalIdentity.provider')
-                    ->label('Origem')
                     ->badge()
-                    ->color('gray'),
+                    ->icon(static fn (Interaction $record): string => $record->externalIdentity->provider->getIcon()),
 
-                TextColumn::make('metadata.matched_by')
-                    ->label('Casou por')
+                TextColumn::make('source.contributionTitle')
+                    ->label('Contribuição')
+                    ->state(static fn (Interaction $record): string => $record->detail()?->contributionTitle() ?? '—')
+                    ->description(static fn (Interaction $record): ?string => $record->detail()?->contributionContext())
+                    ->url(static fn (Interaction $record): ?string => $record->detail()?->contributionUrl(), shouldOpenInNewTab: true)
+                    ->limit(60)
+                    ->wrap(),
+
+                TextColumn::make('attributed_by')
+                    ->label('Atribuição')
                     ->badge()
-                    ->placeholder('—')
-                    ->color(static fn (?string $state): string => $state === ResolveContributorIdentity::MATCHED_BY_LOGIN
-                        ? 'warning'
-                        : 'gray')
-                    ->tooltip(static fn (?string $state): ?string => $state === ResolveContributorIdentity::MATCHED_BY_LOGIN
-                        ? 'Login é mutável no GitHub — atribuição menos firme que actor_id.'
-                        : null),
+                    ->tooltip(static fn (AttributionMethod $state): string => $state->getDescription()),
 
                 TextColumn::make('occurred_at')
                     ->label('Ocorrido em')
@@ -88,15 +90,10 @@ final class InteractionsTable
                         : $query)
                     ->multiple(),
 
-                SelectFilter::make('matched_by')
-                    ->label('Casou por')
-                    ->options([
-                        ResolveContributorIdentity::MATCHED_BY_ACTOR_ID => 'actor_id (exato)',
-                        ResolveContributorIdentity::MATCHED_BY_LOGIN => 'login (mutável)',
-                    ])
-                    ->query(static fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
-                        ? $query->where('metadata->matched_by', $data['value'])
-                        : $query),
+                SelectFilter::make('attributed_by')
+                    ->label('Atribuição')
+                    ->options(AttributionMethod::class)
+                    ->multiple(),
 
                 Filter::make('hidden')
                     ->label('Somente ocultas')
