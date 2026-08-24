@@ -7,6 +7,7 @@ namespace He4rt\Identity\ExternalIdentity\Enums;
 use App\Contracts\ApiKeyClientContract;
 use App\Contracts\OAuthClientContract;
 use App\Enums\Concerns\StringifyEnum;
+use App\Support\ProfileHandle;
 use Filament\Support\Colors\Color;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasDescription;
@@ -113,9 +114,9 @@ enum IdentityProvider: string implements HasColor, HasDescription, HasIcon, HasL
         }
 
         return match ($this) {
-            self::GitHub => self::linkTo('https://github.com/', $handle),
-            self::Twitch => self::linkTo('https://twitch.tv/', $handle),
-            self::DevTo => self::linkTo('https://dev.to/', $handle),
+            self::GitHub => ProfileHandle::url('https://github.com/', $handle),
+            self::Twitch => ProfileHandle::url('https://twitch.tv/', $handle),
+            self::DevTo => ProfileHandle::url('https://dev.to/', $handle),
             default => null,
         };
     }
@@ -275,14 +276,5 @@ enum IdentityProvider: string implements HasColor, HasDescription, HasIcon, HasL
             self::Discord => resolve(DiscordMessageAdapter::class),
             default => null,
         };
-    }
-
-    private static function linkTo(string $base, string $handle): string
-    {
-        if (str_starts_with($handle, 'http://') || str_starts_with($handle, 'https://')) {
-            return $handle;
-        }
-
-        return $base.mb_ltrim(mb_trim($handle), '@');
     }
 }

@@ -19,13 +19,45 @@ it('publishes the open graph card of a profile page', function (): void {
 
     $this->get('/@danielhe4rt')
         ->assertOk()
-        ->assertSee('<meta property="og:type" content="profile" />', escape: false)
-        ->assertSee('<meta property="og:url" content="'.url('/@danielhe4rt').'" />', escape: false)
-        ->assertSee('<link rel="canonical" href="'.url('/@danielhe4rt').'" />', escape: false)
-        ->assertSee('<meta property="og:site_name" content="'.e(config('app.name')).'" />', escape: false)
-        ->assertSee('<meta property="og:title" content="Daniel - '.e(config('app.name')).'" />', escape: false)
-        ->assertSee('<meta property="og:description" content="Developer Relations na He4rt" />', escape: false)
-        ->assertSee('<meta name="description" content="Developer Relations na He4rt" />', escape: false);
+        ->assertSee('<meta property="og:type" content="profile">', escape: false)
+        ->assertSee('<meta property="og:url" content="'.secure_url('/@danielhe4rt').'">', escape: false)
+        ->assertSee('<link rel="canonical" href="'.secure_url('/@danielhe4rt').'">', escape: false)
+        ->assertSee('<meta property="og:site_name" content="'.e(config('app.name')).'">', escape: false)
+        ->assertSee('<meta property="og:title" content="Daniel - '.e(config('app.name')).'">', escape: false)
+        ->assertSee('<meta property="og:description" content="Developer Relations na He4rt">', escape: false)
+        ->assertSee('<meta name="description" content="Developer Relations na He4rt">', escape: false);
+});
+
+it('herda os defaults de SEO do site', function (): void {
+    User::factory()->create(['username' => 'herdeiro']);
+
+    $this->get('/@herdeiro')
+        ->assertOk()
+        ->assertSee('<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">', escape: false)
+        ->assertSee('<meta property="og:locale" content="pt_BR">', escape: false)
+        ->assertSee('<meta name="twitter:site" content="@He4rtDevs">', escape: false)
+        ->assertSee('"@type":"Organization"', escape: false);
+});
+
+it('describes the page as a Person for search engines', function (): void {
+    $user = User::factory()->create(['name' => 'Daniel', 'username' => 'danielhe4rt']);
+    $profile = Profile::factory()->for($user)->create(['headline' => 'Developer Relations na He4rt']);
+
+    WorkExperience::factory()->for($profile)->create([
+        'position' => 'Developer Relations',
+        'company_name' => 'He4rt',
+        'is_currently_working_here' => true,
+    ]);
+
+    $html = $this->get('/@danielhe4rt')->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('"@type":"Person"')
+        ->toContain('"name":"Daniel"')
+        ->toContain('"url":"'.secure_url('/@danielhe4rt').'"')
+        ->toContain('"alternateName":"@danielhe4rt"')
+        ->toContain('"jobTitle":"Developer Relations"')
+        ->toContain('"worksFor":{"@type":"Organization","name":"He4rt"}');
 });
 
 it('falls back to the current role when there is no headline', function (): void {
@@ -43,7 +75,7 @@ it('falls back to the current role when there is no headline', function (): void
 
     $this->get('/@sem-headline')
         ->assertOk()
-        ->assertSee('<meta property="og:description" content="Backend Engineer · He4rt" />', escape: false);
+        ->assertSee('<meta property="og:description" content="Backend Engineer · He4rt">', escape: false);
 });
 
 it('falls back to the bio when there is no headline nor current role', function (): void {
@@ -56,7 +88,7 @@ it('falls back to the bio when there is no headline nor current role', function 
 
     $this->get('/@so-bio')
         ->assertOk()
-        ->assertSee('<meta property="og:description" content="Escrevo Go e cuido de comunidade." />', escape: false);
+        ->assertSee('<meta property="og:description" content="Escrevo Go e cuido de comunidade.">', escape: false);
 });
 
 it('falls back to a plain sentence on an empty profile', function (): void {
@@ -65,7 +97,7 @@ it('falls back to a plain sentence on an empty profile', function (): void {
     $this->get('/@vazio')
         ->assertOk()
         ->assertSee(
-            '<meta property="og:description" content="Fulano na comunidade He4rt Developers." />',
+            '<meta property="og:description" content="Fulano na comunidade He4rt Developers.">',
             escape: false,
         );
 });
@@ -80,7 +112,7 @@ it('trims a long bio down to a card-sized description', function (): void {
 
     $this->get('/@prolixo')
         ->assertOk()
-        ->assertSee('<meta property="og:description" content="'.str_repeat('a', 157).'..." />', escape: false);
+        ->assertSee('<meta property="og:description" content="'.str_repeat('a', 157).'...">', escape: false);
 });
 
 it('shares the cover image when there is one', function (): void {
@@ -93,8 +125,8 @@ it('shares the cover image when there is one', function (): void {
 
     $this->get('/@com-capa')
         ->assertOk()
-        ->assertSee('<meta property="og:image" content="'.e($user->getFirstMediaUrl('cover')).'" />', escape: false)
-        ->assertSee('<meta name="twitter:card" content="summary_large_image" />', escape: false);
+        ->assertSee('<meta property="og:image" content="'.e(url($user->getFirstMediaUrl('cover'))).'">', escape: false)
+        ->assertSee('<meta name="twitter:card" content="summary_large_image">', escape: false);
 });
 
 it('shares the avatar when there is no cover', function (): void {
@@ -109,14 +141,25 @@ it('shares the avatar when there is no cover', function (): void {
 
     $this->get('/@sem-capa')
         ->assertOk()
-        ->assertSee('<meta property="og:image" content="'.e($avatarUrl).'" />', escape: false);
+        ->assertSee('<meta property="og:image" content="'.e(url($avatarUrl)).'">', escape: false);
 });
 
-it('omits the share image when there is no cover and no picture', function (): void {
+it('falls back to the site image when there is no cover and no picture', function (): void {
     User::factory()->create(['username' => 'sem-nada']);
 
     $this->get('/@sem-nada')
         ->assertOk()
-        ->assertDontSee('<meta property="og:image"', escape: false)
-        ->assertSee('<meta name="twitter:card" content="summary" />', escape: false);
+        ->assertSee('<meta property="og:image" content="'.asset(config('he4rt.seo.og_image')).'">', escape: false);
+});
+
+it('credits the member on the twitter card when they linked their X', function (): void {
+    $user = User::factory()->create(['username' => 'tuiteiro']);
+
+    Profile::factory()->for($user)->create([
+        'social_links' => ['twitter' => '@gabrielfvdev'],
+    ]);
+
+    $this->get('/@tuiteiro')
+        ->assertOk()
+        ->assertSee('<meta name="twitter:creator" content="@gabrielfvdev">', escape: false);
 });

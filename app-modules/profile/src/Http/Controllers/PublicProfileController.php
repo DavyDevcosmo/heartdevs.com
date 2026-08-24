@@ -7,6 +7,7 @@ namespace He4rt\Profile\Http\Controllers;
 use App\Http\Controllers\Controller;
 use He4rt\Identity\User\Models\User;
 use He4rt\Profile\Actions\BuildPublicProfile;
+use He4rt\Profile\Seo\PublicProfileHead;
 use Illuminate\Contracts\View\View;
 
 final class PublicProfileController extends Controller
@@ -24,8 +25,10 @@ final class PublicProfileController extends Controller
 
         abort_unless($user instanceof User, 404);
 
-        return view('profile::public', [
-            'profile' => $this->buildPublicProfile->handle($user),
-        ]);
+        $profile = $this->buildPublicProfile->handle($user);
+
+        PublicProfileHead::apply($profile);
+
+        return view('profile::public', ['profile' => $profile]);
     }
 }

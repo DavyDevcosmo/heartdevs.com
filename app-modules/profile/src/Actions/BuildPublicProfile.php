@@ -23,11 +23,20 @@ use He4rt\Profile\Enums\SocialPlatform;
 use He4rt\Profile\Models\Profile;
 use He4rt\Profile\Models\ProfileSkill;
 use He4rt\Profile\Models\WorkExperience;
+use He4rt\Profile\Support\PublicProfileCache;
 use Illuminate\Database\Eloquent\Collection;
 
 final class BuildPublicProfile
 {
     public function handle(User $user): PublicProfileData
+    {
+        return PublicProfileCache::remember(
+            (string) $user->getKey(),
+            fn (): PublicProfileData => $this->build($user),
+        );
+    }
+
+    private function build(User $user): PublicProfileData
     {
         $profile = Profile::query()
             ->where('user_id', $user->getKey())

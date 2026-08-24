@@ -1,12 +1,4 @@
 @php
-    $metaDescription = collect([
-        $profile->headline,
-        $profile->currentPosition && $profile->currentCompany
-            ? $profile->currentPosition . ' · ' . $profile->currentCompany
-            : $profile->currentPosition,
-        $profile->about,
-    ])->filter()->first() ?? $profile->name . ' na comunidade He4rt Developers.';
-
     $facts = array_filter([
         'Senioridade' => $profile->seniority,
         'Experiência' => $profile->yearsExperience
@@ -42,12 +34,7 @@
     $eyebrow = 'text-text-low text-[0.7rem] font-semibold tracking-[0.14em] uppercase';
 @endphp
 
-<x-profile::layout.guest
-    :title="$profile->name"
-    :description="Str::limit($metaDescription, 157)"
-    :image="$profile->coverUrl ?? $profile->avatarUrl"
-    type="profile"
->
+<x-portal::layouts.app>
     <main class="pb-28">
         <header class="relative isolate -mt-24 overflow-hidden pt-24">
             @if ($profile->coverUrl)
@@ -391,4 +378,4 @@
             @endif
         </div>
     </main>
-</x-profile::layout.guest>
+</x-portal::layouts.app>

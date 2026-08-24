@@ -7,4 +7,5 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/@{username}', PublicProfileController::class)
     ->where('username', '[A-Za-z0-9_.-]+')
+    ->middleware('throttle:public-profile')
     ->name('profile.public');

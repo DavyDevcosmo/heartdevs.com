@@ -45,3 +45,24 @@ it('still renders the profile of a suspended user', function (): void {
         ->assertOk()
         ->assertSee('Suspenso Temporariamente');
 });
+
+it('throttles a burst of requests from the same IP', function (): void {
+    User::factory()->create(['username' => 'alvo']);
+
+    foreach (range(1, 60) as $ignored) {
+        $this->get('/@alvo')->assertOk();
+    }
+
+    $this->get('/@alvo')->assertStatus(429);
+});
+
+it('counts the throttle per IP, not per profile', function (): void {
+    User::factory()->create(['username' => 'primeiro']);
+    User::factory()->create(['username' => 'segundo']);
+
+    foreach (range(1, 60) as $ignored) {
+        $this->get('/@primeiro')->assertOk();
+    }
+
+    $this->get('/@segundo')->assertStatus(429);
+});
