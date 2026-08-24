@@ -8,6 +8,9 @@ use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
 use Filament\Panel;
+use Filament\Support\Assets\AlpineComponent;
+use Filament\Support\Facades\FilamentAsset;
+use He4rt\PanelAdmin\Contributions\Widgets\ActivityTimelineWidget;
 use He4rt\PanelAdmin\Discord\DiscordCluster;
 use He4rt\PanelAdmin\Enums\NavigationGroup as NavGroup;
 use He4rt\PanelAdmin\Filament\Resources\ContentEntries\ContentEntryResource;
@@ -49,6 +52,9 @@ class PanelAdminServiceProvider extends ServiceProvider
                     DiscordCluster::class,
                 ])
                 ->navigation($this->buildNavigation(...))
+                ->widgets([
+                    ActivityTimelineWidget::class,
+                ])
                 ->resources([
                     ExternalIdentityResource::class,
                     EventResource::class,
@@ -102,6 +108,13 @@ class PanelAdminServiceProvider extends ServiceProvider
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'panel-admin');
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'panel-admin');
+
+        FilamentAsset::register([
+            AlpineComponent::make(
+                'activity-timeline',
+                __DIR__.'/../resources/js/components/activity-timeline.js',
+            ),
+        ], package: 'he4rt/panel-admin');
 
         Livewire::component('moderation-queue', ModerationQueue::class);
         Livewire::component('appeal-queue', AppealQueue::class);
