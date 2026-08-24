@@ -19,10 +19,12 @@ final readonly class RetrospectiveSnapshot
     /**
      * @param  list<SourceResult>  $sources
      * @param  SourceFilters  $filters  os filtros que PRODUZIRAM estes números
+     * @param  list<PromotionCard>  $promotions  as pessoas do slide da tag He4rt, já medidas
      */
     public function __construct(
         public array $sources = [],
         public SourceFilters $filters = new SourceFilters(),
+        public array $promotions = [],
     ) {}
 
     /**
@@ -45,7 +47,11 @@ final readonly class RetrospectiveSnapshot
             );
         }
 
-        return new self($sources, self::filters($payload['filters'] ?? null));
+        return new self(
+            $sources,
+            self::filters($payload['filters'] ?? null),
+            self::promotions($payload['promotions'] ?? []),
+        );
     }
 
     /**
@@ -61,6 +67,10 @@ final readonly class RetrospectiveSnapshot
                 'hide_bots' => $this->filters->hideBots,
                 'exclusions' => $this->filters->exclusions,
             ],
+            'promotions' => array_map(
+                fn (PromotionCard $card): array => $card->toArray(),
+                $this->promotions,
+            ),
             'sources' => array_map(
                 fn (SourceResult $source): array => [
                     'key' => $source->key,
@@ -83,7 +93,47 @@ final readonly class RetrospectiveSnapshot
 
     public function isEmpty(): bool
     {
-        return $this->sources === [];
+        return $this->sources === [] && $this->promotions === [];
+    }
+
+    /**
+     * As escolhas de promoção que produziram estes cartões, para comparar com a
+     * curadoria atual da edição.
+     *
+     * @return list<string>
+     */
+    public function promotionSignatures(): array
+    {
+        return array_map(
+            static fn (PromotionCard $card): string => $card->signature(),
+            $this->promotions,
+        );
+    }
+
+    /**
+     * @return list<PromotionCard>
+     */
+    private static function promotions(mixed $raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $cards = [];
+
+        foreach ($raw as $card) {
+            if (!is_array($card)) {
+                continue;
+            }
+
+            $hydrated = PromotionCard::makeFromPayload($card);
+
+            if ($hydrated instanceof PromotionCard) {
+                $cards[] = $hydrated;
+            }
+        }
+
+        return $cards;
     }
 
     /**

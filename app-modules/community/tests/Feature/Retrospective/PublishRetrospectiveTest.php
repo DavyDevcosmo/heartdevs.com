@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
 use He4rt\Community\Retrospective\Actions\CompileSnapshot;
+use He4rt\Community\Retrospective\Actions\ComposePromotions;
 use He4rt\Community\Retrospective\Actions\PublishRetrospective;
 use He4rt\Community\Retrospective\Contracts\RetrospectiveSource;
 use He4rt\Community\Retrospective\DTOs\HeadlineMetrics;
@@ -56,7 +57,7 @@ it('o job congela o snapshot e promove para publicado', function (): void {
         }
     };
 
-    new CompileRetrospectiveSnapshot($retrospective)->handle(new CompileSnapshot([$source]));
+    new CompileRetrospectiveSnapshot($retrospective)->handle(new CompileSnapshot([$source], resolve(ComposePromotions::class)));
 
     $fresh = $retrospective->fresh();
 
