@@ -6,7 +6,6 @@ use He4rt\Activity\Message\Models\MembershipEvent;
 use He4rt\Activity\Message\Models\Message;
 use He4rt\Activity\Message\Models\MessageEmbed;
 use He4rt\Activity\Moderation\Models\ModerationEvent;
-use He4rt\Activity\Tracking\Models\Interaction;
 use He4rt\Events\CheckIn\Models\CheckIn;
 use He4rt\Events\Enrollment\Models\Enrollment;
 use He4rt\Events\Enrollment\Models\EnrollmentPolicy;
@@ -101,9 +100,6 @@ const ALLOWED_LOOSE_CASTS = [
     ],
     MembershipEvent::class => [
         'metadata' => 'DÍVIDA: shape conhecido por tipo de evento.',
-    ],
-    Interaction::class => [
-        'metadata' => 'DÍVIDA: tabela hoje vazia — é a hora barata de tipar.',
     ],
     ModerationEvent::class => [
         'metadata' => 'DÍVIDA: shape conhecido.',

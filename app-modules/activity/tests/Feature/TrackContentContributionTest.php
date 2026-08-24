@@ -2,17 +2,31 @@
 
 declare(strict_types=1);
 
-use He4rt\Activity\Tracking\Enums\ActivityStatus;
 use He4rt\Activity\Tracking\Enums\ActivityType;
 use He4rt\Activity\Tracking\Models\Interaction;
 use He4rt\Contents\Articles\Events\ArticlePublished;
 use He4rt\Contents\Database\Factories\ContentEntryFactory;
-use He4rt\Gamification\Character\Models\Character;
+use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
+use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use He4rt\Identity\User\Models\User;
 
-test('creates an interaction when the article author has a character', function (): void {
+function authorWithDevtoIdentity(): User
+{
     $user = User::factory()->create();
-    $character = Character::factory()->create(['user_id' => $user->id]);
+
+    ExternalIdentity::factory()->create([
+        'model_type' => (new User)->getMorphClass(),
+        'model_id' => $user->id,
+        'provider' => IdentityProvider::DevTo,
+        'connected_at' => now(),
+        'disconnected_at' => null,
+    ]);
+
+    return $user;
+}
+
+test('artigo de autor com identidade devto ativa vira contribuição', function (): void {
+    $user = authorWithDevtoIdentity();
 
     $entry = ContentEntryFactory::new()->authoredBy($user)->create([
         'external_id' => '123',
@@ -28,11 +42,11 @@ test('creates an interaction when the article author has a character', function 
     expect($interaction)->not->toBeNull()
         ->and($interaction->external_ref)->toBe('devto:article:123')
         ->and($interaction->type)->toBe(ActivityType::Article)
-        ->and($interaction->status)->toBe(ActivityStatus::Pending)
-        ->and($interaction->character_id)->toBe($character->id);
+        ->and($interaction->user_id)->toBe($user->id)
+        ->and($interaction->isVisible())->toBeTrue();
 });
 
-test('skips tracking and never creates a character when the author has none', function (): void {
+test('autor sem identidade devto conectada é ignorado', function (): void {
     $user = User::factory()->create();
 
     $entry = ContentEntryFactory::new()->authoredBy($user)->create([
@@ -41,13 +55,24 @@ test('skips tracking and never creates a character when the author has none', fu
 
     event(new ArticlePublished($entry->fresh()));
 
-    expect(Interaction::query()->where('source_id', $entry->id)->exists())->toBeFalse()
-        ->and(Character::query()->where('user_id', $user->id)->exists())->toBeFalse();
+    expect(Interaction::query()->where('source_id', $entry->id)->exists())->toBeFalse();
 });
 
-test('deduplicates by external_ref when the event fires twice', function (): void {
-    $user = User::factory()->create();
-    Character::factory()->create(['user_id' => $user->id]);
+test('identidade desconectada não recebe a contribuição', function (): void {
+    $user = authorWithDevtoIdentity();
+    $user->providers()->update(['disconnected_at' => now()]);
+
+    $entry = ContentEntryFactory::new()->authoredBy($user)->create([
+        'external_id' => '999',
+    ]);
+
+    event(new ArticlePublished($entry->fresh()));
+
+    expect(Interaction::query()->where('source_id', $entry->id)->exists())->toBeFalse();
+});
+
+test('evento disparado duas vezes não duplica', function (): void {
+    $user = authorWithDevtoIdentity();
 
     $entry = ContentEntryFactory::new()->authoredBy($user)->create([
         'external_id' => '789',

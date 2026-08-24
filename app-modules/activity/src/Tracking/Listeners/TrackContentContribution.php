@@ -7,8 +7,9 @@ namespace He4rt\Activity\Tracking\Listeners;
 use He4rt\Activity\Tracking\Actions\TrackActivity;
 use He4rt\Activity\Tracking\DTOs\TrackActivityDTO;
 use He4rt\Activity\Tracking\Enums\ActivityType;
+use He4rt\Activity\Tracking\Enums\AttributionMethod;
 use He4rt\Contents\Articles\Events\ArticlePublished;
-use Illuminate\Support\Facades\Log;
+use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 
 final readonly class TrackContentContribution
 {
@@ -24,21 +25,22 @@ final readonly class TrackContentContribution
             return;
         }
 
-        $character = $entry->author?->character;
+        /** @var ExternalIdentity|null $identity */
+        $identity = $entry->author?->providers()
+            ->where('provider', $identityProvider)
+            ->whereNotNull('connected_at')
+            ->whereNull('disconnected_at')
+            ->first();
 
-        if ($character === null) {
-            Log::info('Content contribution skipped: author has no character', [
-                'entry_id' => $entry->id,
-                'author_id' => $entry->author_id,
-            ]);
-
+        // Sem identidade conectada não há dono possível — mesma regra de toda fonte.
+        if ($identity === null) {
             return;
         }
 
         $this->trackActivity->handle(new TrackActivityDTO(
-            characterId: (string) $character->id,
+            externalIdentityId: $identity->id,
             type: ActivityType::Article,
-            provider: $identityProvider,
+            attributedBy: AttributionMethod::Owned,
             occurredAt: $entry->published_at->toDateTimeImmutable(),
             externalRef: sprintf('%s:article:%s', $entry->provider->value, $entry->external_id),
             sourceType: 'content_entry',

@@ -22,7 +22,7 @@ use He4rt\Community\Retrospective\Models\Retrospective;
 final class DeckPresentation
 {
     /**
-     * @return array{sources: list<SourceResult>, since: CarbonImmutable, until: CarbonImmutable, coverTitle: string|null, coverIntro: string|null, closingText: string|null, stateKey: string}
+     * @return array{sources: list<SourceResult>, promotions: list<PromotionSlide>, since: CarbonImmutable, until: CarbonImmutable, coverTitle: string|null, coverIntro: string|null, closingText: string|null, stateKey: string}
      */
     public static function for(?Retrospective $retrospective, bool $live = false): array
     {
@@ -42,6 +42,7 @@ final class DeckPresentation
      *
      * @return array{
      *     sources: list<SourceResult>,
+     *     promotions: list<PromotionSlide>,
      *     since: CarbonImmutable,
      *     until: CarbonImmutable,
      *     coverTitle: string|null,
@@ -57,6 +58,10 @@ final class DeckPresentation
                 $snapshot,
                 $retrospective->deck_config,
             ),
+            // Os cartões já vêm medidos de dentro do snapshot (congelados no
+            // publish, ou coletados ao vivo em rascunho); aqui só se aplica a
+            // curadoria de apresentação, como o ComposeDeck faz com as fontes.
+            'promotions' => PromotionSection::slides($snapshot->promotions, $retrospective->deck_config),
             'since' => $retrospective->since->toImmutable(),
             'until' => $retrospective->until->toImmutable(),
             'coverTitle' => $retrospective->cover_title,
@@ -83,6 +88,7 @@ final class DeckPresentation
             return resolve(CompileSnapshot::class)->execute(
                 $retrospective->period(),
                 $retrospective->filters(),
+                $retrospective->deck_config->promotions,
             );
         }
 
@@ -90,12 +96,13 @@ final class DeckPresentation
     }
 
     /**
-     * @return array{sources: list<never>, since: CarbonImmutable, until: CarbonImmutable, coverTitle: null, coverIntro: null, closingText: null, stateKey: string}
+     * @return array{sources: list<never>, promotions: list<never>, since: CarbonImmutable, until: CarbonImmutable, coverTitle: null, coverIntro: null, closingText: null, stateKey: string}
      */
     private static function blank(): array
     {
         return [
             'sources' => [],
+            'promotions' => [],
             'since' => CarbonImmutable::now(),
             'until' => CarbonImmutable::now(),
             'coverTitle' => null,

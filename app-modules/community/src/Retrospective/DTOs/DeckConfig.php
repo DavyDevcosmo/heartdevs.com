@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace He4rt\Community\Retrospective\DTOs;
 
+use He4rt\Community\Retrospective\Enums\PromotionStage;
+
 /**
  * Curadoria de APRESENTAÇÃO de uma retrospectiva, guardada na edição (jsonb via
  * AsDeckConfig). Separada do snapshot congelado: mexer aqui em ordem/on-off
@@ -19,12 +21,14 @@ final readonly class DeckConfig
      * @param  list<string>  $hiddenSources  keys de fonte ocultadas do deck
      * @param  list<string>  $hiddenSlides  kinds de slide ocultados (ex.: "github.repos")
      * @param  array<string, list<string>>  $exclusions  refs escondidos por key de fonte (ex.: ["github" => ["pr:142"]])
+     * @param  list<PromotionEntry>  $promotions  as pessoas do slide da tag He4rt, na ordem de exibição
      */
     public function __construct(
         public array $order = [],
         public array $hiddenSources = [],
         public array $hiddenSlides = [],
         public array $exclusions = [],
+        public array $promotions = [],
     ) {}
 
     /**
@@ -45,6 +49,7 @@ final readonly class DeckConfig
             hiddenSources: self::stringList($payload['hidden_sources'] ?? []),
             hiddenSlides: self::stringList($payload['hidden_slides'] ?? []),
             exclusions: $exclusions,
+            promotions: self::promotionList($payload['promotions'] ?? []),
         );
     }
 
@@ -58,6 +63,10 @@ final readonly class DeckConfig
             'hidden_sources' => $this->hiddenSources,
             'hidden_slides' => $this->hiddenSlides,
             'exclusions' => $this->exclusions,
+            'promotions' => array_map(
+                static fn (PromotionEntry $entry): array => $entry->toArray(),
+                $this->promotions,
+            ),
         ];
     }
 
@@ -100,6 +109,7 @@ final readonly class DeckConfig
             hiddenSources: $this->toggled($this->hiddenSources, $key, hidden: !$visible),
             hiddenSlides: $this->hiddenSlides,
             exclusions: $this->exclusions,
+            promotions: $this->promotions,
         );
     }
 
@@ -114,6 +124,7 @@ final readonly class DeckConfig
             hiddenSources: $this->hiddenSources,
             hiddenSlides: $this->toggled($this->hiddenSlides, $kind, hidden: !$visible),
             exclusions: $this->exclusions,
+            promotions: $this->promotions,
         );
     }
 
@@ -127,6 +138,7 @@ final readonly class DeckConfig
             hiddenSources: $this->hiddenSources,
             hiddenSlides: $this->hiddenSlides,
             exclusions: $this->exclusions,
+            promotions: $this->promotions,
         );
     }
 
@@ -152,6 +164,7 @@ final readonly class DeckConfig
             hiddenSources: $this->hiddenSources,
             hiddenSlides: $this->hiddenSlides,
             exclusions: $exclusions,
+            promotions: $this->promotions,
         );
     }
 
@@ -171,6 +184,87 @@ final readonly class DeckConfig
         }
 
         return array_values(array_unique($refs));
+    }
+
+    /**
+     * As pessoas de um estágio, na ordem em que o operador as deixou.
+     *
+     * @return list<PromotionEntry>
+     */
+    public function promotionsFor(PromotionStage $stage): array
+    {
+        return array_values(array_filter(
+            $this->promotions,
+            static fn (PromotionEntry $entry): bool => $entry->stage === $stage,
+        ));
+    }
+
+    /**
+     * Substitui as pessoas de UM estágio; as do outro ficam intactas. O inspector
+     * edita um slide por vez (destaques OU a tag), e uma escrita que levasse a
+     * lista inteira apagaria o estágio que não estava na tela.
+     *
+     * Mexe no dado exibido, como as exclusions: quem chama precisa avisar que
+     * exige republicar.
+     *
+     * @param  list<PromotionEntry>  $entries
+     */
+    public function withPromotionsFor(PromotionStage $stage, array $entries): self
+    {
+        $others = array_values(array_filter(
+            $this->promotions,
+            static fn (PromotionEntry $entry): bool => $entry->stage !== $stage,
+        ));
+
+        return new self(
+            order: $this->order,
+            hiddenSources: $this->hiddenSources,
+            hiddenSlides: $this->hiddenSlides,
+            exclusions: $this->exclusions,
+            promotions: [...$others, ...$entries],
+        );
+    }
+
+    /**
+     * As escolhas em forma comparável, para o painel detectar que o publicado
+     * ficou para trás.
+     *
+     * @return list<string>
+     */
+    public function promotionSignatures(): array
+    {
+        return array_map(
+            static fn (PromotionEntry $entry): string => $entry->signature(),
+            $this->promotions,
+        );
+    }
+
+    /**
+     * @return list<PromotionEntry>
+     */
+    private static function promotionList(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $entries = [];
+
+        foreach ($value as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $entry = PromotionEntry::makeFromPayload($item);
+
+            // Escolha corrompida (estágio removido, id vazio) some em vez de
+            // derrubar o deck: o jsonb sobrevive a refactor de enum.
+            if ($entry instanceof PromotionEntry) {
+                $entries[] = $entry;
+            }
+        }
+
+        return $entries;
     }
 
     /**

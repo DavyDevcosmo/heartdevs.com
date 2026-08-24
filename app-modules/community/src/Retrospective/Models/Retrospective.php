@@ -88,10 +88,10 @@ final class Retrospective extends Model
      * A edição publicada está exibindo números que não correspondem mais à curadoria
      * atual, porque um filtro que MEXE NO DADO mudou depois do publish.
      *
-     * Só olha os SourceFilters: ordem e on/off re-derivam do snapshot na composição e
-     * nunca pedem republicação (ADR-0002). Comparar `updated_at` com `published_at`
-     * avisaria também nesses casos, apagando justo a distinção que a fase inteira
-     * defende.
+     * Olha os SourceFilters e as promoções: as duas curadorias que MEXEM no dado.
+     * Ordem e on/off re-derivam do snapshot na composição e nunca pedem
+     * republicação (ADR-0002). Comparar `updated_at` com `published_at` avisaria
+     * também nesses casos, apagando justo a distinção que a fase inteira defende.
      */
     public function needsRepublish(): bool
     {
@@ -104,7 +104,10 @@ final class Retrospective extends Model
 
         return $frozen->hideBots !== $current->hideBots
             || array_values(array_diff($frozen->exclusions, $current->exclusions)) !== []
-            || array_values(array_diff($current->exclusions, $frozen->exclusions)) !== [];
+            || array_values(array_diff($current->exclusions, $frozen->exclusions)) !== []
+            // Ordem importa: trocar quem aparece primeiro no slide da tag muda o
+            // que o público vê, então a comparação é posicional, não de conjunto.
+            || $this->snapshot->promotionSignatures() !== $this->deck_config->promotionSignatures();
     }
 
     /**

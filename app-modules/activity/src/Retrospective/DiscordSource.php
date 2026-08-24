@@ -18,15 +18,19 @@ use He4rt\Activity\Retrospective\Slides\TopMessageSlide;
 use He4rt\Activity\Retrospective\Slides\VoiceBoardSlide;
 use He4rt\Activity\Voice\Models\Voice;
 use He4rt\Community\Retrospective\Contracts\CuratableSource;
+use He4rt\Community\Retrospective\Contracts\MeasuresPerson;
 use He4rt\Community\Retrospective\Contracts\RetrospectiveSource;
 use He4rt\Community\Retrospective\Contracts\Slide;
 use He4rt\Community\Retrospective\DTOs\ExclusionCandidate;
 use He4rt\Community\Retrospective\DTOs\HeadlineMetrics;
 use He4rt\Community\Retrospective\DTOs\Metric;
 use He4rt\Community\Retrospective\DTOs\Period;
+use He4rt\Community\Retrospective\DTOs\PersonAccount;
+use He4rt\Community\Retrospective\DTOs\PersonIdentity;
 use He4rt\Community\Retrospective\DTOs\SlideDescriptor;
 use He4rt\Community\Retrospective\DTOs\SourceFilters;
 use He4rt\Community\Retrospective\DTOs\SourceResult;
+use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\Identity\ExternalIdentity\Models\ExternalIdentity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -41,7 +45,7 @@ use Illuminate\Support\Facades\DB;
  * poucas pessoas do topo de cada ranking. Filtra por sent_at/occurred_at
  * (tempo do evento), nunca created_at.
  */
-final class DiscordSource implements CuratableSource, RetrospectiveSource
+final class DiscordSource implements CuratableSource, MeasuresPerson, RetrospectiveSource
 {
     /**
      * Teto das varreduras de curadoria: o picker mostra o topo do recorte, nunca
@@ -129,6 +133,37 @@ final class DiscordSource implements CuratableSource, RetrospectiveSource
             new SlideDescriptor('discord.reactions', 'Reações', 'Total e emojis mais usados'),
             new SlideDescriptor('discord.top_message', 'Destaque', 'As mensagens mais reagidas (mostra conteúdo)'),
         ];
+    }
+
+    /**
+     * O que esta fonte sabe sobre UMA pessoa no recorte, para o slide da tag He4rt.
+     *
+     * Casa pelo id da identidade do Discord, que é a coluna que messages e voice
+     * guardam. Sem conta do Discord não há o que medir — e devolver lista vazia é
+     * a resposta correta, não um erro: a pessoa pode ter chegado ao deck pelo
+     * GitHub.
+     *
+     * Passa pelos MESMOS builders do collect(), então hide_bots e exclusions valem
+     * aqui também: alguém escondido do deck não reaparece com números no cartão.
+     *
+     * @return list<Metric>
+     */
+    public function measure(PersonIdentity $person, Period $period, SourceFilters $filters): array
+    {
+        $account = $person->account(IdentityProvider::Discord->value);
+
+        if (!$account instanceof PersonAccount) {
+            return [];
+        }
+
+        /** @var list<Metric> $metrics */
+        $metrics = Cache::remember(
+            'retrospective.measure.'.$this->key().'.'.$period->cacheKey().'.'.$this->filtersKey($filters).'.'.$account->identityId,
+            now()->addMinutes(5),
+            fn (): array => $this->personMetrics($account->identityId, $period, $filters),
+        );
+
+        return $metrics;
     }
 
     /**
@@ -276,6 +311,56 @@ final class DiscordSource implements CuratableSource, RetrospectiveSource
         }
 
         return $slides;
+    }
+
+    /**
+     * As três métricas que descrevem uma pessoa no Discord: quanto ela falou,
+     * quanto tempo ela sustentou call e quanta reação o que ela escreveu puxou.
+     *
+     * Métrica zerada não entra: "0 reações" ocupa espaço no cartão para dizer que
+     * não há o que dizer.
+     *
+     * @return list<Metric>
+     */
+    private function personMetrics(string $identityId, Period $period, SourceFilters $filters): array
+    {
+        $messages = $this->messages($period, $filters)
+            ->where('external_identity_id', $identityId)
+            ->count();
+
+        $reactions = (int) Reaction::query()
+            ->where('reactable_type', 'message')
+            ->whereIn(
+                'reactable_id',
+                $this->messages($period, $filters)->where('external_identity_id', $identityId)->select('id'),
+            )
+            ->sum('count');
+
+        $voiceXp = $this->countOf(
+            $this->voice($period, $filters)
+                ->where('external_identity_id', $identityId)
+                ->sum('obtained_experience'),
+        );
+
+        $metrics = [
+            new Metric('Mensagens', $messages),
+            new Metric('XP em call', $voiceXp),
+            new Metric('Reações recebidas', $reactions),
+        ];
+
+        return array_values(array_filter(
+            $metrics,
+            static fn (Metric $metric): bool => $metric->value > 0,
+        ));
+    }
+
+    /**
+     * Identidade dos filtros para a chave de cache. Sem isso, mexer numa exclusion
+     * e reabrir o builder em menos de cinco minutos mostraria o número anterior.
+     */
+    private function filtersKey(SourceFilters $filters): string
+    {
+        return md5(($filters->hideBots ? '1' : '0').'|'.implode(',', $filters->exclusions));
     }
 
     /**

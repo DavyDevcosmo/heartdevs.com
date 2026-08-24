@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use He4rt\Community\Retrospective\DTOs\DeckConfig;
+use He4rt\Community\Retrospective\DTOs\PromotionEntry;
+use He4rt\Community\Retrospective\Enums\PromotionStage;
 
 it('faz round-trip do payload sem perder curadoria', function (): void {
     $config = new DeckConfig(
@@ -123,4 +125,54 @@ it('normaliza os refs recebidos, sem vazios nem repetidos', function (): void {
     $updated = $config->withExclusionsFor('github', ['pr:1', ' pr:2 ', '', 'pr:1']);
 
     expect($updated->exclusionsFor('github'))->toBe(['pr:1', 'pr:2']);
+});
+
+it('faz round-trip das promoções e descarta escolha corrompida', function (): void {
+    $config = new DeckConfig(promotions: [
+        new PromotionEntry('u1', PromotionStage::Spotlight, 'segurou o #ajuda'),
+        new PromotionEntry('u2', PromotionStage::Promoted),
+    ]);
+
+    expect(DeckConfig::makeFromPayload($config->toArray()))->toEqual($config);
+
+    $sujo = DeckConfig::makeFromPayload([
+        'promotions' => [
+            ['user_id' => 'u1', 'stage' => 'promoted'],
+            ['user_id' => '', 'stage' => 'promoted'],
+            ['user_id' => 'u3', 'stage' => 'estagio-que-nao-existe'],
+            'nem array',
+        ],
+    ]);
+
+    expect($sujo->promotions)->toHaveCount(1)
+        ->and($sujo->promotions[0]->userId)->toBe('u1');
+});
+
+it('substitui um estágio sem tocar o outro', function (): void {
+    $config = new DeckConfig(promotions: [
+        new PromotionEntry('u1', PromotionStage::Spotlight),
+        new PromotionEntry('u2', PromotionStage::Promoted),
+    ]);
+
+    $novo = $config->withPromotionsFor(PromotionStage::Promoted, [new PromotionEntry('u9', PromotionStage::Promoted)]);
+
+    expect($novo->promotionsFor(PromotionStage::Promoted))->toHaveCount(1)
+        ->and($novo->promotionsFor(PromotionStage::Promoted)[0]->userId)->toBe('u9')
+        ->and($novo->promotionsFor(PromotionStage::Spotlight))->toHaveCount(1)
+        ->and($novo->promotionsFor(PromotionStage::Spotlight)[0]->userId)->toBe('u1')
+        // A cópia original segue intacta.
+        ->and($config->promotionsFor(PromotionStage::Promoted)[0]->userId)->toBe('u2');
+});
+
+it('preserva as promoções ao mexer em ordem, on/off e exclusions', function (): void {
+    $config = new DeckConfig(promotions: [new PromotionEntry('u1', PromotionStage::Promoted)]);
+
+    $mexido = $config
+        ->withOrder(['discord'])
+        ->withSourceVisible('discord', visible: false)
+        ->withSlideVisible('github.repos', visible: false)
+        ->withExclusionsFor('github', ['pr:1']);
+
+    expect($mexido->promotions)->toHaveCount(1)
+        ->and($mexido->promotions[0]->userId)->toBe('u1');
 });

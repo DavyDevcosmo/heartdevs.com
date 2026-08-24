@@ -6,9 +6,12 @@ use Carbon\CarbonImmutable;
 use He4rt\Community\Retrospective\DTOs\DeckConfig;
 use He4rt\Community\Retrospective\DTOs\HeadlineMetrics;
 use He4rt\Community\Retrospective\DTOs\Metric;
+use He4rt\Community\Retrospective\DTOs\PromotionCard;
+use He4rt\Community\Retrospective\DTOs\PromotionEntry;
 use He4rt\Community\Retrospective\DTOs\RetrospectiveSnapshot;
 use He4rt\Community\Retrospective\DTOs\SourceFilters;
 use He4rt\Community\Retrospective\DTOs\SourceResult;
+use He4rt\Community\Retrospective\Enums\PromotionStage;
 use He4rt\Community\Retrospective\Enums\RetrospectiveStatus;
 use He4rt\Community\Retrospective\Models\Retrospective;
 use He4rt\Community\Retrospective\Slides\FrozenSlide;
@@ -130,4 +133,63 @@ it('ignora ordem e on/off: esses re-derivam sem republicar', function (): void {
         ]);
 
     expect($retrospective->needsRepublish())->toBeFalse();
+});
+
+it('pede republicação quando a lista da tag muda depois de publicar', function (): void {
+    $card = new PromotionCard(
+        userId: 'u1',
+        name: 'Fulana',
+        username: 'fulana',
+        avatar: 'a.png',
+        stage: PromotionStage::Promoted,
+        reason: 'segurou o #ajuda',
+    );
+
+    $retrospective = Retrospective::factory()
+        ->published(new RetrospectiveSnapshot(promotions: [$card]))
+        ->create([
+            'deck_config' => new DeckConfig(promotions: [
+                new PromotionEntry('u1', PromotionStage::Promoted, 'segurou o #ajuda'),
+            ]),
+        ]);
+
+    expect($retrospective->needsRepublish())->toBeFalse();
+
+    // Trocar a pessoa muda número exibido: é dado, não apresentação.
+    $retrospective->update([
+        'deck_config' => $retrospective->deck_config->withPromotionsFor(
+            PromotionStage::Promoted,
+            [new PromotionEntry('u2', PromotionStage::Promoted, 'segurou o #ajuda')],
+        ),
+    ]);
+
+    expect($retrospective->fresh()->needsRepublish())->toBeTrue();
+});
+
+it('corrigir o motivo também deixa o publicado defasado', function (): void {
+    $retrospective = Retrospective::factory()
+        ->published(new RetrospectiveSnapshot(promotions: [
+            new PromotionCard('u1', 'Fulana', 'fulana', 'a.png', PromotionStage::Promoted, 'motivo antigo'),
+        ]))
+        ->create([
+            'deck_config' => new DeckConfig(promotions: [
+                new PromotionEntry('u1', PromotionStage::Promoted, 'motivo novo'),
+            ]),
+        ]);
+
+    expect($retrospective->needsRepublish())->toBeTrue();
+});
+
+it('ordem e on/off de slide continuam sem pedir republicação', function (): void {
+    $retrospective = Retrospective::factory()
+        ->published(new RetrospectiveSnapshot())
+        ->create(['deck_config' => new DeckConfig()]);
+
+    $retrospective->update([
+        'deck_config' => $retrospective->deck_config
+            ->withOrder(['discord', 'github'])
+            ->withSlideVisible('he4rt.tag', visible: false),
+    ]);
+
+    expect($retrospective->fresh()->needsRepublish())->toBeFalse();
 });

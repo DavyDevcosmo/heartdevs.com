@@ -25,9 +25,13 @@ final class DeckFilmstrip
     /**
      * @param  list<array{kind: string, source: string}>  $composedKinds  a forma do deck
      *                                                                    renderizado, para casar cada miniatura com o slide que ela representa
+     * @param  int  $offset  quantos slides o deck desenha ANTES do primeiro composto
+     *                       (capa + seção fixa). Vem de fora porque quem conta isso é a Page,
+     *                       que já é dona do deslocamento — recontar aqui foi como a tira
+     *                       ficou três posições adiantada quando a seção "A He4rt" entrou.
      * @return list<FilmstripGroup>
      */
-    public static function groups(RetrospectiveSnapshot $snapshot, DeckConfig $config, array $composedKinds = []): array
+    public static function groups(RetrospectiveSnapshot $snapshot, DeckConfig $config, array $composedKinds = [], int $offset = 1): array
     {
         $slidesBySource = [];
 
@@ -35,7 +39,7 @@ final class DeckFilmstrip
             $slidesBySource[$source->key] = $source->slides;
         }
 
-        $indices = self::indices($composedKinds);
+        $indices = self::indices($composedKinds, $offset);
 
         return array_map(
             static fn (SourceBlock $block): FilmstripGroup => new FilmstripGroup(
@@ -61,13 +65,12 @@ final class DeckFilmstrip
      * @param  list<array{kind: string, source: string}>  $composedKinds
      * @return array<string, list<int>>
      */
-    private static function indices(array $composedKinds): array
+    private static function indices(array $composedKinds, int $offset): array
     {
         $indices = [];
 
         foreach ($composedKinds as $position => $entry) {
-            // +1: a capa ocupa o índice 0 do deck.
-            $indices[$entry['source'].'|'.$entry['kind']][] = $position + 1;
+            $indices[$entry['source'].'|'.$entry['kind']][] = $position + $offset;
         }
 
         return $indices;

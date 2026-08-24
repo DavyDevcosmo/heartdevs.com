@@ -8,6 +8,8 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -22,9 +24,11 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use He4rt\Community\Retrospective\Contracts\CuratableSource;
+use He4rt\Community\Retrospective\DTOs\PromotionEntry;
 use He4rt\Community\Retrospective\DTOs\RetrospectiveSnapshot;
 use He4rt\Community\Retrospective\DTOs\SourceResult;
 use He4rt\Community\Retrospective\Enums\ExclusionKind;
+use He4rt\Community\Retrospective\Enums\PromotionStage;
 use He4rt\Community\Retrospective\Models\Retrospective;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Actions\PublishRetrospectiveAction;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\RetrospectiveResource;
@@ -33,14 +37,18 @@ use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\DeckFilmstrip;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\DeckStructure;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\ExclusionPicker;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\FilmstripGroup;
+use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\FilmstripSlide;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorMode;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorSelection;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\InspectorViewPath;
+use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\PromotablePeople;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\SlideEntry;
 use He4rt\PanelAdmin\Filament\Resources\Retrospectives\Support\SourceBlock;
 use He4rt\Portal\Retrospective\AboutSection;
 use He4rt\Portal\Retrospective\AboutSlide;
 use He4rt\Portal\Retrospective\DeckPresentation;
+use He4rt\Portal\Retrospective\PromotionSection;
+use He4rt\Portal\Retrospective\PromotionSlide;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 
@@ -83,6 +91,16 @@ class BuildDeck extends Page
     public array $composedKinds = [];
 
     /**
+     * Os slides do ritual da tag que o deck está desenhando, na ordem. Congelado
+     * pelo mesmo motivo do composedKinds: mapear índice <-> seleção precisa da
+     * FORMA do deck, e resolvê-la a cada clique pagaria uma coleta ao vivo.
+     *
+     * @var list<string>
+     */
+    #[Locked]
+    public array $promotionKinds = [];
+
+    /**
      * Versão do preview, que entra na key do deck. O `updated_at` sozinho não basta:
      * dois salvamentos no mesmo segundo dariam a mesma key e o Livewire morfaria o
      * deck em vez de recriá-lo, deixando o Alpine com a lista de slides antiga.
@@ -112,6 +130,7 @@ class BuildDeck extends Page
         $this->record = $this->resolveRecord($record);
 
         $this->composedKinds = $this->composeKinds();
+        $this->promotionKinds = $this->composePromotionKinds();
 
         $this->fillInspector();
     }
@@ -127,7 +146,21 @@ class BuildDeck extends Page
      */
     public function slideTotal(): int
     {
-        return $this->composedOffset() + count($this->composedKinds) + 1;
+        return $this->closingIndex() + 1;
+    }
+
+    /**
+     * Onde começa o ritual da tag: depois de todos os slides de fonte. Dono único
+     * do deslocamento do fim do deck, como composedOffset é do começo.
+     */
+    public function promotionOffset(): int
+    {
+        return $this->composedOffset() + count($this->composedKinds);
+    }
+
+    public function closingIndex(): int
+    {
+        return $this->promotionOffset() + count($this->promotionKinds);
     }
 
     /**
@@ -155,6 +188,7 @@ class BuildDeck extends Page
             InspectorMode::About => $this->aboutLabel($selection->requireTarget()),
             InspectorMode::Source => $this->sourceLabel($selection->requireTarget()),
             InspectorMode::Slide => $this->slideLabelWithSource($selection->requireTarget()),
+            InspectorMode::Promotion => $this->promotionLabel($selection->requireTarget()),
         };
     }
 
@@ -255,6 +289,7 @@ class BuildDeck extends Page
             InspectorMode::Closing => $this->saveClosing($record, $data),
             InspectorMode::Source => $this->saveSource($record, $selection->requireTarget(), $data),
             InspectorMode::Slide => $this->saveSlide($record, $selection->requireTarget(), $data),
+            InspectorMode::Promotion => $this->savePromotion($record, $selection->requireTarget(), $data),
         };
 
         $this->refreshPreview();
@@ -364,6 +399,40 @@ class BuildDeck extends Page
             $this->deckSnapshot(),
             $this->getRetrospective()->deck_config,
             $this->composedKinds,
+            $this->composedOffset(),
+        );
+    }
+
+    /**
+     * As miniaturas do ritual da tag, no mesmo formato dos slides de fonte.
+     *
+     * Sai do CATÁLOGO e do snapshot cru, como o resto da tira: um slide desligado
+     * continua aqui, apagado, porque é nesta célula que mora o caminho de volta.
+     * Sem ninguém escolhido não há miniatura — mas o cartão fica, com o rótulo
+     * dizendo que o slide existe e está vazio.
+     *
+     * @return list<FilmstripSlide>
+     */
+    public function promotionStrip(): array
+    {
+        $cards = $this->deckSnapshot()->promotions;
+        $config = $this->getRetrospective()->deck_config;
+
+        return array_map(
+            function (PromotionSlide $slide) use ($cards, $config): FilmstripSlide {
+                $filled = $slide->withCards(PromotionSection::cardsFor($cards, $slide->stage));
+                $position = array_search($slide->kind, $this->promotionKinds, strict: true);
+
+                return new FilmstripSlide(
+                    kind: $slide->kind,
+                    label: $slide->label,
+                    visible: $config->showsSlide($slide->kind),
+                    view: $filled->isEmpty() ? null : $filled->view(),
+                    props: ['cards' => $filled->cards],
+                    index: $position === false ? null : $this->promotionOffset() + $position,
+                );
+            },
+            PromotionSection::catalog(),
         );
     }
 
@@ -374,10 +443,24 @@ class BuildDeck extends Page
      */
     public function previewIndex(): int
     {
+        return $this->previewTarget() ?? 0;
+    }
+
+    /**
+     * O mesmo índice, mas honesto sobre a ausência: null quando o que está
+     * selecionado NÃO está no deck — slide desligado, kind sem dado no recorte,
+     * ritual sem ninguém escolhido.
+     *
+     * A distinção existe por causa do clique numa miniatura vazia: tratar isso
+     * como "índice 0" mandava o preview e a tira de volta para a capa, arrastando
+     * o operador para longe justamente quando ele foi preencher o slide.
+     */
+    public function previewTarget(): ?int
+    {
         $kinds = $this->composedKinds;
 
         if ($kinds === []) {
-            return 0;
+            return null;
         }
 
         $selection = $this->selection();
@@ -386,7 +469,8 @@ class BuildDeck extends Page
             InspectorMode::Cover => 0,
             InspectorMode::About => $this->aboutIndex($selection->requireTarget()),
             // O fecho é o último slide, depois de tudo.
-            InspectorMode::Closing => $this->composedOffset() + count($kinds),
+            InspectorMode::Closing => $this->closingIndex(),
+            InspectorMode::Promotion => $this->promotionIndex($selection->requireTarget()),
             InspectorMode::Slide => $this->slideIndex($kinds, fn (array $slide): bool => $slide['kind'] === $selection->requireTarget()),
             InspectorMode::Source => $this->slideIndex($kinds, fn (array $slide): bool => $slide['source'] === $selection->requireTarget()),
         };
@@ -453,9 +537,184 @@ class BuildDeck extends Page
         // A capa e a seção fixa ocupam o começo do deck; o resto são os compostos.
         $slide = $kinds[$index - $this->composedOffset()] ?? null;
 
-        return $slide === null
+        if ($slide !== null) {
+            return new InspectorSelection(InspectorMode::Slide, $slide['kind']);
+        }
+
+        $promotion = $this->promotionKinds[$index - $this->promotionOffset()] ?? null;
+
+        return $promotion === null
             ? new InspectorSelection(InspectorMode::Closing)
-            : new InspectorSelection(InspectorMode::Slide, $slide['kind']);
+            : new InspectorSelection(InspectorMode::Promotion, $promotion);
+    }
+
+    /**
+     * Os slides do ritual que o deck está desenhando, na ordem. Sai do MESMO
+     * PromotionSection que o portal usa para desenhar — se o painel recontasse a
+     * regra de "tem gente e está ligado", uma divergência mandaria o preview para
+     * o slide errado.
+     *
+     * @return list<string>
+     */
+    private function composePromotionKinds(): array
+    {
+        /** @var list<PromotionSlide> $slides */
+        $slides = $this->deck()['promotions'];
+
+        return array_map(static fn (PromotionSlide $slide): string => $slide->kind, $slides);
+    }
+
+    /**
+     * Onde o slide do ritual caiu no deck. Um kind fora da composição (desligado,
+     * ou sem ninguém escolhido) não tem posição: a capa é o fallback honesto,
+     * igual ao slideIndex().
+     */
+    private function promotionIndex(string $kind): ?int
+    {
+        $position = array_search($kind, $this->promotionKinds, strict: true);
+
+        return $position === false ? null : $this->promotionOffset() + $position;
+    }
+
+    private function promotionLabel(string $kind): string
+    {
+        $slide = PromotionSection::find($kind);
+
+        return $slide instanceof PromotionSlide
+            ? InspectorMode::Promotion->getLabel().' / '.$slide->label
+            : InspectorMode::Promotion->getLabel();
+    }
+
+    /**
+     * O estágio que o slide selecionado edita. Um kind desconhecido (token velho
+     * na wire) cai em destaque — o estágio que não entrega tag a ninguém.
+     */
+    private function promotionStage(string $kind): PromotionStage
+    {
+        return PromotionSection::find($kind)->stage ?? PromotionStage::Spotlight;
+    }
+
+    /**
+     * Inspector do ritual: o on/off do slide e a lista de pessoas daquele estágio.
+     *
+     * O estágio vem do SLIDE, não de um campo: no slide de destaques o operador
+     * edita destaques, no da tag edita quem recebeu. Um seletor de estágio dentro
+     * da lista permitiria mover alguém para um slide que não está na tela.
+     *
+     * @return array<int, Section>
+     */
+    private function promotionComponents(string $kind): array
+    {
+        $slide = PromotionSection::find($kind);
+        $stage = $this->promotionStage($kind);
+
+        return [
+            Section::make($slide instanceof PromotionSlide ? $slide->label : InspectorMode::Promotion->getLabel())
+                ->compact()
+                ->icon($stage->getIcon())
+                ->description($slide instanceof PromotionSlide ? $slide->hint : $stage->getDescription())
+                ->schema([
+                    Toggle::make('visible')
+                        ->label('Exibir no deck')
+                        ->helperText('Sem ninguém na lista o slide não é desenhado, mesmo ligado.'),
+
+                    Repeater::make('people')
+                        ->label($stage->getLabel())
+                        ->helperText('Os números saem do recorte; aqui só se escolhe quem aparece e por quê.')
+                        ->addActionLabel('Adicionar pessoa')
+                        ->reorderable()
+                        ->collapsible()
+                        ->itemLabel(function (array $state): ?string {
+                            $userId = $state['user_id'] ?? null;
+
+                            return is_string($userId) ? PromotablePeople::labelFor($userId) : null;
+                        })
+                        ->schema([
+                            Select::make('user_id')
+                                ->label('Pessoa')
+                                ->required()
+                                ->distinct()
+                                ->searchable()
+                                ->helperText('Só aparece quem tem Discord ou GitHub vinculado — sem conta não há número para mostrar.')
+                                ->getSearchResultsUsing(fn (string $search): array => PromotablePeople::search($search))
+                                ->getOptionLabelUsing(fn (?string $value): ?string => PromotablePeople::labelFor($value)),
+
+                            TextInput::make('reason')
+                                ->label('Motivo')
+                                ->placeholder('segurou o #ajuda o ano inteiro')
+                                ->maxLength(160),
+                        ]),
+                ]),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function savePromotion(Retrospective $record, string $kind, array $data): void
+    {
+        $stage = $this->promotionStage($kind);
+        $config = $record->deck_config->withSlideVisible($kind, (bool) ($data['visible'] ?? true));
+
+        // Compara ASSINATURAS e não os DTOs: são objetos novos a cada leitura do
+        // jsonb, então `!==` seria sempre verdadeiro e o aviso de republicar
+        // apareceria mesmo quando nada mudou.
+        $before = $this->signaturesOf($config->promotionsFor($stage));
+        $config = $config->withPromotionsFor($stage, $this->submittedPeople($stage, $data));
+
+        $record->update(['deck_config' => $config]);
+
+        if ($this->signaturesOf($config->promotionsFor($stage)) !== $before) {
+            $this->warnAboutPromotions();
+        }
+    }
+
+    /**
+     * @param  list<PromotionEntry>  $entries
+     * @return list<string>
+     */
+    private function signaturesOf(array $entries): array
+    {
+        return array_map(
+            static fn (PromotionEntry $entry): string => $entry->signature(),
+            $entries,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return list<PromotionEntry>
+     */
+    private function submittedPeople(PromotionStage $stage, array $data): array
+    {
+        $rows = is_array($data['people'] ?? null) ? $data['people'] : [];
+        $entries = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $entry = PromotionEntry::makeFromPayload([...$row, 'stage' => $stage->value]);
+
+            // Linha em branco (o Repeater cria uma antes de o operador escolher
+            // alguém) some em silêncio: não é erro, é uma escolha inacabada.
+            if ($entry instanceof PromotionEntry) {
+                $entries[] = $entry;
+            }
+        }
+
+        return $entries;
+    }
+
+    private function warnAboutPromotions(): void
+    {
+        Notification::make()
+            ->warning()
+            ->title('Lista da tag alterada')
+            ->body('Os números de quem aparece são medidos no recorte. Republique a edição para recompilar o snapshot.')
+            ->persistent()
+            ->send();
     }
 
     /**
@@ -485,7 +744,7 @@ class BuildDeck extends Page
      * @param  list<array{kind: string, source: string}>  $kinds
      * @param  callable(array{kind: string, source: string}): bool  $matches
      */
-    private function slideIndex(array $kinds, callable $matches): int
+    private function slideIndex(array $kinds, callable $matches): ?int
     {
         foreach ($kinds as $position => $slide) {
             if ($matches($slide)) {
@@ -493,9 +752,9 @@ class BuildDeck extends Page
             }
         }
 
-        // Selecionado algo que o deck não está mostrando (desligado, ou sem dado no
-        // recorte): a capa é o fallback honesto.
-        return 0;
+        // Selecionado algo que o deck não está mostrando (desligado, ou sem dado
+        // no recorte): não há para onde levar o preview.
+        return null;
     }
 
     /**
@@ -511,6 +770,7 @@ class BuildDeck extends Page
             InspectorMode::Closing => $this->closingComponents(),
             InspectorMode::Source => $this->sourceComponents($selection->requireTarget()),
             InspectorMode::Slide => $this->slideComponents($selection->requireTarget()),
+            InspectorMode::Promotion => $this->promotionComponents($selection->requireTarget()),
         };
     }
 
@@ -531,11 +791,11 @@ class BuildDeck extends Page
     /**
      * Onde o slide fixo caiu no deck: logo depois da capa, na ordem da seção.
      */
-    private function aboutIndex(string $key): int
+    private function aboutIndex(string $key): ?int
     {
         $position = AboutSection::positionOf($key);
 
-        return $position === null ? 0 : $position + 1;
+        return $position === null ? null : $position + 1;
     }
 
     /**
@@ -733,6 +993,16 @@ class BuildDeck extends Page
             InspectorMode::Slide => [
                 'visible' => $config->showsSlide($selection->requireTarget()),
             ],
+            InspectorMode::Promotion => [
+                'visible' => $config->showsSlide($selection->requireTarget()),
+                'people' => array_map(
+                    static fn (PromotionEntry $entry): array => [
+                        'user_id' => $entry->userId,
+                        'reason' => $entry->reason,
+                    ],
+                    $config->promotionsFor($this->promotionStage($selection->requireTarget())),
+                ),
+            ],
         };
     }
 
@@ -916,6 +1186,7 @@ class BuildDeck extends Page
         unset($this->deck, $this->filmstrip);
 
         $this->composedKinds = $this->composeKinds();
+        $this->promotionKinds = $this->composePromotionKinds();
 
         $this->previewVersion++;
 
@@ -942,9 +1213,18 @@ class BuildDeck extends Page
      */
     private function showSelectedSlide(): void
     {
+        $index = $this->previewTarget();
+
+        // Nada a mostrar: o operador clicou num slide que o deck não desenha. O
+        // preview fica onde está — mandá-lo para a capa desfaria o scroll da tira
+        // no exato momento em que ele foi preencher aquele slide.
+        if ($index === null) {
+            return;
+        }
+
         $this->js(sprintf(
             "requestAnimationFrame(() => window.dispatchEvent(new CustomEvent('retro-goto', { detail: { index: %d } })))",
-            $this->previewIndex(),
+            $index,
         ));
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace He4rt\Contents\Models;
 
 use Carbon\CarbonInterface;
+use He4rt\Activity\Tracking\Contracts\ContributionDetail;
 use He4rt\Contents\Casts\AsTagList;
 use He4rt\Contents\Data\TagList;
 use He4rt\Contents\Database\Factories\ContentEntryFactory;
@@ -40,7 +41,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 #[UseFactory(factoryClass: ContentEntryFactory::class)]
 #[Table(name: 'content_entries')]
-final class ContentEntry extends Model
+final class ContentEntry extends Model implements ContributionDetail
 {
     /** @use HasFactory<ContentEntryFactory> */
     use HasFactory;
@@ -74,6 +75,21 @@ final class ContentEntry extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    public function contributionTitle(): string
+    {
+        return $this->title;
+    }
+
+    public function contributionContext(): string
+    {
+        return $this->provider->getLabel();
+    }
+
+    public function contributionUrl(): string
+    {
+        return $this->url;
     }
 
     protected static function newFactory(): ContentEntryFactory
