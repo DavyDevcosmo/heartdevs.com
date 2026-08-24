@@ -8,15 +8,19 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Carbon\Exceptions\InvalidFormatException;
 use He4rt\Community\Retrospective\Contracts\CuratableSource;
+use He4rt\Community\Retrospective\Contracts\MeasuresPerson;
 use He4rt\Community\Retrospective\Contracts\RetrospectiveSource;
 use He4rt\Community\Retrospective\Contracts\Slide;
 use He4rt\Community\Retrospective\DTOs\ExclusionCandidate;
 use He4rt\Community\Retrospective\DTOs\HeadlineMetrics;
 use He4rt\Community\Retrospective\DTOs\Metric;
 use He4rt\Community\Retrospective\DTOs\Period;
+use He4rt\Community\Retrospective\DTOs\PersonAccount;
+use He4rt\Community\Retrospective\DTOs\PersonIdentity;
 use He4rt\Community\Retrospective\DTOs\SlideDescriptor;
 use He4rt\Community\Retrospective\DTOs\SourceFilters;
 use He4rt\Community\Retrospective\DTOs\SourceResult;
+use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\IntegrationGithub\Enums\ContributionType;
 use He4rt\IntegrationGithub\Models\GithubContribution;
 use He4rt\IntegrationGithub\Retrospective\Slides\GithubCommunitySlide;
@@ -24,6 +28,7 @@ use He4rt\IntegrationGithub\Retrospective\Slides\GithubCoreSlide;
 use He4rt\IntegrationGithub\Retrospective\Slides\GithubHighlightsSlide;
 use He4rt\IntegrationGithub\Retrospective\Slides\GithubPanoramaSlide;
 use He4rt\IntegrationGithub\Retrospective\Slides\GithubRepoSlide;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +40,7 @@ use Illuminate\Support\Facades\DB;
  * como card se tiverem PR no recorte; atividade só de review/issue/comentário
  * segue contando em meta/people/highlights.
  */
-final class GithubSource implements CuratableSource, RetrospectiveSource
+final class GithubSource implements CuratableSource, MeasuresPerson, RetrospectiveSource
 {
     /**
      * Teto das varreduras de curadoria: o picker do Deck Builder mostra os itens
@@ -55,24 +60,7 @@ final class GithubSource implements CuratableSource, RetrospectiveSource
 
     public function collect(Period $period, SourceFilters $filters): SourceResult
     {
-        // Instante do merge por PR (repo + external_ref => merged_at), montado de uma
-        // query própria porque o PR-alvo pode ter mesclado FORA do período do recorte.
-        $mergedAt = $this->mergedAtIndex();
-
-        /** @var Collection<int, GithubContribution> $contributions */
-        $contributions = GithubContribution::query()
-            ->whereBetween('occurred_at', [$period->since, $period->until])
-            ->get()
-            ->when(
-                $filters->hideBots,
-                fn (Collection $items): Collection => $items->reject(fn (GithubContribution $contribution): bool => $this->isBot($contribution)),
-            )
-            // Exclusion mexe no dado (ADR-0001): o item sai dos slides e também
-            // dos números, então é derrubado aqui, antes de qualquer agregação.
-            ->reject(fn (GithubContribution $contribution): bool => $this->isExcluded($contribution, $filters))
-            ->reject(fn (GithubContribution $contribution): bool => $this->isEmptyTestPr($contribution))
-            ->reject(fn (GithubContribution $contribution): bool => $this->isPostMergeNoise($contribution, $mergedAt))
-            ->values();
+        $contributions = $this->contributions($period, $filters);
 
         if ($contributions->isEmpty()) {
             return new SourceResult($this->key(), $this->label(), new HeadlineMetrics(), []);
@@ -116,6 +104,36 @@ final class GithubSource implements CuratableSource, RetrospectiveSource
     }
 
     /**
+     * O que esta fonte sabe sobre UMA pessoa no recorte, para o slide da tag He4rt.
+     *
+     * Casa por `actor_id` e não por login: o número é estável quando alguém
+     * renomeia a conta, e é a mesma chave que o identity guarda em
+     * `external_account_id` — é ela que liga o Discord ao GitHub sem tabela de
+     * tradução nenhuma.
+     *
+     * @return list<Metric>
+     */
+    public function measure(PersonIdentity $person, Period $period, SourceFilters $filters): array
+    {
+        $account = $person->account(IdentityProvider::GitHub->value);
+
+        if (!$account instanceof PersonAccount || !is_numeric($account->accountId)) {
+            return [];
+        }
+
+        $actorId = (int) $account->accountId;
+
+        /** @var list<Metric> $metrics */
+        $metrics = Cache::remember(
+            'retrospective.measure.'.$this->key().'.'.$period->cacheKey().'.'.$this->filtersKey($filters).'.'.$actorId,
+            now()->addMinutes(5),
+            fn (): array => $this->personMetrics($actorId, $period, $filters),
+        );
+
+        return $metrics;
+    }
+
+    /**
      * @return list<SlideDescriptor>
      */
     public function slideCatalog(): array
@@ -142,6 +160,71 @@ final class GithubSource implements CuratableSource, RetrospectiveSource
         );
 
         return $candidates;
+    }
+
+    /**
+     * As contribuições do recorte já limpas: bots fora, exclusions fora, ruído de
+     * pós-merge fora. Um dono só do pipeline — o cartão de uma pessoa precisa
+     * contar exatamente o que os slides contaram, senão o mesmo PR apareceria
+     * escondido num lugar e somado no outro.
+     *
+     * @return Collection<int, GithubContribution>
+     */
+    private function contributions(Period $period, SourceFilters $filters, ?int $actorId = null): Collection
+    {
+        // Instante do merge por PR (repo + external_ref => merged_at), montado de uma
+        // query própria porque o PR-alvo pode ter mesclado FORA do período do recorte.
+        $mergedAt = $this->mergedAtIndex();
+
+        /** @var Collection<int, GithubContribution> $contributions */
+        $contributions = GithubContribution::query()
+            ->whereBetween('occurred_at', [$period->since, $period->until])
+            ->when($actorId !== null, fn (Builder $query): Builder => $query->where('actor_id', $actorId))
+            ->get()
+            ->when(
+                $filters->hideBots,
+                fn (Collection $items): Collection => $items->reject(fn (GithubContribution $contribution): bool => $this->isBot($contribution)),
+            )
+            // Exclusion mexe no dado (ADR-0001): o item sai dos slides e também
+            // dos números, então é derrubado aqui, antes de qualquer agregação.
+            ->reject(fn (GithubContribution $contribution): bool => $this->isExcluded($contribution, $filters))
+            ->reject(fn (GithubContribution $contribution): bool => $this->isEmptyTestPr($contribution))
+            ->reject(fn (GithubContribution $contribution): bool => $this->isPostMergeNoise($contribution, $mergedAt))
+            ->values();
+
+        return $contributions;
+    }
+
+    /**
+     * Código entregue, código revisado e o tamanho do que mexeu — a leitura mais
+     * curta de "essa pessoa sustentou os repositórios". Métrica zerada não entra:
+     * "0 reviews" ocupa espaço no cartão para dizer que não há o que dizer.
+     *
+     * @return list<Metric>
+     */
+    private function personMetrics(int $actorId, Period $period, SourceFilters $filters): array
+    {
+        $contributions = $this->contributions($period, $filters, $actorId);
+
+        $metrics = [
+            new Metric('PRs', $this->countType($contributions, ContributionType::Pr)),
+            new Metric('Reviews', $this->countType($contributions, ContributionType::Review)),
+            new Metric('Linhas somadas', $this->sumMeta($contributions, 'additions')),
+        ];
+
+        return array_values(array_filter(
+            $metrics,
+            static fn (Metric $metric): bool => $metric->value > 0,
+        ));
+    }
+
+    /**
+     * Identidade dos filtros na chave de cache. Sem isso, mexer numa exclusion e
+     * reabrir o builder em menos de cinco minutos mostraria o número anterior.
+     */
+    private function filtersKey(SourceFilters $filters): string
+    {
+        return md5(($filters->hideBots ? '1' : '0').'|'.implode(',', $filters->exclusions));
     }
 
     /**
