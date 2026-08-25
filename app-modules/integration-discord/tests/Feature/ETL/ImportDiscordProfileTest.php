@@ -256,6 +256,37 @@ test('profile import preserves oauth credentials connection state and owner', fu
         ->and($identity->metadata)->toHaveKeys(['user', 'badges', 'guild_member']);
 });
 
+test('profile import preserves an avatar when the snapshot omits it and clears it when explicitly null', function (): void {
+    $user = User::factory()->create(['username' => '_tats']);
+    ExternalIdentity::factory()->morphFor()->create([
+        'model_id' => $user->id,
+        'provider' => IdentityProvider::Discord,
+        'external_account_id' => '49615312957476864',
+        'metadata' => [
+            'username' => '_tats',
+            'avatar' => 'known-avatar',
+        ],
+    ]);
+
+    $profileWithoutAvatar = discordProfile(['connected_accounts' => []]);
+    unset($profileWithoutAvatar['user']['avatar']);
+
+    $identity = resolve(ImportDiscordProfileAction::class)->handle(
+        DiscordProfileDTO::fromDump($profileWithoutAvatar),
+    );
+
+    expect($identity->metadata['avatar'])->toBe('known-avatar');
+
+    $identity = resolve(ImportDiscordProfileAction::class)->handle(
+        DiscordProfileDTO::fromDump(discordProfile([
+            'user' => ['avatar' => null],
+            'connected_accounts' => [],
+        ])),
+    );
+
+    expect($identity->metadata)->toHaveKey('avatar', value: null);
+});
+
 test('oauth connection preserves profile snapshot and fills canonical metadata', function (): void {
     $profileIdentity = resolve(ImportDiscordProfileAction::class)->handle(
         DiscordProfileDTO::fromDump(discordProfile(['connected_accounts' => []])),

@@ -104,7 +104,7 @@ test('reattaching preserves metadata owned by other ingestion flows', function (
         ->and($identity->metadata)->toMatchArray([
             'email' => 'preserved@example.com',
             'username' => 'new-name',
-            'avatar' => null,
+            'avatar' => 'old-avatar',
             'profile' => ['bio' => 'Imported profile'],
             'badges' => [['id' => 'contributor']],
         ])

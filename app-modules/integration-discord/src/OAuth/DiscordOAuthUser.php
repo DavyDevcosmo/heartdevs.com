@@ -10,6 +10,19 @@ use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 
 class DiscordOAuthUser extends OAuthUserDTO
 {
+    public function __construct(
+        OAuthAccessDTO $credentials,
+        string $providerId,
+        IdentityProvider $provider,
+        string $username,
+        string $name,
+        ?string $email,
+        ?string $avatarUrl,
+        private readonly bool $avatarProvided,
+    ) {
+        parent::__construct($credentials, $providerId, $provider, $username, $name, $email, $avatarUrl);
+    }
+
     /**
      * @param  array<string, mixed>  $payload
      */
@@ -25,6 +38,7 @@ class DiscordOAuthUser extends OAuthUserDTO
             avatarUrl: isset($payload['avatar'])
                 ? sprintf('https://cdn.discordapp.com/avatars/%s/%s.png', $payload['id'], $payload['avatar'])
                 : null,
+            avatarProvided: array_key_exists('avatar', $payload),
         );
     }
 
@@ -32,6 +46,7 @@ class DiscordOAuthUser extends OAuthUserDTO
     public function toMetadata(): array
     {
         return [
+            ...($this->avatarProvided && $this->avatarUrl === null ? ['avatar' => null] : []),
             ...parent::toMetadata(),
             'global_name' => $this->name,
         ];

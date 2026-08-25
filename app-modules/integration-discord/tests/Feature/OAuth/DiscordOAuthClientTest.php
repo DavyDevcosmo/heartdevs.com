@@ -93,6 +93,23 @@ it('normalizes an authenticated Discord user without email or avatar', function 
         ]);
 });
 
+it('omits an unavailable avatar from authenticated user metadata', function (): void {
+    $credentials = DiscordOAuthAccessDTO::make([
+        'access_token' => 'test-access-token',
+        'refresh_token' => 'test-refresh-token',
+        'expires_in' => 604_800,
+    ]);
+
+    $user = DiscordOAuthUser::make($credentials, [
+        'id' => '123456789',
+        'username' => 'testuser',
+        'global_name' => 'Test User',
+    ]);
+
+    expect($user->avatarUrl)->toBeNull()
+        ->and($user->toMetadata())->not->toHaveKey('avatar');
+});
+
 it('generates correct redirect url', function (): void {
     config()->set('services.discord.scopes', 'identify email');
     config()->set('app.url', 'http://localhost:8000');

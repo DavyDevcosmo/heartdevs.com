@@ -28,7 +28,7 @@ abstract class OAuthUserDTO
     {
         return [
             ...($this->email !== null ? ['email' => $this->email] : []),
-            'avatar' => $this->avatarUrl,
+            ...($this->avatarUrl !== null ? ['avatar' => $this->avatarUrl] : []),
             'username' => $this->username,
         ];
     }

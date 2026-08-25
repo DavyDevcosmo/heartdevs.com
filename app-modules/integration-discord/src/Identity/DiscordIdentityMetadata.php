@@ -22,14 +22,19 @@ final readonly class DiscordIdentityMetadata
             ? $profile->metadata['user']
             : [];
 
+        $publicFields = [
+            'username' => $profile->username,
+            'global_name' => $profile->name,
+        ];
+
+        if (array_key_exists('avatar', $user)) {
+            $publicFields['avatar'] = $user['avatar'];
+        }
+
         return new self(array_replace(
             $current,
             $profile->metadata,
-            [
-                'username' => $profile->username,
-                'global_name' => $profile->name,
-                'avatar' => $user['avatar'] ?? null,
-            ],
+            $publicFields,
         ));
     }
 
