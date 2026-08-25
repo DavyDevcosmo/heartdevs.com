@@ -50,7 +50,7 @@
                 type="button"
                 wire:click="mountAction('adjustCover')"
                 title="{{ __('panel-app::profile.actions.adjust_cover') }}"
-                class="absolute top-3 right-12 z-20 rounded-full bg-black/60 p-1.5 text-white transition-opacity hover:bg-black/80"
+                class="absolute top-3 right-12 z-20 rounded-full bg-black/60 p-1.5 text-white transition-opacity hover:bg-black/80 focus-visible:opacity-100"
                 :class="hover ? 'opacity-100' : 'opacity-0'"
             >
                 <x-heroicon-m-arrows-up-down class="h-4 w-4" />
@@ -59,7 +59,7 @@
             <button
                 type="button"
                 wire:click="removeCover"
-                class="absolute top-3 right-3 z-20 rounded-full bg-black/60 p-1.5 text-white transition-opacity hover:bg-black/80"
+                class="absolute top-3 right-3 z-20 rounded-full bg-black/60 p-1.5 text-white transition-opacity hover:bg-black/80 focus-visible:opacity-100"
                 :class="hover ? 'opacity-100' : 'opacity-0'"
             >
                 <x-heroicon-m-x-mark class="h-4 w-4" />
@@ -111,7 +111,7 @@
                     <button
                         type="button"
                         wire:click="removeAvatar"
-                        class="absolute -top-1 -right-1 z-20 rounded-full bg-red-500 p-1 text-white shadow-md transition-opacity hover:bg-red-600"
+                        class="absolute -top-1 -right-1 z-20 rounded-full bg-red-500 p-1 text-white shadow-md transition-opacity hover:bg-red-600 focus-visible:opacity-100"
                         :class="hover ? 'opacity-100' : 'opacity-0'"
                     >
                         <x-heroicon-m-x-mark class="h-3.5 w-3.5" />

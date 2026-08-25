@@ -53,10 +53,9 @@ enum ProfileImage: string
     /**
      * Os mesmos formatos, como o usuário os reconhece.
      *
-     * GIF entra, mas sai estático: a conversão roda no GD, que lê só o
-     * primeiro quadro, e o editor de recorte serializa via canvas, que não
-     * preserva animação em formato nenhum. Preservar exigiria Imagick e
-     * servir o arquivo original, abrindo mão da dimensão normalizada.
+     * GIF entra e é servido como chega, com a animação intacta: converter
+     * leria só o primeiro quadro no GD. Quem recorta pelo editor perde a
+     * animação, porque o recorte acontece no canvas do browser.
      */
     public static function formatLabels(): string
     {
