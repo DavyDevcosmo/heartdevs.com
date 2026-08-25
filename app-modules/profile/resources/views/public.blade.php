@@ -15,16 +15,6 @@
 
     $links = [...$profile->socialLinks, ...$profile->connectedAccounts];
 
-    $initials = Str::of($profile->name)
-        ->squish()
-        ->explode(' ')
-        ->filter(fn (string $word): bool => preg_match('/^\p{L}/u', $word) === 1)
-        ->take(2)
-        ->map(fn (string $word): string => Str::upper(Str::substr($word, 0, 1)))
-        ->implode('');
-
-    $initials = $initials !== '' ? $initials : Str::upper(Str::substr($profile->username, 0, 1));
-
     $hasBody = $profile->about || $profile->skills !== [] || $profile->experiences !== [] || $profile->projects !== [];
     $hasAside = (bool) $profile->level || $profile->badges !== [];
 
@@ -70,7 +60,7 @@
                             class="from-primary ring-elevation-surface flex size-28 shrink-0 items-center justify-center rounded-full bg-gradient-to-br to-fuchsia-500 text-4xl font-bold text-white ring-4 sm:size-32"
                             style="box-shadow: 0 18px 48px -12px rgb(120 43 241 / 0.75)"
                         >
-                            {{ $initials }}
+                            {{ $profile->initials }}
                         </div>
                     @endif
 

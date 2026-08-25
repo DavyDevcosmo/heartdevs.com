@@ -19,6 +19,7 @@ final readonly class PublicProfileData
         public string $name,
         public string $username,
         public ?string $avatarUrl,
+        public string $initials,
         public ?string $coverUrl = null,
         public ?string $nickname = null,
         public ?string $headline = null,

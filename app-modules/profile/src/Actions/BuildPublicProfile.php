@@ -25,6 +25,7 @@ use He4rt\Profile\Models\ProfileSkill;
 use He4rt\Profile\Models\WorkExperience;
 use He4rt\Profile\Support\PublicProfileCache;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 
 final class BuildPublicProfile
 {
@@ -60,6 +61,7 @@ final class BuildPublicProfile
             name: $user->name,
             username: $user->username,
             avatarUrl: $this->avatarUrl($user),
+            initials: $this->initials($user),
             coverUrl: $user->getFirstMediaUrl('cover') ?: null,
             nickname: $profile?->nickname,
             headline: $profile?->headline,
@@ -350,6 +352,21 @@ final class BuildPublicProfile
         $handle = $identity->metadata['username'] ?? null;
 
         return is_string($handle) && filled($handle) ? $handle : null;
+    }
+
+    private function initials(User $user): string
+    {
+        $initials = Str::of($user->name)
+            ->squish()
+            ->explode(' ')
+            ->filter(static fn (string $word): bool => preg_match('/^\p{L}/u', $word) === 1)
+            ->take(2)
+            ->map(static fn (string $word): string => Str::upper(Str::substr($word, 0, 1)))
+            ->implode('');
+
+        return $initials !== ''
+            ? $initials
+            : Str::upper(Str::substr($user->username, 0, 1));
     }
 
     private function location(User $user): ?string

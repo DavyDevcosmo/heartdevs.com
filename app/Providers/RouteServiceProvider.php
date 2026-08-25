@@ -44,5 +44,7 @@ final class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(60)->by($request->user()?->id ?: $request->ip()));
 
         RateLimiter::for('public-profile', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
+
+        RateLimiter::for('profile-card', fn (Request $request) => Limit::perMinute(120)->by($request->user()?->id ?: $request->ip()));
     }
 }
