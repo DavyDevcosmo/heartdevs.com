@@ -6,6 +6,10 @@ use He4rt\Identity\User\Models\User;
 use He4rt\Profile\Models\Profile;
 use He4rt\Profile\Models\ProfileSkill;
 use He4rt\Profile\Models\Skill;
+use He4rt\Profile\Support\PublicProfileCache;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 beforeEach(function (): void {
     $this->withoutVite();
@@ -95,4 +99,47 @@ it('returns 404 for an unknown username', function (): void {
     $this->actingAs($this->viewer)
         ->get('/@ninguem/card')
         ->assertNotFound();
+});
+
+it('reuses the cached profile instead of rebuilding it', function (): void {
+    $user = User::factory()->create(['username' => 'danielhe4rt']);
+    Profile::factory()->for($user)->create(['headline' => 'Developer Advocate']);
+
+    $this->actingAs($this->viewer)->get('/@danielhe4rt/card')->assertOk();
+
+    $queries = 0;
+
+    DB::listen(function (QueryExecuted $query) use (&$queries): void {
+        $queries++;
+    });
+
+    $this->actingAs($this->viewer)->get('/@danielhe4rt/card')->assertOk();
+
+    expect(Cache::has(PublicProfileCache::key((string) $user->getKey())))->toBeTrue()
+        ->and($queries)->toBeLessThan(3);
+});
+
+it('throttles a burst of card requests from the same viewer', function (): void {
+    User::factory()->create(['username' => 'danielhe4rt']);
+
+    $this->actingAs($this->viewer);
+
+    foreach (range(1, 120) as $ignored) {
+        $this->get('/@danielhe4rt/card')->assertOk();
+    }
+
+    $this->get('/@danielhe4rt/card')->assertStatus(429);
+});
+
+it('counts the card throttle per viewer, not per profile', function (): void {
+    User::factory()->create(['username' => 'primeiro']);
+    User::factory()->create(['username' => 'segundo']);
+
+    $this->actingAs($this->viewer);
+
+    foreach (range(1, 120) as $ignored) {
+        $this->get('/@primeiro/card')->assertOk();
+    }
+
+    $this->get('/@segundo/card')->assertStatus(429);
 });

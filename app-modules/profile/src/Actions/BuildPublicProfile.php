@@ -23,9 +23,9 @@ use He4rt\Profile\Enums\SocialPlatform;
 use He4rt\Profile\Models\Profile;
 use He4rt\Profile\Models\ProfileSkill;
 use He4rt\Profile\Models\WorkExperience;
+use He4rt\Profile\Support\ProfileInitials;
 use He4rt\Profile\Support\PublicProfileCache;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Str;
 
 final class BuildPublicProfile
 {
@@ -356,17 +356,7 @@ final class BuildPublicProfile
 
     private function initials(User $user): string
     {
-        $initials = Str::of($user->name)
-            ->squish()
-            ->explode(' ')
-            ->filter(static fn (string $word): bool => preg_match('/^\p{L}/u', $word) === 1)
-            ->take(2)
-            ->map(static fn (string $word): string => Str::upper(Str::substr($word, 0, 1)))
-            ->implode('');
-
-        return $initials !== ''
-            ? $initials
-            : Str::upper(Str::substr($user->username, 0, 1));
+        return ProfileInitials::for($user->name, $user->username);
     }
 
     private function location(User $user): ?string

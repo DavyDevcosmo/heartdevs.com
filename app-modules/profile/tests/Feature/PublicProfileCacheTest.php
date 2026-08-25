@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Support\ApplicationLocale;
 use He4rt\Identity\User\Models\User;
+use He4rt\Profile\Enums\SeniorityLevel;
 use He4rt\Profile\Models\Profile;
 use He4rt\Profile\Models\ProfileProject;
 use He4rt\Profile\Models\WorkExperience;
@@ -109,4 +111,54 @@ it('drops the cache when a profile-owned row is deleted', function (): void {
     $project->delete();
 
     visitProfile('apagador')->assertOk()->assertDontSee('Some Sumido');
+});
+
+it('keys the cache by locale', function (): void {
+    $user = User::factory()->create(['username' => 'poliglota']);
+
+    expect(PublicProfileCache::key((string) $user->getKey(), ApplicationLocale::EN))
+        ->toBe('public-profile:'.$user->getKey().':en')
+        ->and(PublicProfileCache::key((string) $user->getKey(), ApplicationLocale::PT_BR))
+        ->toBe('public-profile:'.$user->getKey().':pt_BR');
+});
+
+it('does not let a viewer in another language poison the public page', function (): void {
+    $user = User::factory()->create(['username' => 'poliglota']);
+
+    Profile::factory()->for($user)->create([
+        'seniority_level' => SeniorityLevel::Mid,
+    ]);
+
+    $viewer = User::factory()->create();
+
+    test()->actingAs($viewer)
+        ->withSession([ApplicationLocale::SESSION_KEY => ApplicationLocale::EN])
+        ->get('/@poliglota/card')
+        ->assertOk();
+
+    expect(Cache::get(PublicProfileCache::key((string) $user->getKey(), ApplicationLocale::EN))->seniority)
+        ->toBe('Mid-Level');
+
+    ApplicationLocale::apply(ApplicationLocale::PT_BR);
+
+    visitProfile('poliglota')
+        ->assertOk()
+        ->assertSee('Pleno')
+        ->assertDontSee('Mid-Level');
+});
+
+it('drops every locale entry when the profile changes', function (): void {
+    $user = User::factory()->create(['username' => 'poliglota']);
+    $profile = Profile::factory()->for($user)->create();
+
+    foreach (ApplicationLocale::SUPPORTED as $locale) {
+        Cache::put(PublicProfileCache::key((string) $user->getKey(), $locale), 'seed', 60);
+    }
+
+    $profile->update(['headline' => 'mudou']);
+
+    foreach (ApplicationLocale::SUPPORTED as $locale) {
+        expect(Cache::has(PublicProfileCache::key((string) $user->getKey(), $locale)))
+            ->toBeFalse("a entrada de {$locale} sobreviveu ao forget()");
+    }
 });

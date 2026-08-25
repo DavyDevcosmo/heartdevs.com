@@ -1,8 +1,11 @@
 @props (['user' => null, 'size' => 'md'])
 
+@use('He4rt\Profile\Support\ProfileInitials')
+
 @php
     $displayName = $user?->name ?? 'Usuário removido';
     $avatarUrl = $user?->getFirstMediaUrl('avatar') ?: null;
+    $initials = ProfileInitials::for($displayName, $user?->username);
 
     $sizeClasses = match ($size) {
         'lg' => 'h-9 w-9 sm:h-10 sm:w-10',
@@ -33,6 +36,6 @@
             ])
         }}
     >
-        {{ str($displayName)->substr(0, 2)->upper() }}
+        {{ $initials }}
     </div>
 @endif
