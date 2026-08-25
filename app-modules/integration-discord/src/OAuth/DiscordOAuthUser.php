@@ -21,8 +21,19 @@ class DiscordOAuthUser extends OAuthUserDTO
             provider: IdentityProvider::Discord,
             username: $payload['username'],
             name: $payload['global_name'] ?? $payload['username'],
-            email: $payload['email'],
-            avatarUrl: sprintf('https://cdn.discordapp.com/avatars/%s/%s.png', $payload['id'], $payload['avatar']),
+            email: $payload['email'] ?? null,
+            avatarUrl: isset($payload['avatar'])
+                ? sprintf('https://cdn.discordapp.com/avatars/%s/%s.png', $payload['id'], $payload['avatar'])
+                : null,
         );
+    }
+
+    /** @return array<string, mixed> */
+    public function toMetadata(): array
+    {
+        return [
+            ...parent::toMetadata(),
+            'global_name' => $this->name,
+        ];
     }
 }

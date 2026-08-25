@@ -16,25 +16,20 @@ final class AttachProviderToUser
     public function execute(User $owner, OAuthUserDTO $oauthUser, OAuthAccessDTO $access): ExternalIdentity
     {
         /** @var ExternalIdentity $identity */
-        $identity = $owner->providers()->updateOrCreate(
-            [
-                'provider' => $oauthUser->provider,
-                'external_account_id' => $oauthUser->providerId,
-            ],
-            [
-                'type' => $oauthUser->provider->getType(),
-                'credentials_type' => CredentialsType::OAuth2,
-                'credentials' => $access->toClientAccessManager(),
-                'metadata' => array_filter([
-                    'email' => $oauthUser->email,
-                    'avatar' => $oauthUser->avatarUrl,
-                    'username' => $oauthUser->username,
-                ]),
-                'connected_at' => now(),
-                'disconnected_at' => null,
-                'connected_by' => auth()->id(),
-            ]
-        );
+        $identity = $owner->providers()->firstOrNew([
+            'provider' => $oauthUser->provider,
+            'external_account_id' => $oauthUser->providerId,
+        ]);
+
+        $identity->forceFill([
+            'type' => $oauthUser->provider->getType(),
+            'credentials_type' => CredentialsType::OAuth2,
+            'credentials' => $access->toClientAccessManager(),
+            'metadata' => array_replace($identity->metadata ?? [], $oauthUser->toMetadata()),
+            'connected_at' => now(),
+            'disconnected_at' => null,
+            'connected_by' => auth()->id(),
+        ])->save();
 
         event(new ExternalIdentityConnected($identity));
 
