@@ -20,16 +20,24 @@ final readonly class MergeConflictDTO
      */
     public function toSession(): array
     {
+        $credentials = $this->credentials->toClientAccessManager();
+
         return [
             'conflicting_user_id' => $this->conflictingUserId,
             'provider' => $this->provider->value,
-            'credentials' => $this->credentials->toDatabase(),
+            'credentials' => [
+                'encrypted' => true,
+                'access_token' => $credentials->accessToken,
+                'refresh_token' => $credentials->refreshToken,
+                'expires_in' => $credentials->expiresIn,
+            ],
             'oauth_user' => [
                 'provider_id' => $this->oauthUser->providerId,
                 'username' => $this->oauthUser->username,
                 'name' => $this->oauthUser->name,
                 'email' => $this->oauthUser->email,
                 'avatar_url' => $this->oauthUser->avatarUrl,
+                'metadata' => $this->oauthUser->toMetadata(),
             ],
         ];
     }
