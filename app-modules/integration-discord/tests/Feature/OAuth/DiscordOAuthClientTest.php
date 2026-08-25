@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use He4rt\Identity\ExternalIdentity\Enums\IdentityProvider;
 use He4rt\IntegrationDiscord\OAuth\DiscordOAuthAccessDTO;
 use He4rt\IntegrationDiscord\OAuth\DiscordOAuthClient;
 use He4rt\IntegrationDiscord\OAuth\DiscordOAuthUser;
@@ -108,6 +109,29 @@ it('omits an unavailable avatar from authenticated user metadata', function (): 
 
     expect($user->avatarUrl)->toBeNull()
         ->and($user->toMetadata())->not->toHaveKey('avatar');
+});
+
+it('keeps the previous seven argument constructor compatible', function (): void {
+    $credentials = DiscordOAuthAccessDTO::make([
+        'access_token' => 'test-access-token',
+        'refresh_token' => 'test-refresh-token',
+        'expires_in' => 604_800,
+    ]);
+
+    $user = new DiscordOAuthUser(
+        $credentials,
+        '123456789',
+        IdentityProvider::Discord,
+        'testuser',
+        'Test User',
+        email: null,
+        avatarUrl: null,
+    );
+
+    expect($user->toMetadata())->toBe([
+        'username' => 'testuser',
+        'global_name' => 'Test User',
+    ]);
 });
 
 it('generates correct redirect url', function (): void {

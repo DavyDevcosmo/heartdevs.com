@@ -323,6 +323,35 @@ test('oauth connection preserves profile snapshot and fills canonical metadata',
         ->and($identity->metadata)->toHaveKeys(['user', 'badges', 'guild_member']);
 });
 
+test('oauth connection clears a profile avatar only when Discord explicitly returns null', function (): void {
+    $profileIdentity = resolve(ImportDiscordProfileAction::class)->handle(
+        DiscordProfileDTO::fromDump(discordProfile(['connected_accounts' => []])),
+    );
+
+    $access = DiscordOAuthAccessDTO::make([
+        'access_token' => 'new-access-token',
+        'refresh_token' => 'new-refresh-token',
+        'expires_in' => 3_600,
+    ]);
+    $oauthUser = DiscordOAuthUser::make($access, [
+        'id' => '49615312957476864',
+        'username' => '_tats',
+        'global_name' => 'Madruguinha',
+        'email' => 'discord@example.com',
+        'avatar' => null,
+    ]);
+
+    $identity = resolve(AttachProviderToUser::class)->execute(
+        $profileIdentity->user,
+        $oauthUser,
+        $access,
+    );
+
+    expect($identity->metadata)->toHaveKey('avatar', value: null)
+        ->and($identity->metadata['user']['avatar'])->toBe('7638814994b449231c5ff17dd84500bd')
+        ->and($identity->credentials->getAccessToken())->toBe('new-access-token');
+});
+
 test('profile import enriches an identity created from a message without replacing its owner', function (): void {
     resolve(ImportDiscordMessageAction::class)->handle(
         DiscordMessageDTO::fromDump([

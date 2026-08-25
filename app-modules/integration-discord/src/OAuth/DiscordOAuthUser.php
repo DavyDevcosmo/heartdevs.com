@@ -18,7 +18,7 @@ class DiscordOAuthUser extends OAuthUserDTO
         string $name,
         ?string $email,
         ?string $avatarUrl,
-        private readonly bool $avatarProvided,
+        private readonly bool $avatarProvided = false,
     ) {
         parent::__construct($credentials, $providerId, $provider, $username, $name, $email, $avatarUrl);
     }
