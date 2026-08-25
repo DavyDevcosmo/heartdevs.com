@@ -17,11 +17,34 @@ use He4rt\Identity\User\Models\User;
 use He4rt\IntegrationDiscord\OAuth\DiscordOAuthAccessDTO;
 use He4rt\IntegrationDiscord\OAuth\DiscordOAuthClient;
 use He4rt\IntegrationDiscord\OAuth\DiscordOAuthUser;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 
 use function Pest\Livewire\livewire;
+
+/**
+ * @param  array<string, mixed>  $metadata
+ * @return array<string, mixed>
+ */
+function connectionHubOAuthMergePayload(
+    string $conflictingUserId,
+    string $providerId,
+    array $metadata = ['username' => 'oauth-user'],
+): array {
+    return [
+        'conflicting_user_id' => $conflictingUserId,
+        'provider' => IdentityProvider::Discord->value,
+        'provider_id' => $providerId,
+        'credentials' => [
+            'access_token' => Crypt::encrypt('access-token'),
+            'refresh_token' => Crypt::encrypt('refresh-token'),
+            'expires_in' => Crypt::encrypt('3600'),
+        ],
+        'metadata' => $metadata,
+    ];
+}
 
 test('merge confirmation modal exposes accessible dialog semantics', function (): void {
     $currentUser = User::factory()->create();
@@ -124,7 +147,8 @@ test('confirming an oauth merge connects the imported identity without losing it
 
     expect($sessionPayload['credentials']['access_token'])->not->toBe('discord-access-token')
         ->and($sessionPayload['credentials']['refresh_token'])->not->toBe('discord-refresh-token')
-        ->and($sessionPayload['credentials']['encrypted'])->toBeTrue();
+        ->and($sessionPayload)->not->toHaveKey('oauth_user')
+        ->and($sessionPayload['provider_id'])->toBe('49615312957476864');
 
     session()->put('oauth_merge_pending', $sessionPayload);
 
@@ -191,19 +215,11 @@ test('canceling an oauth merge leaves both accounts and the imported identity un
     ]);
 
     $this->actingAs($currentUser);
-    session()->put('oauth_merge_pending', [
-        'conflicting_user_id' => $importedUser->id,
-        'provider' => IdentityProvider::Discord->value,
-        'credentials' => [
-            'access_token' => 'unused-access-token',
-            'refresh_token' => 'unused-refresh-token',
-            'expires_in' => 3_600,
-        ],
-        'oauth_user' => [
-            'provider_id' => 'discord-cancel',
-            'metadata' => ['username' => 'unused-user'],
-        ],
-    ]);
+    session()->put('oauth_merge_pending', connectionHubOAuthMergePayload(
+        conflictingUserId: $importedUser->id,
+        providerId: 'discord-cancel',
+        metadata: ['username' => 'unused-user'],
+    ));
 
     livewire(ConnectionHub::class)->call('cancelMerge');
 
@@ -225,19 +241,11 @@ test('oauth merge aborts when the conflicting identity no longer belongs to the 
     $targetUser = User::factory()->create();
 
     $this->actingAs($currentUser);
-    session()->put('oauth_merge_pending', [
-        'conflicting_user_id' => $targetUser->id,
-        'provider' => IdentityProvider::Discord->value,
-        'credentials' => [
-            'access_token' => 'unused-access-token',
-            'refresh_token' => 'unused-refresh-token',
-            'expires_in' => 3_600,
-        ],
-        'oauth_user' => [
-            'provider_id' => 'missing-discord-identity',
-            'metadata' => ['username' => 'unused-user'],
-        ],
-    ]);
+    session()->put('oauth_merge_pending', connectionHubOAuthMergePayload(
+        conflictingUserId: $targetUser->id,
+        providerId: 'missing-discord-identity',
+        metadata: ['username' => 'unused-user'],
+    ));
 
     livewire(ConnectionHub::class)->call('confirmMerge');
 

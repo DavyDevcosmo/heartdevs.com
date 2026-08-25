@@ -45,7 +45,7 @@ final readonly class ConfirmOAuthMerge
                 owner: $targetUser,
                 provider: $pending->provider,
                 providerId: $pending->providerId,
-                credentials: $pending->toClientAccessManager(),
+                credentials: $pending->credentials,
                 metadata: $pending->metadata,
                 connectedBy: $targetUser->id,
             );
