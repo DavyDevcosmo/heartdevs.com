@@ -11,6 +11,7 @@ use He4rt\Squads\Exceptions\NotAnActiveSquadMember;
 use He4rt\Squads\Models\Squad;
 use He4rt\Squads\Models\SquadMember;
 use He4rt\Squads\Policies\SquadPolicy;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 
 final readonly class PromoteToSubCaptain
@@ -52,6 +53,17 @@ final readonly class PromoteToSubCaptain
             throw_if($member === null, NotAnActiveSquadMember::for($squad, $subject));
 
             $fromRole = $member->role;
+
+            // The captain seat is only moved by super-admins (via `AssignCaptain`
+            // or this action) or by the seated captain stepping down themselves.
+            // Leadership roles below the seat never outrank it, so they cannot
+            // record a transition over the current `Captain`.
+            throw_if(
+                $fromRole === SquadRole::Captain
+                    && !$actor->isAdmin()
+                    && !$actor->is($subject),
+                AuthorizationException::class,
+            );
 
             if ($fromRole === $targetRole) {
                 return $member;

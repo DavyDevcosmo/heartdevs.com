@@ -288,6 +288,52 @@ test('same-state role changes create no event', function (): void {
     expect(SquadMembershipEvent::query()->where('squad_id', $squad->id)->count())->toBe(0);
 });
 
+test('a sub-captain cannot demote the squad captain', function (): void {
+    $squad = Squad::factory()->create();
+    $subCaptain = User::factory()->create();
+    $captain = User::factory()->create();
+
+    SquadMember::factory()->create([
+        'squad_id' => $squad->id,
+        'user_id' => $subCaptain->id,
+        'role' => SquadRole::SubCaptain,
+    ]);
+    SquadMember::factory()->create([
+        'squad_id' => $squad->id,
+        'user_id' => $captain->id,
+        'role' => SquadRole::Captain,
+    ]);
+
+    resolve(PromoteToSubCaptain::class)->demote(
+        actor: $subCaptain,
+        squad: $squad,
+        subject: $captain,
+    );
+})->throws(AuthorizationException::class);
+
+test('a sub-captain cannot move the captain down to sub-captain', function (): void {
+    $squad = Squad::factory()->create();
+    $subCaptain = User::factory()->create();
+    $captain = User::factory()->create();
+
+    SquadMember::factory()->create([
+        'squad_id' => $squad->id,
+        'user_id' => $subCaptain->id,
+        'role' => SquadRole::SubCaptain,
+    ]);
+    SquadMember::factory()->create([
+        'squad_id' => $squad->id,
+        'user_id' => $captain->id,
+        'role' => SquadRole::Captain,
+    ]);
+
+    resolve(PromoteToSubCaptain::class)->handle(
+        actor: $subCaptain,
+        squad: $squad,
+        subject: $captain,
+    );
+})->throws(AuthorizationException::class);
+
 test('a sub-captain can demote themselves', function (): void {
     $squad = Squad::factory()->create();
     $subCaptain = User::factory()->create();
