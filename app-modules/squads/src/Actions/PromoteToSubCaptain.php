@@ -14,6 +14,20 @@ use He4rt\Squads\Policies\SquadPolicy;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Records the outcome of an off-system promotion to sub-captain, together
+ * with its inverse demotion back to `Member` — one governance concern in
+ * both directions, mirroring how `AssignCaptain` owns the captain seat.
+ *
+ * The name follows the module's action map (`CONTEXT.md`), which records
+ * outcomes rather than personas: this is not an action "for" a sub-captain;
+ * it records someone BECOMING one (or leaving that role) after a decision
+ * made off-platform, appending `promote`/`demote` to the audit trail.
+ *
+ * The seated captain is above sub-captain authority: only super-admins or
+ * the captain themselves may move that row, matching the admin-only rule
+ * `AssignCaptain` applies when it replaces an incumbent.
+ */
 final readonly class PromoteToSubCaptain
 {
     public function __construct(
