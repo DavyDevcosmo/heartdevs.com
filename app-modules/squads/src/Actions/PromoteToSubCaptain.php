@@ -7,26 +7,20 @@ namespace He4rt\Squads\Actions;
 use He4rt\Identity\User\Models\User;
 use He4rt\Squads\Enums\MembershipAction;
 use He4rt\Squads\Enums\SquadRole;
+use He4rt\Squads\Exceptions\InvalidSquadRoleTransition;
 use He4rt\Squads\Exceptions\NotAnActiveSquadMember;
 use He4rt\Squads\Models\Squad;
 use He4rt\Squads\Models\SquadMember;
 use He4rt\Squads\Policies\SquadPolicy;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Records the outcome of an off-system promotion to sub-captain, together
- * with its inverse demotion back to `Member` — one governance concern in
- * both directions, mirroring how `AssignCaptain` owns the captain seat.
+ * Records the off-system Member -> SubCaptain result and its inverse,
+ * SubCaptain -> Member, in the membership ledger.
  *
- * The name follows the module's action map (`CONTEXT.md`), which records
- * outcomes rather than personas: this is not an action "for" a sub-captain;
- * it records someone BECOMING one (or leaving that role) after a decision
- * made off-platform, appending `promote`/`demote` to the audit trail.
- *
- * The seated captain is above sub-captain authority: only super-admins or
- * the captain themselves may move that row, matching the admin-only rule
- * `AssignCaptain` applies when it replaces an incumbent.
+ * This action never mutates the captain seat. `AssignCaptain` owns captain
+ * assignment and replacement, while `MarkExMember` currently owns vacancy.
+ * The governance decision remains off-platform; this action records its result.
  */
 final readonly class PromoteToSubCaptain
 {
@@ -37,26 +31,52 @@ final readonly class PromoteToSubCaptain
 
     public function handle(User $actor, Squad $squad, User $subject, ?string $reason = null): SquadMember
     {
-        $this->squadPolicy->authorize($actor, $squad);
+        $this->squadPolicy->authorizeSubCaptainManagement($actor, $squad);
 
-        return $this->transition($squad, $subject, $actor, SquadRole::SubCaptain, $reason);
+        return $this->transition(
+            squad: $squad,
+            subject: $subject,
+            actor: $actor,
+            expectedRole: SquadRole::Member,
+            targetRole: SquadRole::SubCaptain,
+            action: MembershipAction::Promote,
+            reason: $reason,
+        );
     }
 
     public function demote(User $actor, Squad $squad, User $subject, ?string $reason = null): SquadMember
     {
-        $this->squadPolicy->authorize($actor, $squad);
+        $this->squadPolicy->authorizeSubCaptainManagement($actor, $squad);
 
-        return $this->transition($squad, $subject, $actor, SquadRole::Member, $reason);
+        return $this->transition(
+            squad: $squad,
+            subject: $subject,
+            actor: $actor,
+            expectedRole: SquadRole::SubCaptain,
+            targetRole: SquadRole::Member,
+            action: MembershipAction::Demote,
+            reason: $reason,
+        );
     }
 
     private function transition(
         Squad $squad,
         User $subject,
         User $actor,
+        SquadRole $expectedRole,
         SquadRole $targetRole,
+        MembershipAction $action,
         ?string $reason,
     ): SquadMember {
-        return DB::transaction(function () use ($squad, $subject, $actor, $targetRole, $reason): SquadMember {
+        return DB::transaction(function () use (
+            $squad,
+            $subject,
+            $actor,
+            $expectedRole,
+            $targetRole,
+            $action,
+            $reason,
+        ): SquadMember {
             $member = SquadMember::query()
                 ->where('squad_id', $squad->id)
                 ->where('user_id', $subject->id)
@@ -68,20 +88,14 @@ final readonly class PromoteToSubCaptain
 
             $fromRole = $member->role;
 
-            // The captain seat is only moved by super-admins (via `AssignCaptain`
-            // or this action) or by the seated captain stepping down themselves.
-            // Leadership roles below the seat never outrank it, so they cannot
-            // record a transition over the current `Captain`.
-            throw_if(
-                $fromRole === SquadRole::Captain
-                    && !$actor->isAdmin()
-                    && !$actor->is($subject),
-                AuthorizationException::class,
-            );
-
             if ($fromRole === $targetRole) {
                 return $member;
             }
+
+            throw_if(
+                $fromRole !== $expectedRole,
+                InvalidSquadRoleTransition::between($fromRole, $targetRole)
+            );
 
             $member->update([
                 'role' => $targetRole,
@@ -90,7 +104,7 @@ final readonly class PromoteToSubCaptain
             $this->recordMembershipEvent->handle(
                 squad: $squad,
                 subject: $subject,
-                action: $this->actionFor($fromRole, $targetRole),
+                action: $action,
                 fromRole: $fromRole,
                 toRole: $targetRole,
                 actor: $actor,
@@ -99,12 +113,5 @@ final readonly class PromoteToSubCaptain
 
             return $member->refresh();
         });
-    }
-
-    private function actionFor(SquadRole $fromRole, SquadRole $targetRole): MembershipAction
-    {
-        return $fromRole === SquadRole::Member && $targetRole === SquadRole::SubCaptain
-            ? MembershipAction::Promote
-            : MembershipAction::Demote;
     }
 }

@@ -6,6 +6,7 @@ use He4rt\Identity\User\Models\User;
 use He4rt\Squads\Actions\PromoteToSubCaptain;
 use He4rt\Squads\Enums\MembershipAction;
 use He4rt\Squads\Enums\SquadRole;
+use He4rt\Squads\Exceptions\InvalidSquadRoleTransition;
 use He4rt\Squads\Exceptions\NotAnActiveSquadMember;
 use He4rt\Squads\Models\Squad;
 use He4rt\Squads\Models\SquadMember;
@@ -56,6 +57,34 @@ test('a captain promotes a member to sub-captain and records the transition', fu
     ]);
 });
 
+test('a super-admin promotes a member without belonging to the squad', function (): void {
+    $squad = Squad::factory()->create();
+    $subject = User::factory()->create();
+
+    SquadMember::factory()->create([
+        'squad_id' => $squad->id,
+        'user_id' => $subject->id,
+        'role' => SquadRole::Member,
+    ]);
+
+    $member = resolve(PromoteToSubCaptain::class)->handle(
+        actor: $this->admin,
+        squad: $squad,
+        subject: $subject,
+    );
+
+    expect($member->role)->toBe(SquadRole::SubCaptain);
+
+    $this->assertDatabaseHas('squad_membership_events', [
+        'squad_id' => $squad->id,
+        'user_id' => $subject->id,
+        'actor_id' => $this->admin->id,
+        'action' => MembershipAction::Promote->value,
+        'from_role' => SquadRole::Member->value,
+        'to_role' => SquadRole::SubCaptain->value,
+    ]);
+});
+
 test('a captain demotes a sub-captain to member and records the transition', function (): void {
     $squad = Squad::factory()->create();
     $captain = User::factory()->create();
@@ -90,65 +119,73 @@ test('a captain demotes a sub-captain to member and records the transition', fun
     ]);
 });
 
-test('a captain can become a sub-captain and vacate the captain seat', function (): void {
+test('a super-admin demotes a sub-captain without belonging to the squad', function (): void {
     $squad = Squad::factory()->create();
-    $captain = User::factory()->create();
+    $subject = User::factory()->create();
 
     SquadMember::factory()->create([
         'squad_id' => $squad->id,
-        'user_id' => $captain->id,
-        'role' => SquadRole::Captain,
-    ]);
-
-    $member = resolve(PromoteToSubCaptain::class)->handle(
-        actor: $captain,
-        squad: $squad,
-        subject: $captain,
-    );
-
-    expect($member->role)->toBe(SquadRole::SubCaptain)
-        ->and($squad->captain()->first())->toBeNull();
-
-    $this->assertDatabaseHas('squad_membership_events', [
-        'squad_id' => $squad->id,
-        'user_id' => $captain->id,
-        'actor_id' => $captain->id,
-        'action' => MembershipAction::Demote->value,
-        'from_role' => SquadRole::Captain->value,
-        'to_role' => SquadRole::SubCaptain->value,
-    ]);
-});
-
-test('a super-admin can demote a captain to member', function (): void {
-    $squad = Squad::factory()->create();
-    $captain = User::factory()->create();
-
-    SquadMember::factory()->create([
-        'squad_id' => $squad->id,
-        'user_id' => $captain->id,
-        'role' => SquadRole::Captain,
+        'user_id' => $subject->id,
+        'role' => SquadRole::SubCaptain,
     ]);
 
     $member = resolve(PromoteToSubCaptain::class)->demote(
         actor: $this->admin,
         squad: $squad,
-        subject: $captain,
+        subject: $subject,
     );
 
-    expect($member->role)->toBe(SquadRole::Member)
-        ->and($squad->captain()->first())->toBeNull();
+    expect($member->role)->toBe(SquadRole::Member);
 
     $this->assertDatabaseHas('squad_membership_events', [
         'squad_id' => $squad->id,
-        'user_id' => $captain->id,
+        'user_id' => $subject->id,
         'actor_id' => $this->admin->id,
         'action' => MembershipAction::Demote->value,
-        'from_role' => SquadRole::Captain->value,
+        'from_role' => SquadRole::SubCaptain->value,
         'to_role' => SquadRole::Member->value,
     ]);
 });
 
-test('a sub-captain can promote a member in their own squad', function (): void {
+test('a captain cannot become a sub-captain through this action', function (): void {
+    $squad = Squad::factory()->create();
+    $captain = User::factory()->create();
+
+    $membership = SquadMember::factory()->create([
+        'squad_id' => $squad->id,
+        'user_id' => $captain->id,
+        'role' => SquadRole::Captain,
+    ]);
+
+    expect(fn () => resolve(PromoteToSubCaptain::class)->handle(
+        actor: $this->admin,
+        squad: $squad,
+        subject: $captain,
+    ))->toThrow(InvalidSquadRoleTransition::class)
+        ->and($membership->refresh()->role)->toBe(SquadRole::Captain)
+        ->and(SquadMembershipEvent::query()->where('squad_id', $squad->id)->count())->toBe(0);
+});
+
+test('a captain cannot become a member through this action', function (): void {
+    $squad = Squad::factory()->create();
+    $captain = User::factory()->create();
+
+    $membership = SquadMember::factory()->create([
+        'squad_id' => $squad->id,
+        'user_id' => $captain->id,
+        'role' => SquadRole::Captain,
+    ]);
+
+    expect(fn () => resolve(PromoteToSubCaptain::class)->demote(
+        actor: $this->admin,
+        squad: $squad,
+        subject: $captain,
+    ))->toThrow(InvalidSquadRoleTransition::class)
+        ->and($membership->refresh()->role)->toBe(SquadRole::Captain)
+        ->and(SquadMembershipEvent::query()->where('squad_id', $squad->id)->count())->toBe(0);
+});
+
+test('a sub-captain cannot promote a member in their own squad', function (): void {
     $squad = Squad::factory()->create();
     $subCaptain = User::factory()->create();
     $subject = User::factory()->create();
@@ -158,23 +195,19 @@ test('a sub-captain can promote a member in their own squad', function (): void 
         'user_id' => $subCaptain->id,
         'role' => SquadRole::SubCaptain,
     ]);
-    SquadMember::factory()->create([
+    $membership = SquadMember::factory()->create([
         'squad_id' => $squad->id,
         'user_id' => $subject->id,
         'role' => SquadRole::Member,
     ]);
 
-    resolve(PromoteToSubCaptain::class)->handle(
+    expect(fn () => resolve(PromoteToSubCaptain::class)->handle(
         actor: $subCaptain,
         squad: $squad,
         subject: $subject,
-    );
-
-    $this->assertDatabaseHas('squad_members', [
-        'squad_id' => $squad->id,
-        'user_id' => $subject->id,
-        'role' => SquadRole::SubCaptain->value,
-    ]);
+    ))->toThrow(AuthorizationException::class)
+        ->and($membership->refresh()->role)->toBe(SquadRole::Member)
+        ->and(SquadMembershipEvent::query()->where('squad_id', $squad->id)->count())->toBe(0);
 });
 
 test('a common member cannot change a squad role', function (): void {
@@ -187,18 +220,20 @@ test('a common member cannot change a squad role', function (): void {
         'user_id' => $actor->id,
         'role' => SquadRole::Member,
     ]);
-    SquadMember::factory()->create([
+    $membership = SquadMember::factory()->create([
         'squad_id' => $squad->id,
         'user_id' => $subject->id,
         'role' => SquadRole::Member,
     ]);
 
-    resolve(PromoteToSubCaptain::class)->handle(
+    expect(fn () => resolve(PromoteToSubCaptain::class)->handle(
         actor: $actor,
         squad: $squad,
         subject: $subject,
-    );
-})->throws(AuthorizationException::class);
+    ))->toThrow(AuthorizationException::class)
+        ->and($membership->refresh()->role)->toBe(SquadRole::Member)
+        ->and(SquadMembershipEvent::query()->where('squad_id', $squad->id)->count())->toBe(0);
+});
 
 test('a leader cannot change a different squad', function (): void {
     $ownSquad = Squad::factory()->create();
@@ -211,46 +246,51 @@ test('a leader cannot change a different squad', function (): void {
         'user_id' => $captain->id,
         'role' => SquadRole::Captain,
     ]);
-    SquadMember::factory()->create([
+    $membership = SquadMember::factory()->create([
         'squad_id' => $otherSquad->id,
         'user_id' => $subject->id,
         'role' => SquadRole::Member,
     ]);
 
-    resolve(PromoteToSubCaptain::class)->handle(
+    expect(fn () => resolve(PromoteToSubCaptain::class)->handle(
         actor: $captain,
         squad: $otherSquad,
         subject: $subject,
-    );
-})->throws(AuthorizationException::class);
+    ))->toThrow(AuthorizationException::class)
+        ->and($membership->refresh()->role)->toBe(SquadRole::Member)
+        ->and(SquadMembershipEvent::query()->where('squad_id', $otherSquad->id)->count())->toBe(0);
+});
 
-test('a missing active membership cannot be changed', function (): void {
+test('a missing active membership cannot be changed with :method', function (string $method): void {
     $squad = Squad::factory()->create();
     $subject = User::factory()->create();
 
-    resolve(PromoteToSubCaptain::class)->handle(
+    expect(fn () => resolve(PromoteToSubCaptain::class)->{$method}(
         actor: $this->admin,
         squad: $squad,
         subject: $subject,
-    );
-})->throws(NotAnActiveSquadMember::class);
+    ))->toThrow(NotAnActiveSquadMember::class)
+        ->and(SquadMembershipEvent::query()->where('squad_id', $squad->id)->count())->toBe(0);
+})->with(['handle', 'demote']);
 
-test('an ex-member cannot be changed', function (): void {
+test('an ex-member cannot be changed with :method', function (string $method): void {
     $squad = Squad::factory()->create();
     $subject = User::factory()->create();
 
-    SquadMember::factory()->create([
+    $membership = SquadMember::factory()->create([
         'squad_id' => $squad->id,
         'user_id' => $subject->id,
         'role' => SquadRole::ExMember,
     ]);
 
-    resolve(PromoteToSubCaptain::class)->handle(
+    expect(fn () => resolve(PromoteToSubCaptain::class)->{$method}(
         actor: $this->admin,
         squad: $squad,
         subject: $subject,
-    );
-})->throws(NotAnActiveSquadMember::class);
+    ))->toThrow(NotAnActiveSquadMember::class)
+        ->and($membership->refresh()->role)->toBe(SquadRole::ExMember)
+        ->and(SquadMembershipEvent::query()->where('squad_id', $squad->id)->count())->toBe(0);
+})->with(['handle', 'demote']);
 
 test('same-state role changes create no event', function (): void {
     $squad = Squad::factory()->create();
@@ -263,12 +303,12 @@ test('same-state role changes create no event', function (): void {
         'user_id' => $captain->id,
         'role' => SquadRole::Captain,
     ]);
-    SquadMember::factory()->create([
+    $subCaptainMembership = SquadMember::factory()->create([
         'squad_id' => $squad->id,
         'user_id' => $subCaptain->id,
         'role' => SquadRole::SubCaptain,
     ]);
-    SquadMember::factory()->create([
+    $memberMembership = SquadMember::factory()->create([
         'squad_id' => $squad->id,
         'user_id' => $member->id,
         'role' => SquadRole::Member,
@@ -285,74 +325,51 @@ test('same-state role changes create no event', function (): void {
         subject: $member,
     );
 
-    expect(SquadMembershipEvent::query()->where('squad_id', $squad->id)->count())->toBe(0);
+    expect($subCaptainMembership->refresh()->role)->toBe(SquadRole::SubCaptain)
+        ->and($memberMembership->refresh()->role)->toBe(SquadRole::Member)
+        ->and(SquadMembershipEvent::query()->where('squad_id', $squad->id)->count())->toBe(0);
 });
 
-test('a sub-captain cannot demote the squad captain', function (): void {
+test('a sub-captain cannot demote another sub-captain', function (): void {
     $squad = Squad::factory()->create();
     $subCaptain = User::factory()->create();
-    $captain = User::factory()->create();
+    $subject = User::factory()->create();
 
     SquadMember::factory()->create([
         'squad_id' => $squad->id,
         'user_id' => $subCaptain->id,
         'role' => SquadRole::SubCaptain,
     ]);
-    SquadMember::factory()->create([
+    $membership = SquadMember::factory()->create([
         'squad_id' => $squad->id,
-        'user_id' => $captain->id,
-        'role' => SquadRole::Captain,
+        'user_id' => $subject->id,
+        'role' => SquadRole::SubCaptain,
     ]);
 
-    resolve(PromoteToSubCaptain::class)->demote(
+    expect(fn () => resolve(PromoteToSubCaptain::class)->demote(
         actor: $subCaptain,
         squad: $squad,
-        subject: $captain,
-    );
-})->throws(AuthorizationException::class);
+        subject: $subject,
+    ))->toThrow(AuthorizationException::class)
+        ->and($membership->refresh()->role)->toBe(SquadRole::SubCaptain)
+        ->and(SquadMembershipEvent::query()->where('squad_id', $squad->id)->count())->toBe(0);
+});
 
-test('a sub-captain cannot move the captain down to sub-captain', function (): void {
-    $squad = Squad::factory()->create();
-    $subCaptain = User::factory()->create();
-    $captain = User::factory()->create();
-
-    SquadMember::factory()->create([
-        'squad_id' => $squad->id,
-        'user_id' => $subCaptain->id,
-        'role' => SquadRole::SubCaptain,
-    ]);
-    SquadMember::factory()->create([
-        'squad_id' => $squad->id,
-        'user_id' => $captain->id,
-        'role' => SquadRole::Captain,
-    ]);
-
-    resolve(PromoteToSubCaptain::class)->handle(
-        actor: $subCaptain,
-        squad: $squad,
-        subject: $captain,
-    );
-})->throws(AuthorizationException::class);
-
-test('a sub-captain can demote themselves', function (): void {
+test('a sub-captain cannot demote themselves', function (): void {
     $squad = Squad::factory()->create();
     $subCaptain = User::factory()->create();
 
-    SquadMember::factory()->create([
+    $membership = SquadMember::factory()->create([
         'squad_id' => $squad->id,
         'user_id' => $subCaptain->id,
         'role' => SquadRole::SubCaptain,
     ]);
 
-    resolve(PromoteToSubCaptain::class)->demote(
+    expect(fn () => resolve(PromoteToSubCaptain::class)->demote(
         actor: $subCaptain,
         squad: $squad,
         subject: $subCaptain,
-    );
-
-    $this->assertDatabaseHas('squad_members', [
-        'squad_id' => $squad->id,
-        'user_id' => $subCaptain->id,
-        'role' => SquadRole::Member->value,
-    ]);
+    ))->toThrow(AuthorizationException::class)
+        ->and($membership->refresh()->role)->toBe(SquadRole::SubCaptain)
+        ->and(SquadMembershipEvent::query()->where('squad_id', $squad->id)->count())->toBe(0);
 });
